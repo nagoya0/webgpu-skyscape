@@ -10,6 +10,7 @@ import {
 } from 'three/webgpu'
 
 import { requestDevice } from './gpu/support'
+import { applyReversedDepthSort } from './render/depthSort'
 import { showGuidance } from './ui/guidance'
 
 async function start(): Promise<void> {
@@ -20,8 +21,10 @@ async function start(): Promise<void> {
   }
   const { device } = support
 
-  const renderer = new WebGPURenderer({ device, antialias: false })
+  // Reversed Z (ADR 0015).
+  const renderer = new WebGPURenderer({ device, antialias: false, reversedDepthBuffer: true })
   await renderer.init()
+  applyReversedDepthSort(renderer)
   // Passing a device should rule out the WebGL 2 fallback; check anyway.
   if (!(renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend) {
     renderer.dispose()

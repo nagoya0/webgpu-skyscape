@@ -4,8 +4,6 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
 
 ## Open questions
 
-- **Depth format.** Logarithmic depth or reversed Z. Every screen-space pass depends on it
-  ([ADR 0010](adr/0010-post-processing-pipeline.md)), so it is decided in the second task.
 - **The first-person camera.** Its behaviour is still to be specified
   ([ADR 0009](adr/0009-camera-separate-from-path.md)). The first version has a lag behind the
   aircraft's motion and a slight shake.
@@ -18,7 +16,7 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
 
 1. Minimal Vite, TypeScript and Three.js `WebGPURenderer` set-up, with the WebGPU check and the
    guidance screen.
-2. Test and choose the depth format.
+2. Test and choose the depth format (done: [ADR 0015](adr/0015-reversed-z-depth.md)).
 3. `@takram/three-atmosphere`: sky, sun and a time-of-day slider.
 4. A temporary spline flight and the first-person camera.
 5. Commit, then plan the next stages: clouds and temporal anti-aliasing

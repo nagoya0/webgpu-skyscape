@@ -24,4 +24,5 @@ develops and tests against Three.js 0.184.0. A fix is in an open pull request
 ## Consequences
 
 Fixes and features in newer Three.js releases are not available until the takram packages
-support them.
+support them. One such fix, the draw order under reversed Z, is worked around in our code
+([ADR 0015](0015-reversed-z-depth.md)).

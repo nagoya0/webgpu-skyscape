@@ -28,5 +28,5 @@ Post-processing uses the TSL post-processing of Three.js `WebGPURenderer`, in th
 
 ## Consequences
 
-Every pass reads the depth buffer, so the depth format (logarithmic or reversed Z) has to be
-decided early. It is the second task in the plan and is open in [ideas](../ideas.md).
+Every pass reads the depth buffer, so the depth format had to be decided early. It is reversed Z
+([ADR 0015](0015-reversed-z-depth.md)).

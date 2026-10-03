@@ -16,3 +16,4 @@
 | 0012 | [The site and the tile data are hosted apart](0012-site-and-tile-data-hosted-apart.md) | Accepted |
 | 0013 | [Port the volumetric clouds to TSL ourselves](0013-port-the-clouds-to-tsl.md) | Accepted |
 | 0014 | [Pin the versions of Three.js and the takram packages](0014-pin-three-and-takram-versions.md) | Accepted |
+| 0015 | [Reversed-Z depth buffer](0015-reversed-z-depth.md) | Accepted |
