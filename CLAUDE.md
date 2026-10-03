@@ -1,0 +1,53 @@
+# CLAUDE.md
+
+Guidance for AI coding agents working in this repository.
+
+## What this is
+
+A demo that tests how well sky, clouds and the ground can be rendered in the browser with
+WebGPU. The camera rides along a precomputed flight path; there is no piloting. See
+[README.md](README.md) and [ADR 0002](docs/adr/0002-a-rendering-quality-demo.md).
+
+## Language
+
+Everything in the repository is in English: documentation, code, comments, commit messages.
+
+## Decisions and ideas
+
+- Design decisions are Architecture Decision Records in [docs/adr/](docs/adr/). Read the index
+  ([docs/adr/README.md](docs/adr/README.md)) before changing the design, and do not work against
+  an Accepted decision without proposing a new ADR that supersedes it.
+- Record a new decision as the next numbered ADR and add it to the index. Replaced decisions are
+  marked *Superseded* and linked to their replacement, not deleted.
+- Write ADRs in plain, literal language: state the facts and the reasons directly. Avoid metaphors
+  and compressed or poetic phrasing. A reader who was not part of the discussion, including the
+  author months later, must be able to follow why the decision was made.
+- Record only what the maintainer agreed to. Do not add your own assumptions as decisions or
+  reasons.
+- Undecided ideas and open questions live in [docs/ideas.md](docs/ideas.md). When one is settled,
+  write the ADR and remove it from the ideas file.
+- Write down only what cannot be read from the code or the git history.
+
+## Choosing technology
+
+Fit with the product comes first. Never pick a tool the product does not need. Record each
+significant choice as an ADR with the alternatives considered.
+
+Libraries move quickly here (Three.js WebGPU and TSL, the takram packages). Before using an API,
+check it against the installed version's source or documentation rather than memory.
+
+## Secrets and data
+
+- Never commit API keys or other secrets. Pass them as environment variables at run time.
+- Never print, log or commit a key value. To check that a key is present, show its name and length only.
+- Never ask the maintainer to paste a key into the chat.
+- Large tile data does not go into the repository
+  ([ADR 0012](docs/adr/0012-site-and-tile-data-hosted-apart.md)).
+- Every data source keeps its attribution on screen and in the README.
+
+## Repository hygiene
+
+- This repository will become public. Keep personal circumstances, employers, details of the
+  maintainer's own machine and other private context out of documents, code, comments and commit
+  messages.
+- Commit author is the maintainer's GitHub noreply address; do not change it.
