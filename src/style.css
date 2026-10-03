@@ -1,0 +1,44 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  background: #0b0d12;
+  color: #e6e8ee;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+#app,
+#app canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#guidance {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  padding: 0 16px;
+  max-width: 36rem;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+#guidance[hidden] {
+  display: none;
+}
+
+#guidance h1 {
+  font-size: 1.5rem;
+  margin: 0 0 0.5em;
+}
+
+#guidance a {
+  color: #8ab4ff;
+}
