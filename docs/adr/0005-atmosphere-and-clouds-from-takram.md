@@ -1,6 +1,6 @@
 # 5. Atmosphere and clouds from takram's three-geospatial packages
 
-- Status: Accepted
+- Status: Accepted; the clouds part is superseded by [0013](0013-port-the-clouds-to-tsl.md)
 - Date: 2026-10-03
 
 ## Context
@@ -26,8 +26,8 @@ Checked on 2026-10-03:
   `webgpu/clouds` branch, last updated in April 2026, that contains only the noise textures and
   not the cloud rendering itself.
 
-So the clouds cannot be used as decided until they support WebGPU. How to handle this is an open
-question in [ideas](../ideas.md); it has to be settled before the cloud stage.
+So the clouds cannot be used as decided. [ADR 0013](0013-port-the-clouds-to-tsl.md) decides how
+to handle this.
 
 Licences of the bundled assets (precomputed tables, star data, noise textures) are to be checked
 when each asset is first used.

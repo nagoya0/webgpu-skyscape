@@ -17,10 +17,11 @@
   },
   "packageManager": "pnpm@12.8.1",
   "dependencies": {
-    "three": "^0.186.1"
+    "@takram/three-atmosphere": "0.19.1",
+    "three": "0.184.0"
   },
   "devDependencies": {
-    "@types/three": "^0.186.0",
+    "@types/three": "0.184.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.2"
   }
