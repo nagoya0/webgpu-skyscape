@@ -3,26 +3,18 @@ import { PerspectiveCamera, Scene, Timer, WebGPURenderer } from 'three/webgpu'
 import { createAtmosphere } from './atmosphere/atmosphere'
 import { createCockpitCamera } from './camera/cockpitCamera'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
-import { createPlaceholderPath } from './flight/placeholderPath'
+import { createPlaceholderPath, DEFAULT_RACETRACK } from './flight/placeholderPath'
 import { createLocalFrame } from './geo/localFrame'
 import { requestDevice } from './gpu/support'
+import { readParams } from './params'
 import { createPipeline } from './render/pipeline'
 import { createPlaceholderGround } from './scene/placeholderGround'
 import { showGuidance } from './ui/guidance'
-import { createTimeSlider } from './ui/timeSlider'
 
 // Placeholder origin until the area is chosen (ADR 0006): Tokyo Bay.
 const ORIGIN = { longitude: 139.8, latitude: 35.6, height: 0 }
 
-// Query parameters for checks and comparisons:
-//   ?time=HH:MM  time of day (JST)
-//   ?t=seconds   start time on the flight path
-//   ?paused      hold the flight at that time
-const params = new URLSearchParams(location.search)
-const timeParam = /^(\d{1,2}):(\d{2})$/.exec(params.get('time') ?? '')
-const initialMinutes = timeParam ? Number(timeParam[1]) * 60 + Number(timeParam[2]) : 16 * 60 + 30
-const startTime = Number(params.get('t') ?? 0)
-const paused = params.has('paused')
+const params = readParams(location.search)
 
 const debug: Record<string, unknown> = {}
 ;(window as unknown as { __debug: unknown }).__debug = debug
@@ -57,23 +49,37 @@ async function start(): Promise<void> {
   container.appendChild(renderer.domElement)
 
   const frame = createLocalFrame(ORIGIN.longitude, ORIGIN.latitude, ORIGIN.height)
-  const camera = new PerspectiveCamera(70, container.clientWidth / container.clientHeight, 0.1, 1e7)
+  const camera = new PerspectiveCamera(
+    params.fov,
+    container.clientWidth / container.clientHeight,
+    0.1,
+    1e7
+  )
 
   const scene = new Scene()
   const atmosphere = createAtmosphere(renderer, camera)
   atmosphere.setFrame(frame)
+  atmosphere.setDate(params.date)
   scene.add(atmosphere.light, createPlaceholderGround())
 
   const pipeline = createPipeline(renderer, scene, camera)
+  pipeline.exposure.value = params.exposure
 
-  createTimeSlider(document.body, new Date(), initialMinutes, date => {
-    atmosphere.setDate(date)
+  const { path, seamGap } = createPlaceholderPath(frame, {
+    ...DEFAULT_RACETRACK,
+    speed: params.speed,
+    height: params.altitude,
+    bankDegrees: params.bank,
+    rollRateDegrees: params.rollRate
   })
-
-  const { path, seamGap } = createPlaceholderPath(frame)
+  debug.date = params.date.toISOString()
   debug.pathSeconds = Number(pathDuration(path).toFixed(1))
   debug.seamGapMetres = Number(seamGap.toFixed(3))
-  const cockpit = createCockpitCamera(camera, frame)
+  const cockpit = createCockpitCamera(camera, frame, {
+    lagSeconds: params.lag,
+    shakeDegrees: params.shake,
+    sinkPerG: params.sink
+  })
   const state = createAircraftState()
 
   window.addEventListener('resize', () => {
@@ -83,13 +89,13 @@ async function start(): Promise<void> {
   })
 
   const timer = new Timer()
-  let flightTime = startTime
+  let flightTime = params.flightStart
   let first = true
   renderer.setAnimationLoop(time => {
     timer.update(time)
     // Clamp long frames, such as after a hidden tab, so the head lag does not jump.
     const dt = Math.min(timer.getDelta(), 0.1)
-    if (!paused) flightTime += dt
+    if (!params.paused) flightTime += dt
     samplePath(path, flightTime, state)
     cockpit.update(state, first ? 0 : dt, timer.getElapsed())
     first = false

@@ -49,14 +49,14 @@ Placeholders that later stages replace. Remove each with the stage that replaces
   flight only, 120.5 s per lap. Replaced by the JSBSim path. Its output has the same form
   (ECEF positions, body-to-NED attitudes), so the playback and the camera stay.
 - The origin over Tokyo Bay in `src/main.ts`. Replaced by the chosen area.
-- The time slider uses today's date in JST; only the time of day moves.
 
 ## Plan
 
 1. Minimal Vite, TypeScript and Three.js `WebGPURenderer` set-up, with the WebGPU check and the
    guidance screen.
 2. Test and choose the depth format (done: [ADR 0015](adr/0015-reversed-z-depth.md)).
-3. `@takram/three-atmosphere`: sky, sun and a time-of-day slider (done).
+3. `@takram/three-atmosphere`: sky, sun and a time-of-day slider (done; the slider was later
+   replaced by `?time=`, [ADR 0019](adr/0019-no-ui-until-features-are-in.md)).
 4. A temporary flight and the first-person camera (done; waiting for a check by eye).
 5. Commit, then plan the next stages: clouds and temporal anti-aliasing
    ([ADR 0013](adr/0013-port-the-clouds-to-tsl.md)), terrain and buildings, rain, the JSBSim
