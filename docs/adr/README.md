@@ -15,5 +15,6 @@
 | 0011 | [Rain moves with the relative wind, not with gravity](0011-rain-driven-by-relative-wind.md) | Accepted |
 | 0012 | [The site and the tile data are hosted apart](0012-site-and-tile-data-hosted-apart.md) | Accepted |
 | 0013 | [Port the volumetric clouds to TSL ourselves](0013-port-the-clouds-to-tsl.md) | Accepted |
-| 0014 | [Pin the versions of Three.js and the takram packages](0014-pin-three-and-takram-versions.md) | Accepted |
+| 0014 | [Pin the versions of Three.js and the takram packages](0014-pin-three-and-takram-versions.md) | Accepted; version choice superseded by 0016 |
 | 0015 | [Reversed-Z depth buffer](0015-reversed-z-depth.md) | Accepted |
+| 0016 | [Patch the takram packages to run on Three.js 0.186](0016-patch-takram-for-newer-three.md) | Accepted |

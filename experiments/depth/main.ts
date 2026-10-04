@@ -20,7 +20,6 @@ import {
 } from 'three/webgpu'
 
 import { requestDevice } from '../../src/gpu/support'
-import { applyReversedDepthSort } from '../../src/render/depthSort'
 
 const params = new URLSearchParams(location.search)
 const mode = params.get('mode') ?? 'standard'
@@ -44,7 +43,6 @@ async function main(): Promise<void> {
     reversedDepthBuffer: mode === 'reversed'
   })
   await renderer.init()
-  if (mode === 'reversed' && params.get('fixsort') !== '0') applyReversedDepthSort(renderer)
   renderer.setSize(window.innerWidth, window.innerHeight)
   document.body.appendChild(renderer.domElement)
   document.getElementById('label')!.textContent = `${mode} / ${test}`

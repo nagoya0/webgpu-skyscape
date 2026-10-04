@@ -43,7 +43,8 @@ standard buffer.
 
 - Use the reversed-Z depth buffer.
 - While on Three.js r184, install the swapped sort comparators (`src/render/depthSort.ts`).
-  Remove them when upgrading to r185 or later.
+  Remove them when upgrading to r185 or later. (Removed on 2026-10-04 with the upgrade to
+  0.186.1, [ADR 0016](0016-patch-takram-for-newer-three.md).)
 
 ## Consequences
 

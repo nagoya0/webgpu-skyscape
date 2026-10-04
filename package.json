@@ -18,10 +18,11 @@
   "packageManager": "pnpm@12.8.1",
   "dependencies": {
     "@takram/three-atmosphere": "0.19.1",
-    "three": "0.184.0"
+    "@takram/three-geospatial": "0.9.1",
+    "three": "0.186.1"
   },
   "devDependencies": {
-    "@types/three": "0.184.1",
+    "@types/three": "0.186.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.2"
   }

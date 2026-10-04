@@ -1,6 +1,6 @@
 # 14. Pin the versions of Three.js and the takram packages
 
-- Status: Accepted
+- Status: Accepted; the version choice is superseded by [0016](0016-patch-takram-for-newer-three.md)
 - Date: 2026-10-03
 
 ## Context

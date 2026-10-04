@@ -1,0 +1,17 @@
+diff --git a/build/webgpu.js b/build/webgpu.js
+index 30408f0256a1d08e53e2b7fbdbc54e6624fdfeae..37abcd437cd10745540ee29c8119c67f0abec910 100644
+--- a/build/webgpu.js
++++ b/build/webgpu.js
+@@ -334,6 +334,12 @@ function Je(s) {
+       throw new Error("Struct name is required.");
+     return s.layout.name;
+   }
++  // Patched (takram-design-engineering/three-geospatial#118): three r185+ struct proxy.
++  if (Reflect.get(s, "isStructTypeNode") === true) {
++    const name = Reflect.get(s, "name");
++    if (typeof name !== "string") throw new Error("Struct name is required.");
++    return name;
++  }
+   throw new Error(`Unsupported layout type: ${s}`);
+ }
+ function V({

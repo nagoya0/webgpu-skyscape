@@ -1,0 +1,47 @@
+diff --git a/build/webgpu.js b/build/webgpu.js
+index 1ce72679646fb617bb62b52dc7f62bf3aebc208a..a4f863e15a30bb92cd2aa33fc956b5be2c0683d1 100644
+--- a/build/webgpu.js
++++ b/build/webgpu.js
+@@ -5,6 +5,14 @@ import { l as rt, r as Vs, k as So, a as yo } from "./shared2.js";
+ import { QuadMesh as Kt, NodeMaterial as vt, StorageTexture as To, Storage3DTexture as Co, RendererUtils as Ot, Node as wo, NodeUpdateType as gt, TempNode as Qt, PointsNodeMaterial as _s, RenderTarget as fo, AnalyticLightNode as vo, LinearFilter as As } from "three/webgpu";
+ import { FnLayout as k, FnVar as W, stbn as No, outputTexture as ft, outputTexture3D as Ge, isWebGPU as bo, cameraNear as Eo, cameraFar as js, projectionMatrix as Js, equirectToDirectionWorld as Mo, inverseProjectionMatrix as Me, inverseViewMatrix as re, rayEllipsoidIntersection as Ro, depthToViewZ as zo, screenToPositionView as Lo, Node as ne, raySpheresIntersections as Vo, textureGather as tn, bvecNot as le, bvecAnd as jt, OnBeforeFrameUpdate as Jt } from "@takram/three-geospatial/webgpu";
+ import { hash as ps } from "three/src/nodes/core/NodeUtils.js";
++// Patched (takram-design-engineering/three-geospatial#118): three r185+ returns a proxy
++// from struct() that forwards reads to the StructTypeNode, so .layout is gone.
++function __structName(s) {
++  const node = "layout" in s && s.layout != null ? s.layout : s;
++  if (node.name == null) throw new Error("Struct name is required.");
++  return node.name;
++}
++
+ const H = "float", Ao = "float", q = "float", Fs = "float", Fo = "float", en = "float", Do = "vec3", qt = "vec3", Pt = "vec3", sn = "vec3", At = "vec3", nn = "vec3", Ds = "vec3", Re = /* @__PURE__ */ ut(
+   {
+     width: H,
+@@ -16,8 +24,8 @@ const H = "float", Ao = "float", q = "float", Fs = "float", Fo = "float", en = "
+   "DensityProfileLayer"
+ ), te = /* @__PURE__ */ ut(
+   {
+-    layer0: Re.layout.name,
+-    layer1: Re.layout.name
++    layer0: __structName(Re),
++    layer1: __structName(Re)
+   },
+   "DensityProfile"
+ ), os = {
+@@ -26,13 +34,13 @@ const H = "float", Ao = "float", q = "float", Fs = "float", Fo = "float", en = "
+   sunAngularRadius: Ao,
+   bottomRadius: H,
+   topRadius: H,
+-  rayleighDensity: te.layout.name,
++  rayleighDensity: __structName(te),
+   rayleighScattering: At,
+-  mieDensity: te.layout.name,
++  mieDensity: __structName(te),
+   mieScattering: At,
+   mieExtinction: At,
+   miePhaseFunctionG: q,
+-  absorptionDensity: te.layout.name,
++  absorptionDensity: __structName(te),
+   absorptionExtinction: At,
+   groundAlbedo: qt,
+   minCosLight: q,
