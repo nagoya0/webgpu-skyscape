@@ -36,6 +36,14 @@ significant choice as an ADR with the alternatives considered.
 Libraries move quickly here (Three.js WebGPU and TSL, the takram packages). Before using an API,
 check it against the installed version's source or documentation rather than memory.
 
+`three`, `@types/three` and `@takram/*` are pinned, and the takram packages carry local patches.
+Follow [docs/upgrading.md](docs/upgrading.md) for any upgrade, and keep its "Current state"
+section up to date. Mark every type cast that bridges takram's types to the installed
+`@types/three` with a `TYPE-BRIDGE:` comment.
+
+`node scripts/check-page.mjs <url> <out.png>` opens a page in headless Chrome and reports its state
+and `window.__debug`; use it to check changes in a real browser.
+
 ## Secrets and data
 
 - Never commit API keys or other secrets. Pass them as environment variables at run time.

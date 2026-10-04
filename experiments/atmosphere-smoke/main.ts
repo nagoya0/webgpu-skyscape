@@ -40,7 +40,7 @@ async function main(): Promise<void> {
   const atmosphereContext = new AtmosphereContext()
   atmosphereContext.camera = camera
   renderer.contextNode = context({
-    // takram's types are built against @types/three 0.184; the casts bridge to 0.186.
+    // TYPE-BRIDGE: @types/three 0.186 types the context value as unknown.
     ...(renderer.contextNode.value as object),
     getAtmosphere: () => atmosphereContext
   })
@@ -49,6 +49,7 @@ async function main(): Promise<void> {
   getSunDirectionECI(date, atmosphereContext.sunDirectionECEF.value, position).applyMatrix4(matrix)
 
   const scene = new Scene()
+  // TYPE-BRIDGE: takram's types are built against @types/three 0.184.
   scene.backgroundNode = skyBackground() as unknown as Node
   let frames = 0
   renderer.setAnimationLoop(() => {

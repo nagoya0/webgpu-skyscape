@@ -43,7 +43,8 @@ sky on Three.js 0.186.1 ([experiments/atmosphere-smoke](../../experiments/atmosp
 ## Consequences
 
 When #118 is released upstream, upgrade the takram packages and delete the patches. Upgrading a
-patched package needs the patch to be redone or dropped.
+patched package needs the patch to be redone or dropped. The procedure and the checks to run are
+in [docs/upgrading.md](../upgrading.md).
 
 The type declarations of the takram packages are built against `@types/three` 0.184, so some of
 their types do not match 0.186. The code bridges them with type casts at the points where they
