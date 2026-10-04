@@ -19,6 +19,15 @@ body {
   height: 100%;
 }
 
+#app canvas {
+  cursor: grab;
+  touch-action: none;
+}
+
+#app canvas:active {
+  cursor: grabbing;
+}
+
 #guidance {
   position: fixed;
   inset: 0;
@@ -41,4 +50,30 @@ body {
 
 #guidance a {
   color: #8ab4ff;
+}
+
+.time-slider {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  max-width: 40rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.45);
+  font-variant-numeric: tabular-nums;
+}
+
+.time-slider input {
+  flex: 1;
+  min-width: 0;
+}
+
+.time-slider output {
+  white-space: nowrap;
+  font-size: 0.875rem;
 }

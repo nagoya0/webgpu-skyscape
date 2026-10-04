@@ -29,6 +29,9 @@ Three ways to change library code were discussed, chosen by how much has to chan
   `@takram/three-atmosphere` 0.19.1 and `@takram/three-geospatial` 0.9.1 (`patches/`). The CommonJS
   builds are not patched, because Vite loads only the ESM builds.
 - Upgrade to Three.js 0.186.1 and `@types/three` 0.186.0, pinned exactly.
+- Added later the same day: a second change in the `@takram/three-geospatial` patch, for the
+  render pipeline hooks that r186 changed. Without it, temporal anti-aliasing fails on r186. The
+  details are in [docs/upgrading.md](../upgrading.md).
 - Add `@takram/three-geospatial` as a direct dependency, pinned to the version the atmosphere
   package uses, because our code imports it.
 - Remove the reversed-Z sort workaround. Three.js 0.186.1 draws opaque objects front to back under

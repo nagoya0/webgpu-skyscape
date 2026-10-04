@@ -1,5 +1,5 @@
 diff --git a/build/webgpu.js b/build/webgpu.js
-index 30408f0256a1d08e53e2b7fbdbc54e6624fdfeae..37abcd437cd10745540ee29c8119c67f0abec910 100644
+index 30408f0256a1d08e53e2b7fbdbc54e6624fdfeae..b48b981dab7215e184fe1b544417689aa7370a70 100644
 --- a/build/webgpu.js
 +++ b/build/webgpu.js
 @@ -334,6 +334,12 @@ function Je(s) {
@@ -15,3 +15,16 @@ index 30408f0256a1d08e53e2b7fbdbc54e6624fdfeae..37abcd437cd10745540ee29c8119c67f
    throw new Error(`Unsupported layout type: ${s}`);
  }
  function V({
+@@ -1459,7 +1465,11 @@ class at extends Q {
+       const n = e.renderer.getDrawingBufferSize(rt);
+       this.setViewOffset(n.width, n.height);
+     };
+-    if (e.context.renderPipeline != null) {
++    // Patched: three r186 passes the pipeline hooks as callback arrays in the builder context
++    // and RenderPipeline no longer has a .context with onBeforeRenderPipeline.
++    if (Array.isArray(e.context.onBeforePipelineCallbacks)) {
++      e.context.onBeforePipelineCallbacks.push(t), this.needsSyncRenderPipeline = !0;
++    } else if (e.context.renderPipeline?.context != null) {
+       const { context: n } = e.context.renderPipeline;
+       n.onBeforeRenderPipeline = t, this.needsSyncRenderPipeline = !0;
+     }

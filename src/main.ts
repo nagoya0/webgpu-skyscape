@@ -1,16 +1,22 @@
-import {
-  BoxGeometry,
-  DirectionalLight,
-  HemisphereLight,
-  Mesh,
-  MeshStandardNodeMaterial,
-  PerspectiveCamera,
-  Scene,
-  WebGPURenderer
-} from 'three/webgpu'
+import { PerspectiveCamera, Scene, WebGPURenderer } from 'three/webgpu'
 
+import { createAtmosphere } from './atmosphere/atmosphere'
+import { attachDragLook } from './camera/dragLook'
 import { requestDevice } from './gpu/support'
+import { createPipeline } from './render/pipeline'
+import { createPlaceholderGround } from './scene/placeholderGround'
 import { showGuidance } from './ui/guidance'
+import { createTimeSlider } from './ui/timeSlider'
+
+// Placeholder viewpoint until the area is chosen (ADR 0006): above Tokyo Bay.
+const ORIGIN = { longitude: 139.8, latitude: 35.6, height: 0 }
+const CAMERA_ALTITUDE = 1000 // metres above the origin
+
+// ?time=HH:MM (JST) and ?heading=degrees set the starting view, for checks and comparisons.
+const params = new URLSearchParams(location.search)
+const timeParam = /^(\d{1,2}):(\d{2})$/.exec(params.get('time') ?? '')
+const initialMinutes = timeParam ? Number(timeParam[1]) * 60 + Number(timeParam[2]) : 16 * 60 + 30
+const initialHeading = Number(params.get('heading') ?? 270)
 
 async function start(): Promise<void> {
   const support = await requestDevice()
@@ -41,17 +47,20 @@ async function start(): Promise<void> {
   renderer.setSize(container.clientWidth, container.clientHeight)
   container.appendChild(renderer.domElement)
 
-  // Placeholder scene until the atmosphere is in.
+  const camera = new PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1e7)
+  camera.position.set(0, CAMERA_ALTITUDE, 0)
+  attachDragLook(renderer.domElement, camera, initialHeading, 5)
+
   const scene = new Scene()
-  const camera = new PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100)
-  camera.position.set(0, 1.2, 4)
-  camera.lookAt(0, 0, 0)
-  scene.add(new HemisphereLight(0xbfd8ff, 0x404040, 1))
-  const sun = new DirectionalLight(0xffffff, 2)
-  sun.position.set(3, 5, 2)
-  scene.add(sun)
-  const box = new Mesh(new BoxGeometry(1, 1, 1), new MeshStandardNodeMaterial({ color: 0x88aacc }))
-  scene.add(box)
+  const atmosphere = createAtmosphere(renderer, camera)
+  atmosphere.setOrigin(ORIGIN.longitude, ORIGIN.latitude, ORIGIN.height)
+  scene.add(atmosphere.light, createPlaceholderGround())
+
+  const pipeline = createPipeline(renderer, scene, camera)
+
+  createTimeSlider(document.body, new Date(), initialMinutes, date => {
+    atmosphere.setDate(date)
+  })
 
   window.addEventListener('resize', () => {
     camera.aspect = container.clientWidth / container.clientHeight
@@ -59,9 +68,8 @@ async function start(): Promise<void> {
     renderer.setSize(container.clientWidth, container.clientHeight)
   })
 
-  renderer.setAnimationLoop(time => {
-    box.rotation.set(time * 0.0003, time * 0.0005, 0)
-    renderer.render(scene, camera)
+  renderer.setAnimationLoop(() => {
+    pipeline.render()
   })
 }
 

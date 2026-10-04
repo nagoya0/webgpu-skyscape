@@ -21,6 +21,7 @@ All are pinned without `^`. Upgrade `three` and the takram packages together.
 |---|---|---|---|
 | Patch for three r185+ `struct()` | `patches/@takram__three-atmosphere@0.19.1.patch` | `AtmosphereContextBase` reads `struct().layout.name`, which r185 removed; the package throws on import | A takram release contains takram-design-engineering/three-geospatial#118 |
 | Patch for three r185+ `struct()` | `patches/@takram__three-geospatial@0.9.1.patch` | `FnLayout` accepts only the r184 struct shape | Same as above |
+| Patch for the r186 render pipeline hooks | `patches/@takram__three-geospatial@0.9.1.patch` (`TemporalAntialiasNode.setup`) | three r186 replaced `renderPipeline.context.onBeforeRenderPipeline` with the `onBeforePipelineCallbacks` array in the builder context. Unpatched, `temporalAntialias` throws "Cannot set properties of undefined (setting 'onBeforeRenderPipeline')" and the camera jitter is never applied. No upstream issue or pull request exists for this yet (checked 2026-10-04) | A takram release registers the callback through `onBeforePipelineCallbacks` or `OnBeforeRenderPipeline()` from `three/tsl` |
 | Type casts marked `TYPE-BRIDGE` | `grep -rn TYPE-BRIDGE src experiments` | takram's type declarations are built against `@types/three` 0.184 | takram's declarations match the `@types/three` in use; `pnpm tsc` passes without the casts |
 
 Only the ESM builds (`build/webgpu.js`) are patched. The CommonJS builds are minified to one line
@@ -67,7 +68,10 @@ patch no longer matches.
   3. `pnpm patch-commit ../patch-atmosphere`
   4. Repeat for `@takram/three-geospatial`: in `build/webgpu.js`, before
      ``throw new Error(`Unsupported layout type: ...`)``, accept objects whose
-     `isStructTypeNode` is `true` and return their `name`.
+     `isStructTypeNode` is `true` and return their `name`. In the `setup` of the temporal
+     anti-aliasing node, push the view-offset callback onto
+     `builder.context.onBeforePipelineCallbacks` when that array exists, and fall back to the old
+     `renderPipeline.context.onBeforeRenderPipeline` otherwise.
   5. Delete the old patch files and their entries.
 
 ## Checks after upgrading
@@ -85,7 +89,7 @@ In another shell (results print as `[state]`; screenshots go where you point the
 | Check | Command | Expected |
 |---|---|---|
 | Atmosphere loads and renders | `WAIT=15000 node scripts/check-page.mjs "http://localhost:4312/experiments/atmosphere-smoke/" atm.png` | `debug.frames` above 0, no `[exception]`, and the screenshot shows a sky with the sun low in the west |
-| Main page starts on WebGPU | `node scripts/check-page.mjs http://localhost:4312/ main.png` | `guidance` is `null`, `canvas` is `true` |
+| Main page starts on WebGPU | `WAIT=10000 node scripts/check-page.mjs "http://localhost:4312/?time=16:30&heading=270" main.png` | `guidance` is `null`, `canvas` is `true`, no `[console.error]`, and the screenshot shows the low sun in the west over a hazy ground |
 | Guidance screen | `INJECT="GPU.prototype.requestAdapter = async () => null" node scripts/check-page.mjs http://localhost:4312/ guidance.png` | `guidance` holds the no-adapter message |
 | Depth precision | `WAIT=6000 node scripts/check-page.mjs "http://localhost:4312/experiments/depth/?mode=reversed" depth.png` | Every square is green; no red inside the squares |
 | Draw order under reversed Z | `WAIT=15000 node scripts/check-page.mjs "http://localhost:4312/experiments/depth/?mode=reversed&test=overdraw" od.png`, then the same with `mode=standard` | `msPerFrame` of reversed is about the same as standard (3.6 and 4.0 ms on the GPU used for ADR 0015). Several times slower means objects are drawn back to front again |

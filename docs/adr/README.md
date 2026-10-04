@@ -18,3 +18,4 @@
 | 0014 | [Pin the versions of Three.js and the takram packages](0014-pin-three-and-takram-versions.md) | Accepted; version choice superseded by 0016 |
 | 0015 | [Reversed-Z depth buffer](0015-reversed-z-depth.md) | Accepted |
 | 0016 | [Patch the takram packages to run on Three.js 0.186](0016-patch-takram-for-newer-three.md) | Accepted |
+| 0017 | [The scene is in a local frame on the ground, not in ECEF](0017-local-world-frame.md) | Proposed |
