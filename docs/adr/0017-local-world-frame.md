@@ -54,3 +54,10 @@ Implemented for the sky on 2026-10-04 (`src/atmosphere/atmosphere.ts`).
 With the area from [ADR 0018](0018-f16-at-cruise-speed.md), the aircraft stays within about
 25 km of the origin, where a 32-bit float has steps of about 2 mm. The origin can stay fixed for
 the whole flight; moving it with the aircraft is not needed.
+
+Because the ground keeps its curvature, flight at a constant altitude does not have a constant y:
+25 km from the origin, y is about 49 m lower and the local horizontal is tilted by about 0.22°.
+Flight simulators give attitude relative to the horizon at the aircraft's own position (NED). It
+must be rotated into world axes with the NED frame of that position, not the origin's; using the
+origin's would tilt the view against the horizon by up to 0.22°. `nedToWorldRotation` in
+`src/geo/localFrame.ts` does this, and its tests check the tilt.

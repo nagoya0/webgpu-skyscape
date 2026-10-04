@@ -89,7 +89,9 @@ In another shell (results print as `[state]`; screenshots go where you point the
 | Check | Command | Expected |
 |---|---|---|
 | Atmosphere loads and renders | `WAIT=15000 node scripts/check-page.mjs "http://localhost:4312/experiments/atmosphere-smoke/" atm.png` | `debug.frames` above 0, no `[exception]`, and the screenshot shows a sky with the sun low in the west |
-| Main page starts on WebGPU | `WAIT=10000 node scripts/check-page.mjs "http://localhost:4312/?time=16:30&heading=270" main.png` | `guidance` is `null`, `canvas` is `true`, no `[console.error]`, and the screenshot shows the low sun in the west over a hazy ground |
+| Unit tests | `pnpm test` | All pass |
+| Main page starts on WebGPU | `WAIT=10000 node scripts/check-page.mjs "http://localhost:4312/?time=15:00&t=5&paused" main.png` | `guidance` is `null`, `canvas` is `true`, no `[console.error]`, and the screenshot shows a level horizon over a hazy ground with a grid |
+| Turn | `WAIT=10000 node scripts/check-page.mjs "http://localhost:4312/?time=15:00&t=45&paused" turn.png` | `debug.loadFactor` about 2.92; the horizon tilted steeply with the ground on the right |
 | Guidance screen | `INJECT="GPU.prototype.requestAdapter = async () => null" node scripts/check-page.mjs http://localhost:4312/ guidance.png` | `guidance` holds the no-adapter message |
 | Depth precision | `WAIT=6000 node scripts/check-page.mjs "http://localhost:4312/experiments/depth/?mode=reversed" depth.png` | Every square is green; no red inside the squares |
 | Draw order under reversed Z | `WAIT=15000 node scripts/check-page.mjs "http://localhost:4312/experiments/depth/?mode=reversed&test=overdraw" od.png`, then the same with `mode=standard` | `msPerFrame` of reversed is about the same as standard (3.6 and 4.0 ms on the GPU used for ADR 0015). Several times slower means objects are drawn back to front again |

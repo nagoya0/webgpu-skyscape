@@ -42,7 +42,9 @@ section up to date. Mark every type cast that bridges takram's types to the inst
 `@types/three` with a `TYPE-BRIDGE:` comment.
 
 `node scripts/check-page.mjs <url> <out.png>` opens a page in headless Chrome and reports its state
-and `window.__debug`; use it to check changes in a real browser.
+and `window.__debug`; use it to check changes in a real browser. The main page takes
+`?time=HH:MM` (JST), `?t=<seconds on the flight path>` and `?paused`. `pnpm test` runs the unit
+tests (Vitest), which cover the coordinate conversions and the flight path.
 
 ## Secrets and data
 

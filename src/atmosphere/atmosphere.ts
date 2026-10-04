@@ -10,15 +10,16 @@ import {
   AtmosphereLight,
   AtmosphereLightNode
 } from '@takram/three-atmosphere/webgpu'
-import { Ellipsoid, Geodetic, radians } from '@takram/three-geospatial'
 import { context } from 'three/tsl'
 import { Vector3, type Camera, type WebGPURenderer } from 'three/webgpu'
+
+import type { LocalFrame } from '../geo/localFrame'
 
 export interface Atmosphere {
   context: AtmosphereContext
   light: AtmosphereLight
-  /** Places the world origin at a point on the earth. World axes: x north, y up, z east. */
-  setOrigin(longitude: number, latitude: number, height: number): void
+  /** Uses the local frame for the world (ADR 0017). */
+  setFrame(frame: LocalFrame): void
   /** Moves the sun, moon and stars to their positions at the given time. */
   setDate(date: Date): void
   dispose(): void
@@ -40,24 +41,24 @@ export function createAtmosphere(renderer: WebGPURenderer, camera: Camera): Atmo
   })
 
   const light = new AtmosphereLight()
-  const originECEF = new Vector3()
+  const observerECEF = new Vector3()
 
   return {
     context: atmosphereContext,
     light,
 
-    setOrigin(longitude, latitude, height) {
-      new Geodetic(radians(longitude), radians(latitude), height).toECEF(originECEF)
-      // Rebasing the world on a local frame keeps coordinates small, which 32-bit floats need
-      // near the camera.
-      Ellipsoid.WGS84.getNorthUpEastFrame(originECEF, atmosphereContext.matrixWorldToECEF.value)
+    setFrame(frame) {
+      atmosphereContext.matrixWorldToECEF.value.copy(frame.worldToECEF)
+      // The sun and moon directions are computed for an observer at the origin; across the
+      // demo area the difference is far below what can be seen.
+      observerECEF.copy(frame.originECEF)
     },
 
     setDate(date) {
       const { matrixECIToECEF, sunDirectionECEF, moonDirectionECEF } = atmosphereContext
       getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
-      getSunDirectionECI(date, sunDirectionECEF.value, originECEF).applyMatrix4(matrixECIToECEF.value)
-      getMoonDirectionECI(date, moonDirectionECEF.value, originECEF).applyMatrix4(matrixECIToECEF.value)
+      getSunDirectionECI(date, sunDirectionECEF.value, observerECEF).applyMatrix4(matrixECIToECEF.value)
+      getMoonDirectionECI(date, moonDirectionECEF.value, observerECEF).applyMatrix4(matrixECIToECEF.value)
     },
 
     dispose() {

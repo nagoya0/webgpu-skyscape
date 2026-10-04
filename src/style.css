@@ -19,15 +19,6 @@ body {
   height: 100%;
 }
 
-#app canvas {
-  cursor: grab;
-  touch-action: none;
-}
-
-#app canvas:active {
-  cursor: grabbing;
-}
-
 #guidance {
   position: fixed;
   inset: 0;

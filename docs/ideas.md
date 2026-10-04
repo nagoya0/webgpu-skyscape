@@ -5,8 +5,9 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
 ## Open questions
 
 - **The first-person camera.** Its behaviour is still to be specified
-  ([ADR 0009](adr/0009-camera-separate-from-path.md)). The first version has a lag behind the
-  aircraft's motion and a slight shake.
+  ([ADR 0009](adr/0009-camera-separate-from-path.md)). The first version
+  (`src/camera/cockpitCamera.ts`) has first guesses to tune by eye: head lag 0.12 s, shake 0.06°,
+  sinking 1.5 cm per G above 1, field of view 70°. No cockpit or aircraft is drawn yet.
 - **The area.** About 30 to 50 km across, detailed only along the flight path
   ([ADR 0018](adr/0018-f16-at-cruise-speed.md)). Where exactly is chosen by the level of detail
   and textures available in PLATEAU ([ADR 0006](adr/0006-fixed-area-tiled-detail.md)).
@@ -43,9 +44,11 @@ The demo should also work at night. Planned split:
 
 Placeholders that later stages replace. Remove each with the stage that replaces it.
 
-- `src/scene/placeholderGround.ts`: a flat 200 km disc. Replaced by terrain.
-- `src/camera/dragLook.ts`: looking around by dragging. Replaced by the first-person camera.
-- The viewpoint above Tokyo Bay in `src/main.ts`. Replaced by the chosen area.
+- `src/scene/placeholderGround.ts`: a flat 200 km disc with a 1 km grid. Replaced by terrain.
+- `src/flight/placeholderPath.ts`: a racetrack at 250 m/s and 1500 m, 70° bank turns, level
+  flight only, 120.5 s per lap. Replaced by the JSBSim path. Its output has the same form
+  (ECEF positions, body-to-NED attitudes), so the playback and the camera stay.
+- The origin over Tokyo Bay in `src/main.ts`. Replaced by the chosen area.
 - The time slider uses today's date in JST; only the time of day moves.
 
 ## Plan
@@ -54,7 +57,7 @@ Placeholders that later stages replace. Remove each with the stage that replaces
    guidance screen.
 2. Test and choose the depth format (done: [ADR 0015](adr/0015-reversed-z-depth.md)).
 3. `@takram/three-atmosphere`: sky, sun and a time-of-day slider (done).
-4. A temporary spline flight and the first-person camera.
+4. A temporary flight and the first-person camera (done; waiting for a check by eye).
 5. Commit, then plan the next stages: clouds and temporal anti-aliasing
    ([ADR 0013](adr/0013-port-the-clouds-to-tsl.md)), terrain and buildings, rain, the JSBSim
    flight path.
