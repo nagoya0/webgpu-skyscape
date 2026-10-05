@@ -81,7 +81,7 @@ Placeholders that later stages replace. Remove each with the stage that replaces
 
 Next stages, proposed 2026-10-05:
 
-1. **Cloud trial, one to two days.** A simple ray-marched cloud written in WGSL and connected
+1. **Cloud trial, one to two days** (done: [ADR 0022](adr/0022-heavy-shaders-in-wgsl.md)). A simple ray-marched cloud written in WGSL and connected
    with `wgslFn`. Checks: does it fit the render pipeline; does it work with reversed-Z depth,
    temporal anti-aliasing and the atmosphere tables; how mechanical is moving takram's GLSL to
    WGSL. The result decides the shader-language policy for all later shaders (an ADR), and the

@@ -70,3 +70,9 @@ write anew come to an estimated 2,500 to 3,000 lines.
   and using TSL only to connect it (`wgslFn`) may be more reliable, since this project needs no
   WebGL path ([ADR 0003](0003-webgpu-only.md)). A short trial decides this; see
   [ideas](../ideas.md).
+- **Decided after the trial:** the port is to WGSL, not TSL
+  ([ADR 0022](0022-heavy-shaders-in-wgsl.md)). The trial showed the porting itself to be close
+  to mechanical. The main work is elsewhere: a temporal accumulation for the clouds (TAA alone
+  left the clouds' sampling noise), aerial perspective on the clouds (distant clouds came out too
+  dark without it), rendering at half resolution (the trial took about 5 ms per frame at
+  1262 × 624 on a desktop GPU), and tuning the look.

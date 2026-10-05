@@ -46,6 +46,11 @@ and `window.__debug`; use it to check changes in a real browser. The main page t
 settings from URL query parameters, listed in `src/params.ts`. `pnpm test` runs the unit tests
 (Vitest), which cover the coordinate conversions, the flight path and the parameters.
 
+Write heavy shader code in WGSL (`.wgsl` files, one function each, connected with `wgslFn`) and
+use TSL only to gather inputs and connect stages. In post-processing, pass the scene camera's
+values as uniforms; the `three/tsl` camera accessors refer to the full-screen quad's camera there
+([ADR 0022](docs/adr/0022-heavy-shaders-in-wgsl.md)).
+
 Do not add on-screen controls; the UI is designed once the features are in
 ([ADR 0019](docs/adr/0019-no-ui-until-features-are-in.md)). Add a URL parameter instead.
 
