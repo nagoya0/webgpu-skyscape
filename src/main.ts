@@ -8,9 +8,11 @@ import { createLocalFrame } from './geo/localFrame'
 import { requestDevice } from './gpu/support'
 import { readParams } from './params'
 import { createPipeline } from './render/pipeline'
+import { createFacadeMaterial } from './scene/facadeMaterial'
 import { createBuildings, plateauBuildingUrls } from './scene/plateauBuildings'
 import { createPlaceholderGround } from './scene/placeholderGround'
 import { showGuidance } from './ui/guidance'
+import { showLoading } from './ui/loading'
 
 // The middle of the three wards tried first (ADR 0023), near Shimbashi. The course and with it
 // the origin may still move.
@@ -65,7 +67,12 @@ async function start(): Promise<void> {
   scene.add(atmosphere.light, createPlaceholderGround())
 
   const buildings = params.buildings
-    ? createBuildings(frame, camera, plateauBuildingUrls(params.textures))
+    ? createBuildings(
+        frame,
+        camera,
+        plateauBuildingUrls(params.textures),
+        params.textures ? null : createFacadeMaterial()
+      )
     : null
   if (buildings) scene.add(buildings.group)
 
@@ -98,6 +105,15 @@ async function start(): Promise<void> {
     renderer.setSize(container.clientWidth, container.clientHeight)
   })
 
+  // The flight holds at its start while the first tiles load, so the demo begins in place.
+  const loading = showLoading()
+  let loaded = false
+  const LOADING_TIMEOUT = 30 // seconds; start anyway after this
+  // Tile loading pauses briefly between levels of the tile tree, so the queue must stay empty
+  // for a while before loading counts as done.
+  const SETTLE_TIME = 1.5 // seconds
+  let settledSince: number | null = null
+
   const timer = new Timer()
   let flightTime = params.flightStart
   let first = true
@@ -105,7 +121,20 @@ async function start(): Promise<void> {
     timer.update(time)
     // Clamp long frames, such as after a hidden tab, so the head lag does not jump.
     const dt = Math.min(timer.getDelta(), 0.1)
-    if (!params.paused) flightTime += dt
+    if (!loaded) {
+      const elapsed = timer.getElapsed()
+      const stats = buildings?.stats()
+      const settled = !stats || (stats.loaded > 0 && stats.loading === 0)
+      settledSince = settled ? (settledSince ?? elapsed) : null
+      if ((settledSince !== null && elapsed - settledSince > SETTLE_TIME) || elapsed > LOADING_TIMEOUT) {
+        loaded = true
+        loading.hide()
+      } else if (stats && stats.loading > 0) {
+        loading.setText(`Loading buildings… ${stats.loading} tiles to go`)
+      }
+    }
+    debug.loaded = loaded
+    if (loaded && !params.paused) flightTime += dt
     samplePath(path, flightTime, state)
     cockpit.update(state, first ? 0 : dt, timer.getElapsed())
     first = false

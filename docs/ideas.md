@@ -19,19 +19,18 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   Shinjuku towers, Shibuya, Roppongi and Tokyo Tower, Marunouchi, the Sumida river and Skytree,
   the bay (Toyosu, Odaiba), Tokyo Bay, and possibly Minato Mirai in Yokohama. About 30 km north
   to south and 20 km east to west. Still to check: whether bulk download of GSI tiles is
-  allowed and how. Started small on 2026-10-05: Chiyoda, Chuo and Minato only, streamed from
-  PLATEAU (`src/scene/plateauBuildings.ts`); the placeholder racetrack is larger than these
-  three wards and leaves them on the turns.
-- **PLATEAU textures.** Findings from the first streaming test (2026-10-05): heights in the tiles
-  are ellipsoidal; the tile tree is a proper quadtree whose coarse levels hold only tall
-  buildings; textured LOD2 tiles take about 11 to 25 MB each once decoded, so even a 1.5 GB cache
-  fills with coarse tiles before the buildings near the camera load. Untextured LOD2 loads about
-  1,000 tiles in about 420 MB and shows the dense city. Options: keep untextured buildings and
-  shade facades ourselves in WGSL (windows, which could also light up at night), or convert the
-  textured tiles to KTX2 at a lower resolution and host them ourselves
-  ([ADR 0006](adr/0006-fixed-area-tiled-detail.md), [ADR 0012](adr/0012-site-and-tile-data-hosted-apart.md)).
-- **Loading screen.** The maintainer allows a loading screen when the page opens, as an exception
-  to [ADR 0019](adr/0019-no-ui-until-features-are-in.md), like the guidance screen.
+  allowed and how. The maintainer keeps this course as the target (2026-10-06): instead of
+  shrinking the course, more wards are loaded. Now streamed from PLATEAU
+  (`src/scene/plateauBuildings.ts`): Shinjuku, Shibuya, Minato, Chiyoda, Chuo, Taito, Sumida and
+  Koto. The placeholder racetrack stays as it is; on its turns it leaves these wards (Bunkyo to
+  the north, Shinagawa to the south) and flies over empty ground for now.
+- **Tile streaming at speed.** At 250 m/s the camera keeps requesting new tiles; a thousand or
+  more can be queued while flying. Prefetching along the precomputed path
+  ([ADR 0018](adr/0018-f16-at-cruise-speed.md)) is the planned answer.
+- **Loading screen.** Allowed by the maintainer as an exception to
+  [ADR 0019](adr/0019-no-ui-until-features-are-in.md), like the guidance screen, and to be
+  redesigned with the UI. A temporary one (`src/ui/loading.ts`) holds the flight at its start
+  until the tile queue has stayed empty for 1.5 s, or for 30 s at most.
 - **Length of the demo.** Two to three minutes assumed so far; whether it loops.
 - **Manoeuvres in the final route.** The maintainer wants more than level turns: full rolls and
   more complex flying. The placeholder's roll rate (90°/s) and bank (70°) look fine. Things this

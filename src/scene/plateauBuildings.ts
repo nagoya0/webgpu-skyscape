@@ -4,13 +4,15 @@
 import { TilesRenderer } from '3d-tiles-renderer'
 import { GLTFExtensionsPlugin } from '3d-tiles-renderer/plugins'
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
-import { Box3, Group, type Mesh, type PerspectiveCamera } from 'three/webgpu'
+import { Box3, Group, type Material, type Mesh, type PerspectiveCamera } from 'three/webgpu'
 
 import type { LocalFrame } from '../geo/localFrame'
 
-const WARDS = ['13101', '13102', '13103'] // Chiyoda, Chuo, Minato
+// The wards along the proposed course (ideas.md): Shinjuku, Shibuya, Minato, Chiyoda, Chuo,
+// Taito, Sumida, Koto.
+const WARDS = ['13104', '13113', '13103', '13101', '13102', '13106', '13107', '13108']
 
-/** LOD2 buildings of the three wards tried first, with or without PLATEAU's textures. */
+/** LOD2 buildings of the wards along the course, with or without PLATEAU's textures. */
 export function plateauBuildingUrls(textured: boolean): string[] {
   const variant = textured ? 'texture' : 'notexture'
   return WARDS.map(
@@ -34,6 +36,8 @@ export function createBuildings(
   frame: LocalFrame,
   camera: PerspectiveCamera,
   urls: readonly string[],
+  /** Replaces the material of every loaded mesh, for the untextured tiles. */
+  material: Material | null = null,
   errorTarget = 6,
   cacheBytes = 1.5e9
 ): Buildings {
@@ -62,6 +66,18 @@ export function createBuildings(
       sharedCache = cache
     } else {
       ;(tiles as unknown as { lruCache: unknown }).lruCache = sharedCache
+    }
+    if (material) {
+      tiles.addEventListener('load-model', ({ scene }) => {
+        scene.traverse(object => {
+          const mesh = object as Mesh
+          if (mesh.isMesh) {
+            // 'load-model' fires after the renderer has recorded the tile's own materials, which
+            // it disposes when the tile unloads; the shared material is not among them.
+            mesh.material = material
+          }
+        })
+      })
     }
     tiles.setCamera(camera)
     group.add(tiles.group)

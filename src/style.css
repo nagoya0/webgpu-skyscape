@@ -42,3 +42,26 @@ body {
 #guidance a {
   color: #8ab4ff;
 }
+
+/* Temporary loading screen (src/ui/loading.ts). */
+.loading {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  background: #0b0d12;
+  color: #9aa3b5;
+  font-size: 0.95rem;
+  transition: opacity 0.8s ease;
+}
+
+.loading.done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading {
+    transition: none;
+  }
+}

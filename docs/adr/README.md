@@ -25,3 +25,4 @@
 | 0021 | [Keep Three.js and takram; choose by what works now, not long-term upkeep](0021-keep-threejs-and-takram.md) | Accepted |
 | 0022 | [Heavy shaders in WGSL, connected with TSL](0022-heavy-shaders-in-wgsl.md) | Accepted |
 | 0023 | [The area is central Tokyo](0023-area-central-tokyo.md) | Accepted |
+| 0024 | [Untextured PLATEAU buildings with procedural facades](0024-untextured-buildings-with-procedural-facades.md) | Accepted |
