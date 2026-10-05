@@ -80,7 +80,8 @@ async function start(): Promise<void> {
     shakeDegrees: params.shake,
     shakePerG: params.shakePerG,
     shakeInCloud: params.shakeInCloud,
-    sinkPerG: params.sink
+    sinkPerG: params.sink,
+    sinkSeconds: params.sinkTime
   })
   const state = createAircraftState()
 

@@ -6,8 +6,13 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
 
 - **The first-person camera.** Its behaviour is still to be specified
   ([ADR 0009](adr/0009-camera-separate-from-path.md)). The first version
-  (`src/camera/cockpitCamera.ts`) has first guesses to tune by eye: head lag 0.12 s, sinking
-  1.5 cm per G above 1, field of view 70°. No cockpit or aircraft is drawn yet.
+  (`src/camera/cockpitCamera.ts`) has first guesses to tune by eye: field of view 70°, eye moving
+  1.5 cm down per G above 1 and up per G below 1. No cockpit or aircraft is drawn yet.
+  Head lag and the eye's movement under load only mean something relative to a cockpit on
+  screen; without one, a lagging camera just makes the aircraft look sluggish. So head lag is off
+  by default (`?lag=` turns it on). When it is used, it applies to pitch only: a pilot's head
+  turns with the aircraft in roll and yaw. What should show is the body pressed into the seat
+  when pulling up and lifting when pushing over. Both are tuned when the cockpit view is built.
   Shake, as the maintainer wants it: none in steady flight, even if that is less realistic; some
   in turns and more when passing through clouds. For now 0.04° per G above 1 and 0.3° at full
   cloud density; the cloud figure is untested until clouds exist.

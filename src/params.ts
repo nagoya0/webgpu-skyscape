@@ -7,11 +7,12 @@
 //   paused            hold the flight at that time
 //   exposure=number   exposure before tone mapping (default 3)
 //   fov=degrees       vertical field of view (default 70)
-//   lag=seconds       head lag of the first-person camera (default 0.12)
+//   lag=seconds       head lag in pitch, for the cockpit view; 0 is none (default 0)
 //   shake=degrees     camera shake in steady flight (default 0)
 //   shakeg=degrees    extra shake per G above 1 (default 0.04)
 //   shakecloud=deg    extra shake at full cloud density (default 0.3)
-//   sink=metres       eye sinking per G above 1 (default 0.015)
+//   sink=metres       eye moves down per G above 1, up per G below 1 (default 0.015)
+//   sinktime=seconds  time for the body to settle into a new load (default 0.15)
 //   speed=m/s         speed on the placeholder path (default 250)
 //   altitude=metres   height of the placeholder path (default 1500)
 //   bank=degrees      bank angle in the placeholder path's turns (default 70)
@@ -30,6 +31,7 @@ export interface Params {
   shakePerG: number
   shakeInCloud: number
   sink: number
+  sinkTime: number
   speed: number
   altitude: number
   bank: number
@@ -69,11 +71,12 @@ export function readParams(search: string, now = new Date()): Params {
     paused: query.has('paused'),
     exposure: number('exposure', 3, 0, 1e6),
     fov: number('fov', 70, 10, 150),
-    lag: number('lag', 0.12, 0.001, 10),
+    lag: number('lag', 0, 0, 10),
     shake: number('shake', 0, 0, 10),
     shakePerG: number('shakeg', 0.04, 0, 10),
     shakeInCloud: number('shakecloud', 0.3, 0, 10),
     sink: number('sink', 0.015, 0, 1),
+    sinkTime: number('sinktime', 0.15, 0.001, 10),
     speed: number('speed', 250, 1, 1000),
     altitude: number('altitude', 1500, 0, 20_000),
     bank: number('bank', 70, 1, 85),
