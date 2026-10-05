@@ -8,11 +8,13 @@ import { createLocalFrame } from './geo/localFrame'
 import { requestDevice } from './gpu/support'
 import { readParams } from './params'
 import { createPipeline } from './render/pipeline'
+import { createBuildings, plateauBuildingUrls } from './scene/plateauBuildings'
 import { createPlaceholderGround } from './scene/placeholderGround'
 import { showGuidance } from './ui/guidance'
 
-// Placeholder origin until the area is chosen (ADR 0006): Tokyo Bay.
-const ORIGIN = { longitude: 139.8, latitude: 35.6, height: 0 }
+// The middle of the three wards tried first (ADR 0023), near Shimbashi. The course and with it
+// the origin may still move.
+const ORIGIN = { longitude: 139.757, latitude: 35.665, height: 0 }
 
 const params = readParams(location.search)
 
@@ -62,6 +64,11 @@ async function start(): Promise<void> {
   atmosphere.setDate(params.date)
   scene.add(atmosphere.light, createPlaceholderGround())
 
+  const buildings = params.buildings
+    ? createBuildings(frame, camera, plateauBuildingUrls(params.textures))
+    : null
+  if (buildings) scene.add(buildings.group)
+
   const pipeline = createPipeline(renderer, scene, camera)
   pipeline.exposure.value = params.exposure
 
@@ -102,6 +109,15 @@ async function start(): Promise<void> {
     samplePath(path, flightTime, state)
     cockpit.update(state, first ? 0 : dt, timer.getElapsed())
     first = false
+    if (buildings) {
+      buildings.update(container.clientWidth, container.clientHeight)
+      debug.tiles = buildings.stats()
+      if (params.paused) {
+        debug.buildingBounds = buildings.bounds()
+        debug.traversal = buildings.traversal()
+      }
+    }
+    debug.camera = camera.position.toArray().map(Math.round)
     debug.flightTime = Number(flightTime.toFixed(2))
     debug.loadFactor = Number(state.loadFactor.toFixed(2))
     pipeline.render()

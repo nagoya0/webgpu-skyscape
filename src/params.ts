@@ -15,9 +15,11 @@
 //                     (default 0)
 //   sinktime=seconds  time for the body to settle into a new load (default 0.15)
 //   speed=m/s         speed on the placeholder path (default 250)
-//   altitude=metres   height of the placeholder path (default 1500)
+//   altitude=metres   height of the placeholder path above the ellipsoid (default 450)
 //   bank=degrees      bank angle in the placeholder path's turns (default 70)
 //   rollrate=deg/s    roll rate of the placeholder path (default 90)
+//   buildings=0       leave out the PLATEAU buildings
+//   textures=1        use PLATEAU's textured buildings (heavy on GPU memory)
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 
@@ -37,6 +39,8 @@ export interface Params {
   altitude: number
   bank: number
   rollRate: number
+  buildings: boolean
+  textures: boolean
 }
 
 export function readParams(search: string, now = new Date()): Params {
@@ -79,8 +83,10 @@ export function readParams(search: string, now = new Date()): Params {
     sink: number('sink', 0, 0, 1),
     sinkTime: number('sinktime', 0.15, 0.001, 10),
     speed: number('speed', 250, 1, 1000),
-    altitude: number('altitude', 1500, 0, 20_000),
+    altitude: number('altitude', 450, 0, 20_000),
     bank: number('bank', 70, 1, 85),
-    rollRate: number('rollrate', 90, 1, 720)
+    rollRate: number('rollrate', 90, 1, 720),
+    buildings: query.get('buildings') !== '0',
+    textures: query.get('textures') === '1'
   }
 }
