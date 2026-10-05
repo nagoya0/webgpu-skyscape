@@ -24,3 +24,4 @@
 | 0020 | [Effects by view: the aircraft's in the first-person view, the pilot's in the cockpit view](0020-effects-by-view.md) | Accepted |
 | 0021 | [Keep Three.js and takram; choose by what works now, not long-term upkeep](0021-keep-threejs-and-takram.md) | Accepted |
 | 0022 | [Heavy shaders in WGSL, connected with TSL](0022-heavy-shaders-in-wgsl.md) | Accepted |
+| 0023 | [The area is central Tokyo](0023-area-central-tokyo.md) | Accepted |

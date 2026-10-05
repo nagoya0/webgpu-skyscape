@@ -15,9 +15,11 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   Shake, as the maintainer wants it: none in steady flight, even if that is less realistic; some
   in turns and more when passing through clouds. For now 0.04° per G above 1 and 0.3° at full
   cloud density; the cloud figure is untested until clouds exist.
-- **The area.** About 30 to 50 km across, detailed only along the flight path
-  ([ADR 0018](adr/0018-f16-at-cruise-speed.md)). Where exactly is chosen by the level of detail
-  and textures available in PLATEAU ([ADR 0006](adr/0006-fixed-area-tiled-detail.md)).
+- **The course in central Tokyo** ([ADR 0023](adr/0023-area-central-tokyo.md)). Proposed: the
+  Shinjuku towers, Shibuya, Roppongi and Tokyo Tower, Marunouchi, the Sumida river and Skytree,
+  the bay (Toyosu, Odaiba), Tokyo Bay, and possibly Minato Mirai in Yokohama. About 30 km north
+  to south and 20 km east to west. Still to check: whether bulk download of GSI tiles is
+  allowed and how; whether PLATEAU 3D Tiles heights are ellipsoidal or orthometric.
 - **Length of the demo.** Two to three minutes assumed so far; whether it loops.
 - **Manoeuvres in the final route.** The maintainer wants more than level turns: full rolls and
   more complex flying. The placeholder's roll rate (90°/s) and bank (70°) look fine. Things this
