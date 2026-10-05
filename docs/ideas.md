@@ -6,8 +6,11 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
 
 - **The first-person camera.** Its behaviour is still to be specified
   ([ADR 0009](adr/0009-camera-separate-from-path.md)). The first version
-  (`src/camera/cockpitCamera.ts`) has first guesses to tune by eye: head lag 0.12 s, shake 0.06°,
-  sinking 1.5 cm per G above 1, field of view 70°. No cockpit or aircraft is drawn yet.
+  (`src/camera/cockpitCamera.ts`) has first guesses to tune by eye: head lag 0.12 s, sinking
+  1.5 cm per G above 1, field of view 70°. No cockpit or aircraft is drawn yet.
+  Shake, as the maintainer wants it: none in steady flight, even if that is less realistic; some
+  in turns and more when passing through clouds. For now 0.04° per G above 1 and 0.3° at full
+  cloud density; the cloud figure is untested until clouds exist.
 - **The area.** About 30 to 50 km across, detailed only along the flight path
   ([ADR 0018](adr/0018-f16-at-cruise-speed.md)). Where exactly is chosen by the level of detail
   and textures available in PLATEAU ([ADR 0006](adr/0006-fixed-area-tiled-detail.md)).

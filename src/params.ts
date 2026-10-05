@@ -8,7 +8,9 @@
 //   exposure=number   exposure before tone mapping (default 3)
 //   fov=degrees       vertical field of view (default 70)
 //   lag=seconds       head lag of the first-person camera (default 0.12)
-//   shake=degrees     shake of the first-person camera (default 0.06)
+//   shake=degrees     camera shake in steady flight (default 0)
+//   shakeg=degrees    extra shake per G above 1 (default 0.04)
+//   shakecloud=deg    extra shake at full cloud density (default 0.3)
 //   sink=metres       eye sinking per G above 1 (default 0.015)
 //   speed=m/s         speed on the placeholder path (default 250)
 //   altitude=metres   height of the placeholder path (default 1500)
@@ -25,6 +27,8 @@ export interface Params {
   fov: number
   lag: number
   shake: number
+  shakePerG: number
+  shakeInCloud: number
   sink: number
   speed: number
   altitude: number
@@ -66,7 +70,9 @@ export function readParams(search: string, now = new Date()): Params {
     exposure: number('exposure', 3, 0, 1e6),
     fov: number('fov', 70, 10, 150),
     lag: number('lag', 0.12, 0.001, 10),
-    shake: number('shake', 0.06, 0, 10),
+    shake: number('shake', 0, 0, 10),
+    shakePerG: number('shakeg', 0.04, 0, 10),
+    shakeInCloud: number('shakecloud', 0.3, 0, 10),
     sink: number('sink', 0.015, 0, 1),
     speed: number('speed', 250, 1, 1000),
     altitude: number('altitude', 1500, 0, 20_000),

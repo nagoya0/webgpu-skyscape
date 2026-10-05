@@ -78,6 +78,8 @@ async function start(): Promise<void> {
   const cockpit = createCockpitCamera(camera, frame, {
     lagSeconds: params.lag,
     shakeDegrees: params.shake,
+    shakePerG: params.shakePerG,
+    shakeInCloud: params.shakeInCloud,
     sinkPerG: params.sink
   })
   const state = createAircraftState()

@@ -10,15 +10,23 @@ import type { AircraftState } from '../flight/path'
 export interface CockpitCameraOptions {
   /** Seconds for the head to catch up about 63 % of a change in the aircraft's attitude. */
   lagSeconds: number
-  /** Shake amplitude in degrees. */
+  /** Shake in degrees in steady, level flight. */
   shakeDegrees: number
+  /** Extra shake in degrees per G above 1, for turns. */
+  shakePerG: number
+  /** Extra shake in degrees at full cloud density. */
+  shakeInCloud: number
   /** Metres the eye sinks per G above 1. */
   sinkPerG: number
 }
 
+// The maintainer prefers no shake in steady flight, some in turns and more in clouds, even if
+// real aircraft shake a little all the time.
 export const DEFAULT_COCKPIT_CAMERA: CockpitCameraOptions = {
   lagSeconds: 0.12,
-  shakeDegrees: 0.06,
+  shakeDegrees: 0,
+  shakePerG: 0.04,
+  shakeInCloud: 0.3,
   sinkPerG: 0.015
 }
 
@@ -61,7 +69,13 @@ export function createCockpitCamera(
       }
 
       // Shake: sums of sines at unrelated frequencies, so the motion does not repeat visibly.
-      const amplitude = (options.shakeDegrees * Math.PI) / 180
+      // Its size follows the load factor and the cloud density, both interpolated smoothly
+      // from the path data.
+      const shakeDegrees =
+        options.shakeDegrees +
+        options.shakePerG * Math.max(state.loadFactor - 1, 0) +
+        options.shakeInCloud * state.cloudDensity
+      const amplitude = (shakeDegrees * Math.PI) / 180
       shakeEuler.set(
         amplitude * (Math.sin(time * 11.3) * 0.6 + Math.sin(time * 17.9 + 1.3) * 0.4),
         amplitude * (Math.sin(time * 7.1 + 0.7) * 0.6 + Math.sin(time * 13.7 + 2.1) * 0.4),
