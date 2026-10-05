@@ -1,0 +1,47 @@
+# 26. Our own terrain from GSI tiles, streamed in real time
+
+- Status: Accepted
+- Date: 2026-10-06
+
+## Context
+
+The ground needs the GSI elevation model and aerial photographs
+([ADR 0007](0007-japanese-open-data.md)) under the PLATEAU buildings
+([ADR 0024](0024-untextured-buildings-with-procedural-facades.md)).
+
+3DTilesRendererJS has plugins for terrain from RGB-encoded elevation tiles and for draping image
+tiles, but their materials change GLSL through `onBeforeCompile`, which works only with
+`WebGLRenderer`. Under [ADR 0021](0021-keep-threejs-and-takram.md) (choose what works now) they
+are not usable here.
+
+GSI's terms (checked 2026-10-06 at https://maps.gsi.go.jp/development/ichiran.html and the GSI
+content terms of use) allow web applications to load GSI tiles in real time with attribution and
+without an application; when the data is processed, that has to be stated as well. Heavy access
+or bulk downloads are to be discussed with GSI first.
+
+## Decision
+
+- The terrain is ours (`src/terrain/`): a quadtree of XYZ tiles in Web Mercator, the scheme GSI
+  tiles use, from zoom 10 roots around the area down to zoom 17. A tile is refined while one
+  texel of its photograph would cover more than 1.5 pixels, and is drawn until all four children
+  are ready, so the surface has no holes while loading. Tile edges hang a 30 m skirt to hide
+  cracks between levels.
+- Heights come from GSI's 5 m DEM (`dem5a_png`, zoom 15) where available, else the 10 m DEM
+  (`dem_png`, up to zoom 14); missing values, mostly sea, are taken as 0 m. GSI heights are above
+  the geoid, while PLATEAU and the atmosphere use the ellipsoid, so a constant geoid height of
+  36.8 m is added: GSI's geoid calculator gives 36.69 m at the origin, 37.07 m at Shinjuku and
+  36.83 m at Oshiage, so a constant is within 0.4 m over the area.
+- The surface colour is GSI's seamless aerial photograph (`seamlessphoto`), one zoom level deeper
+  than the tile, stitched into a 512 × 512 texture per tile.
+- Tiles are loaded from GSI in real time, at most six requests at a time. Nothing is
+  downloaded in bulk or rehosted.
+- The credits for GSI and PLATEAU are shown on screen, stating that the GSI data is processed.
+
+## Consequences
+
+- Terrain textures took about 225 MB for about 160 tiles in the first test, within the memory
+  budget of [ADR 0025](0025-target-hardware.md) together with the buildings.
+- The aerial photographs contain the shadows and lighting of the day they were taken, under the
+  demo's own lighting.
+- Small dark slivers can still show where tiles of different levels meet.
+- If the demo's traffic grows, GSI's guidance on heavy access applies.

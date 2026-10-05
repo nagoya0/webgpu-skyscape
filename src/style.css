@@ -43,6 +43,22 @@ body {
   color: #8ab4ff;
 }
 
+/* Data credits (src/ui/attribution.ts). */
+.attribution {
+  position: fixed;
+  right: 8px;
+  bottom: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: right;
+  color: rgb(255 255 255 / 0.75);
+  text-shadow: 0 0 3px rgb(0 0 0 / 0.8);
+}
+
+.attribution a {
+  color: inherit;
+}
+
 /* Temporary loading screen (src/ui/loading.ts). */
 .loading {
   position: fixed;

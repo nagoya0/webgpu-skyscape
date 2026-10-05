@@ -11,6 +11,8 @@ import { createPipeline } from './render/pipeline'
 import { createFacadeMaterial } from './scene/facadeMaterial'
 import { createBuildings, plateauBuildingUrls } from './scene/plateauBuildings'
 import { createPlaceholderGround } from './scene/placeholderGround'
+import { createTerrain } from './terrain/terrain'
+import { showAttribution } from './ui/attribution'
 import { showGuidance } from './ui/guidance'
 import { showLoading } from './ui/loading'
 
@@ -76,6 +78,10 @@ async function start(): Promise<void> {
     : null
   if (buildings) scene.add(buildings.group)
 
+  const terrain = params.terrain ? createTerrain(frame) : null
+  if (terrain) scene.add(terrain.group)
+  showAttribution()
+
   const pipeline = createPipeline(renderer, scene, camera)
   pipeline.exposure.value = params.exposure
 
@@ -124,13 +130,19 @@ async function start(): Promise<void> {
     if (!loaded) {
       const elapsed = timer.getElapsed()
       const stats = buildings?.stats()
-      const settled = !stats || (stats.loaded > 0 && stats.loading === 0)
+      const ground = terrain?.stats()
+      const settled =
+        (!stats || (stats.loaded > 0 && stats.loading === 0)) &&
+        (!ground || (ground.ready > 0 && ground.loading === 0))
       settledSince = settled ? (settledSince ?? elapsed) : null
       if ((settledSince !== null && elapsed - settledSince > SETTLE_TIME) || elapsed > LOADING_TIMEOUT) {
         loaded = true
         loading.hide()
-      } else if (stats && stats.loading > 0) {
-        loading.setText(`Loading buildings… ${stats.loading} tiles to go`)
+      } else {
+        const parts = []
+        if (stats && stats.loading > 0) parts.push(`buildings ${stats.loading}`)
+        if (ground && ground.loading > 0) parts.push(`terrain ${ground.loading}`)
+        if (parts.length > 0) loading.setText(`Loading… ${parts.join(', ')} tiles to go`)
       }
     }
     debug.loaded = loaded
@@ -145,6 +157,10 @@ async function start(): Promise<void> {
         debug.buildingBounds = buildings.bounds()
         debug.traversal = buildings.traversal()
       }
+    }
+    if (terrain) {
+      terrain.update(camera, container.clientHeight)
+      debug.terrain = terrain.stats()
     }
     debug.camera = camera.position.toArray().map(Math.round)
     debug.flightTime = Number(flightTime.toFixed(2))

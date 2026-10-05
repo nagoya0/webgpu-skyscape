@@ -76,7 +76,10 @@ The demo should also work at night. Planned split:
 
 Placeholders that later stages replace. Remove each with the stage that replaces it.
 
-- `src/scene/placeholderGround.ts`: a flat 200 km disc with a 1 km grid. Replaced by terrain.
+- `src/scene/placeholderGround.ts`: a flat 200 km disc with a 1 km grid. The terrain
+  ([ADR 0026](adr/0026-own-terrain-from-gsi-tiles.md)) now covers the area; the disc, 37 m
+  below it, only fills in beyond the terrain's root tiles and can go once the terrain reaches
+  the horizon.
 - `src/flight/placeholderPath.ts`: a racetrack at 250 m/s and 1500 m, 70° bank turns, level
   flight only, 120.5 s per lap. Replaced by the JSBSim path. Its output has the same form
   (ECEF positions, body-to-NED attitudes), so the playback and the camera stay.

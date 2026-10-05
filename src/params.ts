@@ -20,6 +20,7 @@
 //   rollrate=deg/s    roll rate of the placeholder path (default 90)
 //   buildings=0       leave out the PLATEAU buildings
 //   textures=1        use PLATEAU's textured buildings (heavy on GPU memory)
+//   terrain=0         leave out the GSI terrain and aerial photographs
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 
@@ -41,6 +42,7 @@ export interface Params {
   rollRate: number
   buildings: boolean
   textures: boolean
+  terrain: boolean
 }
 
 export function readParams(search: string, now = new Date()): Params {
@@ -87,6 +89,7 @@ export function readParams(search: string, now = new Date()): Params {
     bank: number('bank', 70, 1, 85),
     rollRate: number('rollrate', 90, 1, 720),
     buildings: query.get('buildings') !== '0',
-    textures: query.get('textures') === '1'
+    textures: query.get('textures') === '1',
+    terrain: query.get('terrain') !== '0'
   }
 }
