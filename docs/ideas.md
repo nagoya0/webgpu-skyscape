@@ -15,6 +15,18 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   ([ADR 0018](adr/0018-f16-at-cruise-speed.md)). Where exactly is chosen by the level of detail
   and textures available in PLATEAU ([ADR 0006](adr/0006-fixed-area-tiled-detail.md)).
 - **Length of the demo.** Two to three minutes assumed so far; whether it loops.
+- **Manoeuvres in the final route.** The maintainer wants more than level turns: full rolls and
+  more complex flying. The placeholder's roll rate (90°/s) and bank (70°) look fine. Things this
+  will affect:
+  - Head lag: 0.12 s suits slow turns, but an F-16 can roll at over 200°/s, which would leave the
+    view 20 to 30° behind. A real pilot's head turns with the aircraft, so roll may need less lag
+    than pitch and yaw.
+  - Sampling: at 10 Hz a fast roll turns 20 to 30° per sample. Raise the rate to 30 to 60 Hz, or
+    use squad instead of slerp (ADR 0008 allows both).
+  - JSBSim: altitude and heading holds cover straight flight and turns. Rolls and loops need
+    timed control inputs or a small Python controller that flies towards target attitudes.
+  - Altitude and G: a loop changes altitude by 1 to 2 km and pulls 4 to 7 G, which affects the
+    altitude range, the cloud heights and the camera's sinking and shake.
 - **Flight altitude.** Low to medium, so that the aircraft can pass through cumulus clouds, whose
   bases are around 600 to 2,000 m.
 - **Static site host.** GitHub Pages or Cloudflare Pages
