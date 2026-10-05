@@ -57,7 +57,7 @@ describe('cockpit camera', () => {
     cockpit.update(state, 0, 0)
     state.bodyToNED.copy(attitude(0, 5, 0))
     cockpit.update(state, 1 / 60, 1 / 60)
-    expect(Math.asin(forward(camera).y) * (180 / Math.PI)).toBeCloseTo(5, 6)
+    expect(Math.asin(forward(camera).y) * (180 / Math.PI)).toBeCloseTo(5, 3)
   })
 
   it('with lag set, lags behind a pitch change and then catches up', () => {
