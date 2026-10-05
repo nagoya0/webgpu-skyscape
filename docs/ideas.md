@@ -46,6 +46,8 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     altitude range, the cloud heights and the camera's sinking and shake.
 - **Flight altitude.** Low to medium, so that the aircraft can pass through cumulus clouds, whose
   bases are around 600 to 2,000 m.
+- **Resolution and frame rate on the target hardware** ([ADR 0025](adr/0025-target-hardware.md)).
+  Proposed: 1920 × 1080 at 60 fps. Not confirmed by the maintainer yet.
 - **Static site host.** GitHub Pages or Cloudflare Pages
   ([ADR 0012](adr/0012-site-and-tile-data-hosted-apart.md)).
 - **A fork of three-geospatial.** Decided at the cloud stage, by how much of the library's
@@ -101,8 +103,9 @@ Next stages, proposed 2026-10-05:
    estimate for the cloud stage.
 2. **Area and terrain.** Choose the area from PLATEAU's coverage; build tiled terrain and aerial
    photographs with levels of detail ([ADR 0006](adr/0006-fixed-area-tiled-detail.md)); decide
-   the tile storage and the site host. Check temporal anti-aliasing at 250 m/s and measure on an
-   integrated GPU, leaving GPU time for the clouds.
+   the tile storage and the site host. Check temporal anti-aliasing at 250 m/s and measure
+   against the target hardware ([ADR 0025](adr/0025-target-hardware.md)), leaving GPU time and
+   memory for the clouds.
 3. **Buildings.** PLATEAU 3D Tiles in the local frame, detailed along the path.
 4. **Clouds**, in this demo's scope ([ADR 0013](adr/0013-port-the-clouds-to-tsl.md)). The cloud
    shape data (weather map, layer settings) lives in files that both the GPU and the offline

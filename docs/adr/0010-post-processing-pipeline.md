@@ -1,6 +1,6 @@
 # 10. Post-processing order, temporal anti-aliasing and quality presets
 
-- Status: Accepted
+- Status: Accepted; the integrated-GPU assumption is superseded by [0025](0025-target-hardware.md)
 - Date: 2026-10-03
 
 ## Context

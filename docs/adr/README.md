@@ -11,7 +11,7 @@
 | 0007 | [Japanese open data for the ground; not Google Photorealistic 3D Tiles](0007-japanese-open-data.md) | Accepted |
 | 0008 | [Play back a flight path computed in advance](0008-precomputed-flight-path.md) | Accepted |
 | 0009 | [The camera is a module separate from the flight path](0009-camera-separate-from-path.md) | Accepted |
-| 0010 | [Post-processing order, temporal anti-aliasing and quality presets](0010-post-processing-pipeline.md) | Accepted |
+| 0010 | [Post-processing order, temporal anti-aliasing and quality presets](0010-post-processing-pipeline.md) | Accepted; integrated-GPU assumption superseded by 0025 |
 | 0011 | [Rain moves with the relative wind, not with gravity](0011-rain-driven-by-relative-wind.md) | Accepted |
 | 0012 | [The site and the tile data are hosted apart](0012-site-and-tile-data-hosted-apart.md) | Accepted |
 | 0013 | [Port the volumetric clouds to TSL ourselves](0013-port-the-clouds-to-tsl.md) | Accepted |
@@ -26,3 +26,4 @@
 | 0022 | [Heavy shaders in WGSL, connected with TSL](0022-heavy-shaders-in-wgsl.md) | Accepted |
 | 0023 | [The area is central Tokyo](0023-area-central-tokyo.md) | Accepted |
 | 0024 | [Untextured PLATEAU buildings with procedural facades](0024-untextured-buildings-with-procedural-facades.md) | Accepted |
+| 0025 | [Target hardware: a mid-range gaming PC, not integrated GPUs](0025-target-hardware.md) | Accepted |

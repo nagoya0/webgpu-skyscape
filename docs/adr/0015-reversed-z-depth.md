@@ -56,4 +56,5 @@ depth must handle the reversed direction (1 is near, 0 is far), and the cloud po
 levels, used by the light shafts (`EpipolarShadowLengthNode`). It matters only if light shafts are
 used.
 
-The timings come from one desktop GPU. Integrated GPUs have not been measured.
+The timings come from one desktop GPU. Integrated GPUs have not been measured; they are no
+longer a target ([ADR 0025](0025-target-hardware.md)).
