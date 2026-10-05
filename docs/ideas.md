@@ -76,7 +76,29 @@ Placeholders that later stages replace. Remove each with the stage that replaces
 2. Test and choose the depth format (done: [ADR 0015](adr/0015-reversed-z-depth.md)).
 3. `@takram/three-atmosphere`: sky, sun and a time-of-day slider (done; the slider was later
    replaced by `?time=`, [ADR 0019](adr/0019-no-ui-until-features-are-in.md)).
-4. A temporary flight and the first-person camera (done; waiting for a check by eye).
-5. Commit, then plan the next stages: clouds and temporal anti-aliasing
-   ([ADR 0013](adr/0013-port-the-clouds-to-tsl.md)), terrain and buildings, rain, the JSBSim
-   flight path.
+4. A temporary flight and the first-person camera (done; checked by eye).
+5. Plan the next stages (done, below).
+
+Next stages, proposed 2026-10-05:
+
+1. **Cloud trial, one to two days.** A simple ray-marched cloud written in WGSL and connected
+   with `wgslFn`. Checks: does it fit the render pipeline; does it work with reversed-Z depth,
+   temporal anti-aliasing and the atmosphere tables; how mechanical is moving takram's GLSL to
+   WGSL. The result decides the shader-language policy for all later shaders (an ADR), and the
+   estimate for the cloud stage.
+2. **Area and terrain.** Choose the area from PLATEAU's coverage; build tiled terrain and aerial
+   photographs with levels of detail ([ADR 0006](adr/0006-fixed-area-tiled-detail.md)); decide
+   the tile storage and the site host. Check temporal anti-aliasing at 250 m/s and measure on an
+   integrated GPU, leaving GPU time for the clouds.
+3. **Buildings.** PLATEAU 3D Tiles in the local frame, detailed along the path.
+4. **Clouds**, in this demo's scope ([ADR 0013](adr/0013-port-the-clouds-to-tsl.md)). The cloud
+   shape data (weather map, layer settings) lives in files that both the GPU and the offline
+   path tool read, so the path's cloud density channel matches what is drawn
+   ([ADR 0008](adr/0008-precomputed-flight-path.md)).
+5. **Rain** ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
+   [ADR 0020](adr/0020-effects-by-view.md)).
+6. **JSBSim path** with manoeuvres, replacing the placeholder.
+7. **Night.** Stars, moon and adaptive exposure fit between any stages; city lights and street
+   lamp quads after the buildings.
+
+Later: the cockpit view, quality presets, the UI, the README and video, publishing.
