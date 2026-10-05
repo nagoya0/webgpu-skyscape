@@ -46,8 +46,6 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     altitude range, the cloud heights and the camera's sinking and shake.
 - **Flight altitude.** Low to medium, so that the aircraft can pass through cumulus clouds, whose
   bases are around 600 to 2,000 m.
-- **Resolution and frame rate on the target hardware** ([ADR 0025](adr/0025-target-hardware.md)).
-  Proposed: 1920 × 1080 at 60 fps. Not confirmed by the maintainer yet.
 - **Static site host.** GitHub Pages or Cloudflare Pages
   ([ADR 0012](adr/0012-site-and-tile-data-hosted-apart.md)).
 - **A fork of three-geospatial.** Decided at the cloud stage, by how much of the library's

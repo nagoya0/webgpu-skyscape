@@ -29,13 +29,15 @@ The demo targets a mid-range gaming PC, described by the maintainer as:
 - Weaker hardware is not a target. Lower quality settings may be added later only if they do not
   hold back the highest setting.
 - Half-resolution passes are used where the target hardware needs them, not by default.
+- Resolution and frame rate: 1920 × 1080 at 60 fps on the target hardware (agreed on
+  2026-10-06).
 
 ## Consequences
 
 - The development machine has an NVIDIA GeForce RTX 4070 (12 GB). From published game benchmarks,
   not our own measurements, it is roughly 2.3 to 2.5 times as fast as an RTX 2060 and 1.7 to
   1.9 times as fast as an RX 6600 XT. So 60 fps on the target (16.7 ms per frame) means about
-  7 ms per frame on the development machine; 30 fps would allow about 14 ms.
+  7 ms per frame on the development machine at 1920 × 1080.
 - The development machine has twice the target's memory, so running out of memory will not show
   there. The memory budget has to be counted, from the tile cache sizes and similar figures,
   rather than noticed.
@@ -43,4 +45,3 @@ The demo targets a mid-range gaming PC, described by the maintainer as:
   alone ([ADR 0024](0024-untextured-buildings-with-procedural-facades.md)).
 - The README's recommended environment ([ADR 0003](0003-webgpu-only.md)) is based on this class
   of hardware.
-- Resolution and frame rate targets are not set yet; see [ideas](../ideas.md).
