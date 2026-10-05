@@ -11,7 +11,8 @@
 //   shake=degrees     camera shake in steady flight (default 0)
 //   shakeg=degrees    extra shake per G above 1 (default 0.04)
 //   shakecloud=deg    extra shake at full cloud density (default 0.3)
-//   sink=metres       eye moves down per G above 1, up per G below 1 (default 0.015)
+//   sink=metres       eye moves down per G above 1, up per G below 1, for the cockpit view
+//                     (default 0)
 //   sinktime=seconds  time for the body to settle into a new load (default 0.15)
 //   speed=m/s         speed on the placeholder path (default 250)
 //   altitude=metres   height of the placeholder path (default 1500)
@@ -75,7 +76,7 @@ export function readParams(search: string, now = new Date()): Params {
     shake: number('shake', 0, 0, 10),
     shakePerG: number('shakeg', 0.04, 0, 10),
     shakeInCloud: number('shakecloud', 0.3, 0, 10),
-    sink: number('sink', 0.015, 0, 1),
+    sink: number('sink', 0, 0, 1),
     sinkTime: number('sinktime', 0.15, 0.001, 10),
     speed: number('speed', 250, 1, 1000),
     altitude: number('altitude', 1500, 0, 20_000),

@@ -4,16 +4,20 @@ import { describe, expect, it } from 'vitest'
 
 import { createAircraftState } from '../flight/path'
 import { createLocalFrame } from '../geo/localFrame'
-import { createCockpitCamera, DEFAULT_COCKPIT_CAMERA } from './cockpitCamera'
+import {
+  createCockpitCamera,
+  DEFAULT_COCKPIT_CAMERA,
+  type CockpitCameraOptions
+} from './cockpitCamera'
 
 const frame = createLocalFrame(139.8, 35.6, 0)
 
-function setup(lagSeconds = DEFAULT_COCKPIT_CAMERA.lagSeconds) {
+function setup(overrides: Partial<CockpitCameraOptions> = {}) {
   const camera = new PerspectiveCamera()
   const cockpit = createCockpitCamera(camera, frame, {
     ...DEFAULT_COCKPIT_CAMERA,
     shakePerG: 0,
-    lagSeconds
+    ...overrides
   })
   const state = createAircraftState()
   new Geodetic(radians(139.8), radians(35.6), 1500).toECEF(state.ecef)
@@ -61,7 +65,7 @@ describe('cockpit camera', () => {
   })
 
   it('with lag set, lags behind a pitch change and then catches up', () => {
-    const { camera, cockpit, state } = setup(0.12)
+    const { camera, cockpit, state } = setup({ lagSeconds: 0.12 })
     state.bodyToNED.copy(attitude(0, 0, 0))
     cockpit.update(state, 0, 0)
     state.bodyToNED.copy(attitude(0, 5, 0))
@@ -74,7 +78,7 @@ describe('cockpit camera', () => {
     expect(pitchLater).toBeCloseTo(5, 2)
   })
 
-  it('moves the eye down above 1 G and up below it', () => {
+  it('has no body effects by default (ADR 0020)', () => {
     const { camera, cockpit, state } = setup()
     state.bodyToNED.copy(attitude(0, 0, 0))
     state.loadFactor = 1
@@ -82,9 +86,21 @@ describe('cockpit camera', () => {
     const level = camera.position.y
     state.loadFactor = 3
     for (let i = 0; i < 120; i++) cockpit.update(state, 1 / 60, i / 60)
-    expect(camera.position.y - level).toBeCloseTo(-2 * DEFAULT_COCKPIT_CAMERA.sinkPerG, 4)
+    expect(camera.position.y).toBeCloseTo(level, 9)
+  })
+
+  it('with sink set, moves the eye down above 1 G and up below it', () => {
+    const sinkPerG = 0.015
+    const { camera, cockpit, state } = setup({ sinkPerG })
+    state.bodyToNED.copy(attitude(0, 0, 0))
+    state.loadFactor = 1
+    cockpit.update(state, 0, 0)
+    const level = camera.position.y
+    state.loadFactor = 3
+    for (let i = 0; i < 120; i++) cockpit.update(state, 1 / 60, i / 60)
+    expect(camera.position.y - level).toBeCloseTo(-2 * sinkPerG, 4)
     state.loadFactor = 0
     for (let i = 0; i < 120; i++) cockpit.update(state, 1 / 60, i / 60)
-    expect(camera.position.y - level).toBeCloseTo(DEFAULT_COCKPIT_CAMERA.sinkPerG, 4)
+    expect(camera.position.y - level).toBeCloseTo(sinkPerG, 4)
   })
 })

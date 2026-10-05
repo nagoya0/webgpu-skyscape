@@ -23,7 +23,7 @@ Channels in the path data:
 |---|---|
 | Time, latitude, longitude, altitude, attitude quaternion | Position and attitude |
 | Cloud density, sampled offline at the aircraft's position | Rain strength; entering and leaving clouds |
-| Load factor (G) | Camera sinking under load; vignetting |
+| Load factor (G) | Camera sinking under load; vignetting (cockpit view only, [ADR 0020](0020-effects-by-view.md)); shake in turns |
 
 Playback:
 

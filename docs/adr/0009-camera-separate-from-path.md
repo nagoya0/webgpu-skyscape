@@ -14,6 +14,9 @@ The camera is a separate module that reads the aircraft's state from the path. T
 is a first-person view from the aircraft. Its details are not decided yet. Other views may be
 added later but are on hold.
 
+Update 2026-10-05: a cockpit view is planned for later, and which effects belong to which view is
+set in [ADR 0020](0020-effects-by-view.md).
+
 ## Consequences
 
 The path playback must not assume a particular camera.

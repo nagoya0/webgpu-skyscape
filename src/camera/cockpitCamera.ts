@@ -2,14 +2,15 @@
 // does. The behaviour is still to be specified; the numbers below are first guesses to be tuned
 // by eye.
 //
-// - Pitch lag: when the aircraft pitches, the head lags a little behind. Roll and yaw are not
-//   lagged; a pilot's head turns with the aircraft about those axes. Off by default: with no
-//   cockpit on screen, lagging the camera only makes the aircraft look sluggish. It is for the
-//   cockpit view.
-// - Load: the body is pressed into the seat above 1 G and lifts below it, so the eye moves down
-//   or up along the aircraft's vertical axis (ADR 0008). The motion is only visible against
-//   near objects, so it will show once the canopy frame or cockpit is drawn.
-// - Shake: none in steady flight, some in turns, more in clouds.
+// ADR 0020: the first-person view shows only what happens to the aircraft; the pilot's body
+// belongs to the cockpit view. The body effects below are kept for that view and are off by
+// default.
+//
+// - Shake (aircraft): none in steady flight, some in turns, more in clouds.
+// - Pitch lag (body): when the aircraft pitches, the head lags a little behind. Roll and yaw are
+//   not lagged; a pilot's head turns with the aircraft about those axes.
+// - Load (body): the body is pressed into the seat above 1 G and lifts below it, so the eye
+//   moves down or up along the aircraft's vertical axis.
 import { Euler, Matrix4, Quaternion, Vector3, type PerspectiveCamera } from 'three/webgpu'
 
 import { ecefToWorld, nedToWorldRotation, type LocalFrame } from '../geo/localFrame'
@@ -37,7 +38,9 @@ export const DEFAULT_COCKPIT_CAMERA: CockpitCameraOptions = {
   shakeDegrees: 0,
   shakePerG: 0.04,
   shakeInCloud: 0.3,
-  sinkPerG: 0.015,
+  // Off in the first-person view: the pilot's body belongs to the cockpit view (ADR 0020).
+  // 0.015 is the first guess for that view.
+  sinkPerG: 0,
   sinkSeconds: 0.15
 }
 

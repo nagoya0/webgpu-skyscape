@@ -15,7 +15,10 @@ direction of travel, not from above.
   velocity). Drops move with the relative wind projected into camera space plus a little gravity,
   and nearby drops merge. When drawn, each drop refracts the scene colour along its normal, and
   the area under it is slightly blurred. Reference: the ShaderToy shader "Heartfelt", with its flow
-  direction changed from gravity to the wind direction.
+  direction changed from gravity to the wind direction. In the first-person view this buffer
+  covers the whole screen as a game-style shortcut, and the drops flow outwards radially from
+  the direction of travel; in the cockpit view the drops sit on the canopy glass
+  ([ADR 0020](0020-effects-by-view.md)).
 - **Drops in the air.** Particles stretched along the relative velocity. They appear as streaks
   coming radially from the vanishing point of the direction of travel.
 - **Strength** comes from the cloud density channel of the path data

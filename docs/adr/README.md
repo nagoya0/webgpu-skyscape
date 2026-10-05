@@ -21,3 +21,4 @@
 | 0017 | [The scene is in a local tangent-plane frame, not in ECEF](0017-local-world-frame.md) | Accepted |
 | 0018 | [The aircraft is an F-16-class fighter at cruise speed](0018-f16-at-cruise-speed.md) | Accepted |
 | 0019 | [No UI until the features are in; settings come from the URL](0019-no-ui-until-features-are-in.md) | Accepted |
+| 0020 | [Effects by view: the aircraft's in the first-person view, the pilot's in the cockpit view](0020-effects-by-view.md) | Accepted |
