@@ -20,7 +20,10 @@
 //   rollrate=deg/s    roll rate of the placeholder path (default 90)
 //   buildings=0       leave out the PLATEAU buildings
 //   textures=1        use PLATEAU's textured buildings (heavy on GPU memory)
+//   tileerror=pixels  screen-space error target for the building tiles (default 20)
+//   bundle=0          draw the building tiles without a render bundle
 //   terrain=0         leave out the GSI terrain and aerial photographs
+//   measure           after loading, time 180 frames and report them in window.__debug
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 
@@ -43,6 +46,9 @@ export interface Params {
   buildings: boolean
   textures: boolean
   terrain: boolean
+  measure: boolean
+  tileError: number
+  bundle: boolean
 }
 
 export function readParams(search: string, now = new Date()): Params {
@@ -90,6 +96,9 @@ export function readParams(search: string, now = new Date()): Params {
     rollRate: number('rollrate', 90, 1, 720),
     buildings: query.get('buildings') !== '0',
     textures: query.get('textures') === '1',
-    terrain: query.get('terrain') !== '0'
+    terrain: query.get('terrain') !== '0',
+    measure: query.has('measure'),
+    tileError: number('tileerror', 20, 0.5, 200),
+    bundle: query.get('bundle') !== '0'
   }
 }

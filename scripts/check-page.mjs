@@ -7,6 +7,7 @@
 //   CHROME  path to the Chrome or Chromium executable (default: a standard install location)
 //   WAIT    milliseconds to wait after navigation (default 4000)
 //   INJECT  script to run before the page's own scripts, e.g. to simulate missing WebGPU
+//   SIZE    window size as WIDTHxHEIGHT (default 1280x720)
 import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -34,7 +35,8 @@ if (!chromePath) {
 const port = 9400 + Math.floor(Math.random() * 400)
 const chrome = spawn(chromePath, [
   '--headless=new',
-  '--window-size=1280,720',
+  `--window-size=${(process.env.SIZE ?? '1280x720').replace('x', ',')}`,
+  '--force-device-scale-factor=1',
   `--remote-debugging-port=${port}`,
   `--user-data-dir=${mkdtempSync(path.join(tmpdir(), 'cdp-'))}`,
   ...flags,

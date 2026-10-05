@@ -4,7 +4,14 @@
 import { TilesRenderer } from '3d-tiles-renderer'
 import { GLTFExtensionsPlugin } from '3d-tiles-renderer/plugins'
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
-import { Box3, Group, type Material, type Mesh, type PerspectiveCamera } from 'three/webgpu'
+import {
+  Box3,
+  BundleGroup,
+  Group,
+  type Material,
+  type Mesh,
+  type PerspectiveCamera
+} from 'three/webgpu'
 
 import type { LocalFrame } from '../geo/localFrame'
 
@@ -38,13 +45,21 @@ export function createBuildings(
   urls: readonly string[],
   /** Replaces the material of every loaded mesh, for the untextured tiles. */
   material: Material | null = null,
-  errorTarget = 6,
-  cacheBytes = 1.5e9
+  errorTarget = 20,
+  cacheBytes = 1.5e9,
+  /** Record the tiles' draw calls in a render bundle, re-recorded only when tiles change. */
+  bundle = true
 ): Buildings {
-  const group = new Group()
+  // Encoding about a thousand tile draw calls every frame cost about 9 ms of JavaScript
+  // (2026-10-06). The tiles renderer already hides tiles outside the view, so the bundle only
+  // needs re-recording when a tile is shown, hidden, loaded or unloaded.
+  const group = bundle ? new BundleGroup() : new Group()
   group.name = 'PLATEAU buildings'
   group.matrixAutoUpdate = false
   group.matrix.copy(frame.ecefToWorld)
+  const invalidate = (): void => {
+    if (group instanceof BundleGroup) group.needsUpdate = true
+  }
 
   // PLATEAU meshes are Draco-compressed and carry their centre in the CESIUM_RTC extension.
   const dracoLoader = new DRACOLoader().setDecoderPath(`${import.meta.env.BASE_URL}draco/`)
@@ -79,6 +94,9 @@ export function createBuildings(
         })
       })
     }
+    tiles.addEventListener('tile-visibility-change', invalidate)
+    tiles.addEventListener('load-model', invalidate)
+    tiles.addEventListener('dispose-model', invalidate)
     tiles.setCamera(camera)
     group.add(tiles.group)
     return tiles

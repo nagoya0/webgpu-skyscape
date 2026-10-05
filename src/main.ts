@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Scene, Timer, WebGPURenderer } from 'three/webgpu'
+import { PerspectiveCamera, Scene, Timer, WebGPURenderer, type Mesh } from 'three/webgpu'
 
 import { createAtmosphere } from './atmosphere/atmosphere'
 import { createCockpitCamera } from './camera/cockpitCamera'
@@ -73,7 +73,10 @@ async function start(): Promise<void> {
         frame,
         camera,
         plateauBuildingUrls(params.textures),
-        params.textures ? null : createFacadeMaterial()
+        params.textures ? null : createFacadeMaterial(),
+        params.tileError,
+        undefined,
+        params.bundle
       )
     : null
   if (buildings) scene.add(buildings.group)
@@ -146,14 +149,30 @@ async function start(): Promise<void> {
       }
     }
     debug.loaded = loaded
-    if (loaded && !params.paused) flightTime += dt
+    if (loaded && params.measure && !measuring) {
+      measuring = true
+      renderer.setAnimationLoop(null)
+      void measure(timer.getElapsed())
+      return
+    }
+    step(loaded && !params.paused ? dt : 0, timer.getElapsed())
+  })
+
+  let lastBoundsTime = -Infinity
+
+  // One frame: move the aircraft, update the tiles, draw.
+  function step(flightDelta: number, elapsed: number): void {
+    flightTime += flightDelta
     samplePath(path, flightTime, state)
-    cockpit.update(state, first ? 0 : dt, timer.getElapsed())
+    cockpit.update(state, first ? 0 : flightDelta, elapsed)
     first = false
     if (buildings) {
       buildings.update(container.clientWidth, container.clientHeight)
       debug.tiles = buildings.stats()
-      if (params.paused) {
+      // For checks while paused. bounds() visits every vertex, so once a second at most, and
+      // never while measuring.
+      if (params.paused && !params.measure && elapsed - lastBoundsTime > 1) {
+        lastBoundsTime = elapsed
         debug.buildingBounds = buildings.bounds()
         debug.traversal = buildings.traversal()
       }
@@ -166,7 +185,47 @@ async function start(): Promise<void> {
     debug.flightTime = Number(flightTime.toFixed(2))
     debug.loadFactor = Number(state.loadFactor.toFixed(2))
     pipeline.render()
-  })
+  }
+
+  // ?measure: after loading, 180 frames of flight at 60 frames per second of flight time,
+  // each waiting for the GPU to finish, so the time covers the CPU and GPU work of a frame.
+  let measuring = false
+  async function measure(elapsed: number): Promise<void> {
+    for (let i = 0; i < 20; i++) {
+      step(params.paused ? 0 : 1 / 60, elapsed)
+      await device.queue.onSubmittedWorkDone()
+    }
+    const times: number[] = []
+    const cpuTimes: number[] = []
+    for (let i = 0; i < 180; i++) {
+      const begin = performance.now()
+      step(params.paused ? 0 : 1 / 60, elapsed + i / 60)
+      // Time until the commands are submitted: mostly JavaScript (tile updates, scene
+      // traversal, encoding draw calls).
+      cpuTimes.push(performance.now() - begin)
+      await device.queue.onSubmittedWorkDone()
+      times.push(performance.now() - begin)
+    }
+    times.sort((p, q) => p - q)
+    cpuTimes.sort((p, q) => p - q)
+    const round = (value: number): number => Number(value.toFixed(2))
+    let meshes = 0
+    scene.traverseVisible(object => {
+      if ((object as Mesh).isMesh) meshes++
+    })
+    debug.measure = {
+      size: `${renderer.domElement.width}x${renderer.domElement.height}`,
+      medianMs: round(times[90]),
+      p95Ms: round(times[171]),
+      maxMs: round(times[179]),
+      cpuMedianMs: round(cpuTimes[90]),
+      visibleMeshes: meshes
+    }
+    renderer.setAnimationLoop(t => {
+      timer.update(t)
+      step(params.paused ? 0 : Math.min(timer.getDelta(), 0.1), timer.getElapsed())
+    })
+  }
 }
 
 start().catch((error: unknown) => {
