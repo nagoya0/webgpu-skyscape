@@ -32,8 +32,13 @@ The demo targets a mid-range gaming PC, described by the maintainer as:
 
 ## Consequences
 
-- Timings measured on the development machine (an NVIDIA GPU of the Lovelace generation,
-  probably faster than an RTX 2060) are read with a margin of at least two times.
+- The development machine has an NVIDIA GeForce RTX 4070 (12 GB). From published game benchmarks,
+  not our own measurements, it is roughly 2.3 to 2.5 times as fast as an RTX 2060 and 1.7 to
+  1.9 times as fast as an RX 6600 XT. So 60 fps on the target (16.7 ms per frame) means about
+  7 ms per frame on the development machine; 30 fps would allow about 14 ms.
+- The development machine has twice the target's memory, so running out of memory will not show
+  there. The memory budget has to be counted, from the tile cache sizes and similar figures,
+  rather than noticed.
 - PLATEAU's textured buildings still do not fit: three wards filled 1.5 GB with coarse tiles
   alone ([ADR 0024](0024-untextured-buildings-with-procedural-facades.md)).
 - The README's recommended environment ([ADR 0003](0003-webgpu-only.md)) is based on this class
