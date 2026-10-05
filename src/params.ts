@@ -21,8 +21,10 @@
 //   buildings=0       leave out the PLATEAU buildings
 //   textures=1        use PLATEAU's textured buildings (heavy on GPU memory)
 //   tileerror=pixels  screen-space error target for the building tiles (default 20)
-//   bundle=0          draw the building tiles without a render bundle
+//   draw=MODE         how the building tiles are drawn: batch (default), bundle or plain
 //   terrain=0         leave out the GSI terrain and aerial photographs
+//   raymarch=0        look up the aerial perspective in tables instead of ray marching it
+//   flare=0           leave out the lens flare
 //   measure           after loading, time 180 frames and report them in window.__debug
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
@@ -48,7 +50,9 @@ export interface Params {
   terrain: boolean
   measure: boolean
   tileError: number
-  bundle: boolean
+  drawMode: 'batch' | 'bundle' | 'plain'
+  raymarch: boolean
+  flare: boolean
 }
 
 export function readParams(search: string, now = new Date()): Params {
@@ -99,6 +103,8 @@ export function readParams(search: string, now = new Date()): Params {
     terrain: query.get('terrain') !== '0',
     measure: query.has('measure'),
     tileError: number('tileerror', 20, 0.5, 200),
-    bundle: query.get('bundle') !== '0'
+    drawMode: (['batch', 'bundle', 'plain'] as const).find(m => m === query.get('draw')) ?? 'batch',
+    raymarch: query.get('raymarch') !== '0',
+    flare: query.get('flare') !== '0'
   }
 }

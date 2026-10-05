@@ -28,3 +28,4 @@
 | 0024 | [Untextured PLATEAU buildings with procedural facades](0024-untextured-buildings-with-procedural-facades.md) | Accepted |
 | 0025 | [Target hardware: a mid-range gaming PC, not integrated GPUs](0025-target-hardware.md) | Accepted |
 | 0026 | [Our own terrain from GSI tiles, streamed in real time](0026-own-terrain-from-gsi-tiles.md) | Accepted |
+| 0027 | [Building tiles are drawn as one BatchedMesh](0027-batched-building-tiles.md) | Accepted |

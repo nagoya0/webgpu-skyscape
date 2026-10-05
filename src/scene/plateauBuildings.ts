@@ -14,6 +14,7 @@ import {
 } from 'three/webgpu'
 
 import type { LocalFrame } from '../geo/localFrame'
+import { createTileBatcher, type TileBatcher } from './tileBatcher'
 
 // The wards along the proposed course (ideas.md): Shinjuku, Shibuya, Minato, Chiyoda, Chuo,
 // Taito, Sumida, Koto.
@@ -32,7 +33,7 @@ export interface Buildings {
   /** Call once per frame, after the camera has moved. */
   update(width: number, height: number): void
   /** Tiles currently downloading or parsing, and tiles loaded. */
-  stats(): { loading: number; loaded: number }
+  stats(): { loading: number; loaded: number; batch?: ReturnType<TileBatcher['stats']> }
   /** For checks: world-space bounds of the loaded meshes, rounded to metres. */
   bounds(): { min: number[]; max: number[]; meshes: number } | null
   /** For checks: visible tiles per depth in the tile tree, and active tiles. */
@@ -46,20 +47,31 @@ export function createBuildings(
   /** Replaces the material of every loaded mesh, for the untextured tiles. */
   material: Material | null = null,
   errorTarget = 20,
-  cacheBytes = 1.5e9,
-  /** Record the tiles' draw calls in a render bundle, re-recorded only when tiles change. */
-  bundle = true
+  /** Tile cache limit. Textured tiles need about 1.5 GB to reach the finer levels. */
+  cacheBytes = material ? 0.6e9 : 1.5e9,
+  /**
+   * How the tile meshes are drawn. Encoding about a thousand tile draw calls every frame cost
+   * about 9 ms of JavaScript (2026-10-06).
+   * - 'batch': all tiles in one BatchedMesh (needs the shared material);
+   * - 'bundle': a render bundle, re-recorded when a tile is shown, hidden, loaded or unloaded;
+   * - 'plain': one draw call per tile mesh.
+   */
+  mode: 'batch' | 'bundle' | 'plain' = 'batch'
 ): Buildings {
-  // Encoding about a thousand tile draw calls every frame cost about 9 ms of JavaScript
-  // (2026-10-06). The tiles renderer already hides tiles outside the view, so the bundle only
-  // needs re-recording when a tile is shown, hidden, loaded or unloaded.
-  const group = bundle ? new BundleGroup() : new Group()
+  const group = new Group()
   group.name = 'PLATEAU buildings'
-  group.matrixAutoUpdate = false
-  group.matrix.copy(frame.ecefToWorld)
+  // The tiles renderer's groups, in ECEF.
+  const tilesRoot = mode === 'bundle' ? new BundleGroup() : new Group()
+  tilesRoot.matrixAutoUpdate = false
+  tilesRoot.matrix.copy(frame.ecefToWorld)
+  group.add(tilesRoot)
   const invalidate = (): void => {
-    if (group instanceof BundleGroup) group.needsUpdate = true
+    if (tilesRoot instanceof BundleGroup) tilesRoot.needsUpdate = true
   }
+  // The BatchedMesh joins the scene only once it holds a geometry: its vertex attributes are
+  // created by the first addGeometry, and a pipeline built for it while empty lacks them and
+  // stays that way ("Vertex attribute 'position' not found").
+  const batcher = mode === 'batch' && material ? createTileBatcher(frame, material) : null
 
   // PLATEAU meshes are Draco-compressed and carry their centre in the CESIUM_RTC extension.
   const dracoLoader = new DRACOLoader().setDecoderPath(`${import.meta.env.BASE_URL}draco/`)
@@ -82,7 +94,16 @@ export function createBuildings(
     } else {
       ;(tiles as unknown as { lruCache: unknown }).lruCache = sharedCache
     }
-    if (material) {
+    if (batcher) {
+      tiles.addEventListener('load-model', ({ scene }) => {
+        batcher.add(scene)
+        if (!batcher.mesh.parent && batcher.mesh.instanceCount > 0) group.add(batcher.mesh)
+      })
+      tiles.addEventListener('tile-visibility-change', ({ scene, visible }) =>
+        batcher.setVisible(scene, visible)
+      )
+      tiles.addEventListener('dispose-model', ({ scene }) => batcher.remove(scene))
+    } else if (material) {
       tiles.addEventListener('load-model', ({ scene }) => {
         scene.traverse(object => {
           const mesh = object as Mesh
@@ -98,7 +119,7 @@ export function createBuildings(
     tiles.addEventListener('load-model', invalidate)
     tiles.addEventListener('dispose-model', invalidate)
     tiles.setCamera(camera)
-    group.add(tiles.group)
+    tilesRoot.add(tiles.group)
     return tiles
   })
   group.updateMatrixWorld(true)
@@ -120,7 +141,7 @@ export function createBuildings(
         loading += s.queued + s.downloading + s.parsing
         loaded += s.loaded
       }
-      return { loading, loaded }
+      return batcher ? { loading, loaded, batch: batcher.stats() } : { loading, loaded }
     },
     bounds() {
       const box = new Box3()

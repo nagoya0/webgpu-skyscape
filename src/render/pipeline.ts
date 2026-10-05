@@ -36,7 +36,8 @@ export function createPipeline(
   renderer: WebGPURenderer,
   scene: Scene,
   camera: Camera,
-  stages: readonly CompositeStage[] = []
+  stages: readonly CompositeStage[] = [],
+  options: { lensFlare?: boolean } = {}
 ): Pipeline {
   const passNode = pass(scene, camera, { samples: 0 }).setMRT(
     mrt({ output, velocity: asNode(highpVelocity) })
@@ -47,9 +48,9 @@ export function createPipeline(
 
   const aerial = aerialPerspective(color, depth)
   const composited = stages.reduce<Node<'vec4'>>((input, stage) => stage(input, depth), asNode(aerial))
-  const flare = lensFlare(composited)
+  const flare = options.lensFlare === false ? null : lensFlare(composited)
   const exposure = uniform(3)
-  const toneMapped = toneMapping(AgXToneMapping, exposure, asNode(flare))
+  const toneMapped = toneMapping(AgXToneMapping, exposure, flare ? asNode(flare) : composited)
   const taa = temporalAntialias(toneMapped, depth, velocity, camera)
 
   // Dithering is a vec3; adding it to the vec4 output leaves alpha as it is, as upstream does.
@@ -63,7 +64,7 @@ export function createPipeline(
     dispose() {
       renderPipeline.dispose()
       taa.dispose()
-      flare.dispose()
+      flare?.dispose()
       aerial.dispose()
       passNode.dispose()
     }

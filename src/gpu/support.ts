@@ -7,6 +7,16 @@ export const REQUIRED_FEATURES: readonly GPUFeatureName[] = ['float32-filterable
 /** Limits the renderer needs above the WebGPU defaults. */
 export const REQUIRED_LIMITS: Readonly<Record<string, number>> = {}
 
+/**
+ * Limits asked for up to these values when the adapter allows, without failing if it does not.
+ * The batched building geometry (src/scene/tileBatcher.ts) outgrows the default 256 MiB per
+ * buffer.
+ */
+export const DESIRED_LIMITS: Readonly<Record<string, number>> = {
+  maxBufferSize: 1024 * 1024 * 1024,
+  maxStorageBufferBindingSize: 1024 * 1024 * 1024
+}
+
 export type SupportResult =
   | { ok: true; device: GPUDevice; adapterInfo: GPUAdapterInfo }
   | { ok: false; reason: string; details: string[] }
@@ -56,9 +66,15 @@ export async function requestDevice(): Promise<SupportResult> {
   try {
     // Ask for everything the adapter offers, as Three.js does, so that optional
     // features such as timestamp queries stay available.
+    const adapterLimits = adapter.limits as unknown as Record<string, number>
+    const requiredLimits: Record<string, number> = { ...REQUIRED_LIMITS }
+    for (const [name, value] of Object.entries(DESIRED_LIMITS)) {
+      const available = adapterLimits[name]
+      if (available !== undefined) requiredLimits[name] = Math.min(value, available)
+    }
     const device = await adapter.requestDevice({
       requiredFeatures: [...adapter.features] as GPUFeatureName[],
-      requiredLimits: REQUIRED_LIMITS
+      requiredLimits
     })
     return { ok: true, device, adapterInfo: adapter.info }
   } catch (error) {

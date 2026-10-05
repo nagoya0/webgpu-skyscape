@@ -34,7 +34,13 @@ async function start(): Promise<void> {
   const { device } = support
 
   // Reversed Z (ADR 0015).
-  const renderer = new WebGPURenderer({ device, antialias: false, reversedDepthBuffer: true })
+  const renderer = new WebGPURenderer({
+    device,
+    antialias: false,
+    reversedDepthBuffer: true,
+    // GPU timestamps for ?measure only; they need the 'timestamp-query' feature.
+    trackTimestamp: params.measure && device.features.has('timestamp-query')
+  })
   await renderer.init()
   // Passing a device should rule out the WebGL 2 fallback; check anyway.
   if (!(renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend) {
@@ -63,7 +69,7 @@ async function start(): Promise<void> {
   )
 
   const scene = new Scene()
-  const atmosphere = createAtmosphere(renderer, camera)
+  const atmosphere = createAtmosphere(renderer, camera, params.raymarch)
   atmosphere.setFrame(frame)
   atmosphere.setDate(params.date)
   scene.add(atmosphere.light, createPlaceholderGround())
@@ -76,7 +82,7 @@ async function start(): Promise<void> {
         params.textures ? null : createFacadeMaterial(),
         params.tileError,
         undefined,
-        params.bundle
+        params.drawMode
       )
     : null
   if (buildings) scene.add(buildings.group)
@@ -85,7 +91,7 @@ async function start(): Promise<void> {
   if (terrain) scene.add(terrain.group)
   showAttribution()
 
-  const pipeline = createPipeline(renderer, scene, camera)
+  const pipeline = createPipeline(renderer, scene, camera, [], { lensFlare: params.flare })
   pipeline.exposure.value = params.exposure
 
   const { path, seamGap } = createPlaceholderPath(frame, {
@@ -188,26 +194,35 @@ async function start(): Promise<void> {
   }
 
   // ?measure: after loading, 180 frames of flight at 60 frames per second of flight time,
-  // each waiting for the GPU to finish, so the time covers the CPU and GPU work of a frame.
+  // each waiting for the GPU to finish. Reported per frame:
+  // - total: CPU and GPU one after the other, the worst case;
+  // - cpu: until the commands are submitted (tile updates, scene traversal, encoding);
+  // - gpu: GPU time from timestamp queries, where the device supports them.
+  // A browser overlaps the CPU work of one frame with the GPU work of the previous one, so the
+  // achievable frame time is closer to the larger of cpu and gpu than to total.
   let measuring = false
   async function measure(elapsed: number): Promise<void> {
+    // `trackTimestamp` is missing from the type declarations of the backend in 0.186.
+    const timestamps = (renderer.backend as unknown as { trackTimestamp: boolean }).trackTimestamp
     for (let i = 0; i < 20; i++) {
       step(params.paused ? 0 : 1 / 60, elapsed)
       await device.queue.onSubmittedWorkDone()
+      if (timestamps) await renderer.resolveTimestampsAsync('render')
     }
     const times: number[] = []
     const cpuTimes: number[] = []
+    const gpuTimes: number[] = []
     for (let i = 0; i < 180; i++) {
       const begin = performance.now()
       step(params.paused ? 0 : 1 / 60, elapsed + i / 60)
-      // Time until the commands are submitted: mostly JavaScript (tile updates, scene
-      // traversal, encoding draw calls).
       cpuTimes.push(performance.now() - begin)
       await device.queue.onSubmittedWorkDone()
       times.push(performance.now() - begin)
+      if (timestamps) gpuTimes.push((await renderer.resolveTimestampsAsync('render')) ?? 0)
     }
     times.sort((p, q) => p - q)
     cpuTimes.sort((p, q) => p - q)
+    gpuTimes.sort((p, q) => p - q)
     const round = (value: number): number => Number(value.toFixed(2))
     let meshes = 0
     scene.traverseVisible(object => {
@@ -219,6 +234,8 @@ async function start(): Promise<void> {
       p95Ms: round(times[171]),
       maxMs: round(times[179]),
       cpuMedianMs: round(cpuTimes[90]),
+      gpuMedianMs: gpuTimes.length ? round(gpuTimes[90]) : null,
+      gpuP95Ms: gpuTimes.length ? round(gpuTimes[171]) : null,
       visibleMeshes: meshes
     }
     renderer.setAnimationLoop(t => {

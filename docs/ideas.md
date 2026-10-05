@@ -25,22 +25,20 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   Koto. The placeholder racetrack stays as it is; on its turns it leaves these wards (Bunkyo to
   the north, Shinagawa to the south) and flies over empty ground for now.
 - **Frame time** ([ADR 0025](adr/0025-target-hardware.md): about 7 ms per frame on the
-  development machine). Measured 2026-10-06 with `?measure`, 1902 × 984, paused over the
-  buildings at t = 5 s:
+  development machine). After batching the buildings ([ADR 0027](adr/0027-batched-building-tiles.md)),
+  measured 2026-10-06 with `?measure`, 1902 × 984, paused over the buildings at t = 5 s:
 
-  | Scene | Frame | JavaScript | Meshes |
-  |---|---|---|---|
-  | Sky only | 4.1 ms | 0.3 ms | 1 |
-  | + terrain | 5.3 ms | 1.1 ms | 194 |
-  | + terrain + buildings, no render bundle | 17.1 ms | 8.0 ms | 1,030 |
-  | + terrain + buildings, render bundle | 13.0 ms | 5.5 ms | 1,030 |
+  | Scene | GPU | JavaScript |
+  |---|---|---|
+  | Sky only | 1.1 ms | 0.3 ms |
+  | + terrain | 1.8 ms | 1.1 ms |
+  | + terrain + buildings | 3.5 ms | 3.3 ms |
 
-  Done: building tile error target 6 → 20 (no visible difference; 1,967 → 1,030 meshes) and a
-  `BundleGroup` for the building tiles. Still about twice the budget, mostly the buildings.
-  Next options: merge the building tiles into a `BatchedMesh` ourselves (3DTilesRendererJS's
-  BatchedTilesPlugin is WebGL-only), update the tile traversal less often than every frame,
-  and look at the GPU cost of the facade shader. Measurements while flying vary a lot (19 to
-  37 ms) because new tiles are parsed in the same frames.
+  Within budget with room for the clouds. Still to look at: JavaScript time while flying (new
+  tiles are parsed in the same frames, so frames vary), and updating the tile traversal less
+  often than every frame if JavaScript becomes the limit. How to read `?measure`: GPU time from
+  timestamp queries; JavaScript time from a run without them, since they slow it; the "total"
+  figure includes about 3 ms of waiting for the GPU's reply and overstates the cost.
 - **Tile streaming at speed.** At 250 m/s the camera keeps requesting new tiles; a thousand or
   more can be queued while flying. Prefetching along the precomputed path
   ([ADR 0018](adr/0018-f16-at-cruise-speed.md)) is the planned answer.

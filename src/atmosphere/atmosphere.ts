@@ -25,7 +25,16 @@ export interface Atmosphere {
   dispose(): void
 }
 
-export function createAtmosphere(renderer: WebGPURenderer, camera: Camera): Atmosphere {
+export function createAtmosphere(
+  renderer: WebGPURenderer,
+  camera: Camera,
+  /**
+   * Ray march the scattered light between the camera and the scene per pixel (takram's
+   * default) instead of looking it up in the precomputed tables. Costs GPU time; the tables
+   * can show precision artefacts.
+   */
+  raymarchScattering = true
+): Atmosphere {
   renderer.library.addLight(
     // TYPE-BRIDGE: takram's types are built against @types/three 0.184.
     AtmosphereLightNode as unknown as Parameters<typeof renderer.library.addLight>[0],
@@ -34,6 +43,7 @@ export function createAtmosphere(renderer: WebGPURenderer, camera: Camera): Atmo
 
   const atmosphereContext = new AtmosphereContext()
   atmosphereContext.camera = camera
+  atmosphereContext.raymarchScattering = raymarchScattering
   renderer.contextNode = context({
     // TYPE-BRIDGE: @types/three 0.186 types the context value as unknown.
     ...(renderer.contextNode.value as object),
