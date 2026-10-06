@@ -34,6 +34,42 @@ Planned: finer mountain terrain and forests, the rest of the clouds, rain, a fli
 JSBSim with manoeuvres, night scenes, colour grading, and a UI. The order and the open questions are in
 [docs/ideas.md](docs/ideas.md).
 
+## What this project adds
+
+Beyond using the libraries listed under credits, this project does the following itself:
+
+- **Clouds on WebGPU.** takram's volumetric clouds are written for WebGL. Their shaders are
+  ported to WGSL and connected to Three.js's WebGPU renderer through TSL, with temporal
+  upscaling, cascaded cloud shadows and light shafts
+  ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md),
+  [ADR 0022](docs/adr/0022-heavy-shaders-in-wgsl.md)). Non-finite values are dropped before they
+  can spread through the temporal history.
+- **Cloud shadows on the ground** through Three.js's own shadow system, so the terrain and
+  buildings darken under the clouds.
+- **takram's packages on a newer Three.js**, patched to run on 0.186
+  ([ADR 0016](docs/adr/0016-patch-takram-for-newer-three.md)).
+- **Terrain streamed from GSI tiles**: a quadtree refined by how large a photograph texel
+  appears on screen, with no holes while tiles load, out to the horizon, and a sea-level sphere
+  beyond it ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md),
+  [ADR 0030](docs/adr/0030-terrain-to-the-horizon.md)).
+- **Water from map data**: a water mask per tile from the elevation model's missing data and the
+  water polygons of GSI's vector tiles (read by a small decoder of our own), drawn with waves,
+  the sky's reflection and the sun's glint
+  ([ADR 0029](docs/adr/0029-water-from-gsi-data.md)).
+- **Aerial photographs as ground colour**: the haze in the photographs is removed so that it is
+  not applied twice ([ADR 0031](docs/adr/0031-correct-the-sources-grade-at-the-end.md)), and the
+  land reflects light diffusely, without the sheen a standard material keeps at grazing angles
+  ([ADR 0032](docs/adr/0032-land-reflects-diffusely.md)).
+- **A local frame for the scene**: positions are computed on the Earth and moved into a frame
+  around the area, which keeps 32-bit floats precise
+  ([ADR 0017](docs/adr/0017-local-world-frame.md)).
+- **Camera effects**: shake that grows with load and inside clouds; head lag and the eye moving
+  under load, kept off for a later cockpit view
+  ([ADR 0020](docs/adr/0020-effects-by-view.md)).
+- **Buildings in the Tokyo area**: PLATEAU's untextured models with procedural facades, drawn as
+  one batched mesh ([ADR 0024](docs/adr/0024-untextured-buildings-with-procedural-facades.md),
+  [ADR 0027](docs/adr/0027-batched-building-tiles.md)).
+
 ## Requirements
 
 A browser with WebGPU enabled. There is no WebGL fallback; other browsers get a page explaining
