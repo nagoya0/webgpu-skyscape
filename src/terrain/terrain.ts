@@ -16,6 +16,7 @@ import {
   Vector3,
   type PerspectiveCamera
 } from 'three/webgpu'
+import { mix, texture as textureNode, vec3 } from 'three/tsl'
 
 import { Geodetic, radians } from '@takram/three-geospatial'
 
@@ -59,7 +60,18 @@ export interface TerrainOptions {
   maxTiles: number
   /** Tiles loading at once at most. */
   maxLoading: number
+  /**
+   * Debugging: 'levels' tints each tile by its zoom level; 'unlit' shows the photographs as they
+   * are, without lighting or water.
+   */
+  debug?: 'levels' | 'unlit' | null
 }
+
+// Zoom level colours for debugging, repeating every eight levels: zoom 8 red, 9 orange,
+// 10 yellow, 11 green, 12 cyan, 13 blue, 14 purple, 15 white, 16 red again.
+const LEVEL_COLORS: [number, number, number][] = [
+  [1, 0, 0], [1, 0.5, 0], [1, 1, 0], [0, 1, 0], [0, 1, 1], [0, 0.3, 1], [0.7, 0, 1], [1, 1, 1]
+]
 
 export const DEFAULT_TERRAIN: TerrainOptions = {
   longitude: 139.757,
@@ -207,10 +219,17 @@ export function createTerrain(
           metalness: 0,
           side: DoubleSide
         })
-        const land = gradedPhoto(texture)
+        // ?terraindebug=1: tint each tile by its zoom level, to see which level is drawn where.
+        const land = options.debug === 'levels'
+          ? mix(gradedPhoto(texture), vec3(...LEVEL_COLORS[tile.key.z % LEVEL_COLORS.length]), 0.6)
+          : gradedPhoto(texture)
         const mask = maskSources && atmosphereContext ? buildWaterMask(...maskSources) : null
         let waterMask: DataTexture | null = null
-        if (mask && atmosphereContext) {
+        if (options.debug === 'unlit') {
+          // ?terraindebug=2: the photograph as emission, without lighting, water or correction.
+          material.colorNode = vec3(0)
+          material.emissiveNode = textureNode(texture).rgb
+        } else if (mask && atmosphereContext) {
           // Only tiles with water get the water shading, which costs a sky lookup per pixel.
           waterMask = new DataTexture(mask, MASK_SIZE, MASK_SIZE, RedFormat, UnsignedByteType)
           waterMask.minFilter = LinearFilter
