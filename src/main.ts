@@ -1,5 +1,6 @@
 import { PerspectiveCamera, Scene, Timer, WebGPURenderer, type Mesh } from 'three/webgpu'
 
+import { AREAS } from './areas'
 import { createAtmosphere } from './atmosphere/atmosphere'
 import {
   CLOUD_FEATURES,
@@ -25,9 +26,6 @@ import { showDebugText } from './ui/debugText'
 import { showGuidance } from './ui/guidance'
 import { showLoading } from './ui/loading'
 
-// The middle of the three wards tried first (ADR 0023), near Shimbashi. The course and with it
-// the origin may still move.
-const ORIGIN = { longitude: 139.757, latitude: 35.665, height: 0 }
 
 const params = readParams(location.search)
 
@@ -69,7 +67,9 @@ async function start(): Promise<void> {
   renderer.setSize(container.clientWidth, container.clientHeight)
   container.appendChild(renderer.domElement)
 
-  const frame = createLocalFrame(ORIGIN.longitude, ORIGIN.latitude, ORIGIN.height)
+  const area = AREAS[params.area]
+  const { origin } = area
+  const frame = createLocalFrame(origin.longitude, origin.latitude, origin.height)
   const camera = new PerspectiveCamera(
     params.fov,
     container.clientWidth / container.clientHeight,
@@ -83,7 +83,7 @@ async function start(): Promise<void> {
   atmosphere.setDate(params.date)
   scene.add(atmosphere.light, createPlaceholderGround())
 
-  const buildings = params.buildings
+  const buildings = params.buildings && area.buildings
     ? createBuildings(
         frame,
         camera,
@@ -97,7 +97,7 @@ async function start(): Promise<void> {
   if (buildings) scene.add(buildings.group)
 
   photoGrade.value.set(params.photoDehaze, params.photoContrast, params.photoSaturation, 0)
-  const terrain = params.terrain ? createTerrain(frame) : null
+  const terrain = params.terrain ? createTerrain(frame, area.terrain) : null
   if (terrain) scene.add(terrain.group)
   showAttribution()
   const debugText = params.debugText ? showDebugText() : null

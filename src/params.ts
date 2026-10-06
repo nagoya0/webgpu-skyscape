@@ -1,6 +1,7 @@
 // Settings from the URL query, the only way to change them until the UI is designed (ADR 0019).
 // Unknown or malformed values fall back to the defaults. Names and values are ASCII only.
 //
+//   area=NAME         tokyo (default) or hakone (a trial of flying higher over mountains)
 //   date=YYYY-MM-DD   date in JST (default: today in JST)
 //   time=HH:MM        time of day in JST (default 16:30)
 //   t=seconds         start time on the flight path (default 0)
@@ -43,6 +44,7 @@
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 
 export interface Params {
+  area: 'tokyo' | 'hakone'
   date: Date
   flightStart: number
   paused: boolean
@@ -115,6 +117,7 @@ export function readParams(search: string, now = new Date()): Params {
   }
 
   return {
+    area: query.get('area') === 'hakone' ? 'hakone' : 'tokyo',
     date,
     flightStart: number('t', 0, -1e6, 1e6),
     paused: query.has('paused'),

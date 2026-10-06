@@ -82,6 +82,20 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   haze removed 0.15, contrast 1.2, saturation 1.4, picked by the maintainer from four
   strengths. Still to look at: the uniform grey of the buildings, and at the end colour grading
   and the choice of tone mapping (AgX is muted by design).
+- **Area and altitude: a trial of Hakone and Mount Fuji** (`?area=hakone`, `src/areas.ts`). The
+  maintainer questioned central Tokyo (2026-10-06): without building textures, procedural
+  facades seen from low altitude look artificial, and buildings popping in and out along the
+  course stand out. Options discussed: stay in Tokyo and fix the streaming; the coast and
+  mountains (Sagami Bay, Hakone, Mount Fuji) flown higher; or the sea only. The maintainer
+  leans towards the coast and mountains, flown higher so that the ground needs less detail. Not
+  decided; a trial was agreed first. Trial set-up: origin north of Lake Ashi, terrain root tiles
+  at zoom 8 out to about 1.5° (towards the horizon), no buildings, flown at 3,000 m with 30°
+  bank (`?area=hakone&altitude=3000&bank=30`). First results (2026-10-06, 1600 × 900 and
+  1920 × 1080): Mount Fuji with its snow cap and the cumulus below read well with photographs
+  and terrain only; 164 to 180 terrain tiles and 229 to 252 MB of textures, the same as Tokyo,
+  since higher altitude needs less detail near the camera; GPU about 2.9 ms and JavaScript
+  about 1.4 ms. Still to look at: some photographs turn orange with the correction, a light
+  band along the horizon, the sea where photographs are missing.
 - **Priority after the clouds.** The maintainer finds the clouds good enough for now and the
   ground lagging behind (2026-10-06), so ground quality comes before the remaining cloud
   features. Candidates: building shadows and ambient occlusion, water surfaces, the aerial

@@ -56,6 +56,7 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 
 | Parameter | Meaning |
 |---|---|
+| `area=tokyo`, `area=hakone` | Demo area; Hakone and Mount Fuji are a trial (without buildings), best seen with `altitude=3000&bank=30` |
 | `date=YYYY-MM-DD`, `time=HH:MM` | Date and time of day in JST |
 | `t=seconds`, `paused` | Start time on the flight path; hold the flight there |
 | `exposure`, `fov` | Exposure before tone mapping; vertical field of view |
