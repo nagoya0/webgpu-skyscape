@@ -23,12 +23,15 @@
 //   shadow...      the cloud shadow maps and their cascades, for the optical depth to the sun
 //                  beyond the marched sun ray (cloudShadowOpticalDepth.wgsl)
 //   pixel          full-resolution pixel, for the shadow filter's rotation
+//   shadowLengthMarch  (min step, max iterations, max distance, unused) for the light shafts
 //
 // Returns columns:
 //   [0] cloud radiance (premultiplied) and opacity, before the aerial perspective
 //   [1] (front distance, velocity u, velocity v, 0): the distance to the clouds' front, or to
 //       the scene where there are no clouds; the velocity is this frame's UV minus last frame's
 //   [2] (ray direction in world space, haze ray length) for the aerial perspective and the haze
+//   [3] (shadow length, shadow start, 0, 0) in metres: how much of the view ray lies in cloud
+//       shadow, and where that stretch starts, for the light shafts (SHADOW_LENGTH)
 fn clouds(
   viewZ: f32,
   uv: vec2f,
@@ -79,7 +82,8 @@ fn clouds(
   shadowSampler: sampler,
   shadowMapSize: f32,
   shadowTopHeight: f32,
-  pixel: vec2f
+  pixel: vec2f,
+  shadowLengthMarch: vec4f
 ) -> mat4x4f {
   // Ray in view space, then world space.
   let ndc = vec4f(uv.x * 2.0 - 1.0, 1.0 - uv.y * 2.0, 0.5, 1.0);
@@ -251,10 +255,58 @@ fn clouds(
     hazeFar = mix(hazeFar, min(frontDistance, hazeFar), alpha);
   }
 
+  // Light shafts: the length of the view ray in cloud shadow (marchShadowLength), from the
+  // camera to the ground, the top of the shadow layers, the scene or the clouds' front.
+  var shadowLength = vec2f(0.0);
+  #ifdef SHADOW_LENGTH
+  let shadowTop = raySphere(relative, direction, earthRadius + shadowTopHeight);
+  var rayNear = cameraNear;
+  var rayFar = select(shadowTop.y, ground.x, ground.x > 0.0);
+  if (height >= shadowTopHeight) {
+    rayNear = shadowTop.x;
+  }
+  rayFar = min(min(rayFar, sceneDistance), shadowLengthMarch.z);
+  if (transmittanceSum > 0.0) {
+    // Clamp at the clouds, by their opacity for smoother edges.
+    rayFar = mix(rayFar, min(frontDistance, rayFar), alpha);
+  }
+  if (rayNear >= 0.0 && rayFar > rayNear) {
+    let maxDistance = rayFar - rayNear;
+    var shadowStep = shadowLengthMarch.x;
+    var rayDistance = shadowStep * jitter;
+    var lengthInShadow = 0.0;
+    var weightedDistance = 0.0;
+    for (var i = 0; i < i32(shadowLengthMarch.y); i++) {
+      if (rayDistance > maxDistance) {
+        break;
+      }
+      let q = origin + direction * (rayNear + rayDistance);
+      let shadowDepth = cloudShadowOpticalDepth(
+        q, 0.0, 0.0, 1.0, jitter,
+        viewMatrix, shadowMatrix0, shadowMatrix1, shadowMatrix2, shadowIntervalsA,
+        shadowIntervalsB, shadowCascadeCount, cameraNear, shadowFar, shadowTexture,
+        shadowSampler, shadowMapSize, sunDirection, earthCenter, earthRadius, shadowTopHeight, pixel
+      );
+      let inShadow = (1.0 - exp(-shadowDepth)) * shadowStep;
+      lengthInShadow += inShadow;
+      weightedDistance += inShadow * (rayNear + rayDistance);
+      shadowStep *= march.z;
+      rayDistance += shadowStep;
+    }
+    // Not in takram: the atmosphere here takes the shadow as one stretch (length, start), so
+    // the stretch is centred on where the shadowed samples lie on average.
+    if (lengthInShadow > 0.0) {
+      shadowLength = vec2f(
+        lengthInShadow, max(weightedDistance / lengthInShadow - lengthInShadow * 0.5, 0.0)
+      );
+    }
+  }
+  #endif // SHADOW_LENGTH
+
   return mat4x4f(
     vec4f(radianceIntegral, alpha),
     vec4f(frontDistance, velocity, 0.0),
     vec4f(direction, hazeFar),
-    vec4f(0.0)
+    vec4f(shadowLength, 0.0, 0.0)
   );
 }

@@ -16,8 +16,8 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 
 "takram's default" is takram's default quality preset (`qualityPresets.ts`, the same as its high
 preset). Until 2026-10-06 this table did not say that `TURBULENCE`, `ACCURATE_SUN_SKY_LIGHT`,
-`GROUND_BOUNCE` and `SHADOW_LENGTH` are on in takram's default; they are the switches still
-missing for the default look.
+`GROUND_BOUNCE` and `SHADOW_LENGTH` are on in takram's default; of these, `SHADOW_LENGTH` is now
+ported, and the other three are the switches still missing for the default look.
 
 | Switch | Ported | On by default here | takram's default |
 |---|---|---|---|
@@ -28,7 +28,7 @@ missing for the default look.
 | `ACCURATE_SUN_SKY_LIGHT` | no | | on |
 | `GROUND_BOUNCE` | no | | on |
 | `HAZE` | yes | yes | on |
-| `SHADOW_LENGTH` (light shafts) | no | | on |
+| `SHADOW_LENGTH` (light shafts) | yes | yes | on |
 | `TEMPORAL_UPSCALE` | yes | yes | on |
 | `TEMPORAL_PASS`, `TEMPORAL_JITTER` (shadow maps) | yes | yes | on |
 | `SHADOW` | not needed | | Marks takram's shared shader code as built for the shadow pass; here the shadow march is its own WGSL function |
@@ -82,7 +82,7 @@ missing for the default look.
 | Front depth and velocity output | done | Velocity from last frame's view-projection in world space; takram reprojects the no-cloud case in view space for precision, which the local frame does not need |
 | Temporal resolve with reprojection and variance clipping (`cloudsResolve.frag`) | done | Four neighbours, bilinear history, as takram's defaults (varianceGamma 2, temporalAlpha 0.1). Added: values that are not finite are dropped, since one NaN in the history spread until the screen went black (found 2026-10-06 when flying into a cloud) |
 | Temporal upscaling from a lower resolution (`TEMPORAL_UPSCALE`) | done | Quarter resolution in each direction, filled in over 16 frames in takram's Bayer order. Off (`?cloudfx=-TEMPORAL_UPSCALE`), the clouds are marched at full resolution and blended into the history |
-| Shadow length in the resolve (`SHADOW_LENGTH`) | planned | With the light shafts |
+| Shadow length in the resolve (`SHADOW_LENGTH`) | done | Resolved with the colour, as takram |
 | Quality presets | on hold | One target machine ([ADR 0025](adr/0025-target-hardware.md)) |
 
 ## Atmosphere and scene
@@ -91,7 +91,7 @@ missing for the default look.
 |---|---|---|
 | Aerial perspective on the clouds | done | `getIndirectLuminanceToPoint` from `@takram/three-atmosphere/webgpu` (takram's `GetSkyRadianceToPoint`) up to the clouds' front, applied in TSL after the WGSL march; without the shadow length |
 | Haze below and between the clouds (`HAZE`) | done | takram's defaults; the shadow length is 0 until `SHADOW_LENGTH` is ported |
-| Light shafts (`SHADOW_LENGTH`, epipolar shadow length in the atmosphere) | planned | On in takram's default. Can be built now that the shadow maps exist |
+| Light shafts (`SHADOW_LENGTH`: the length of the view ray in cloud shadow) | partial | Marched through the shadow maps as takram's `marchShadowLength` (50 m steps growing by 1.01, up to 500 steps and 200 km), and passed to the scene's aerial perspective, the clouds' aerial perspective and the haze. Difference: `@takram/three-atmosphere/webgpu` takes the shadow as one stretch, (length, start), where takram's WebGL atmosphere takes a length only; the stretch is centred on the average position of the shadowed samples. About 0.35 ms of GPU at 1920 × 1080. The cloud pass now writes 48 bytes per pixel, so the device needs `maxColorAttachmentBytesPerSample` of 48 (`src/gpu/support.ts`) |
 | Cascaded shadow maps (`CascadedShadowMaps`, `ShadowPass`, `shadow.frag`) | partial | `src/clouds/cascadedShadowMaps.ts`, `cloudShadows.ts`: takram's 3 cascades of 512 × 512, split lambda 0.6, structured volume sampling, 50 steps. Differences: the cascades sit side by side in one 32-bit texture instead of a half-float array texture; shadows reach 80 km (the clouds' march distance), where takram uses the camera's far plane, which is 10,000 km here and would spread the cascades too thin; no mip level per cascade |
 | Cloud shadows on the scene (terrain, buildings) | partial | Through the sun light's custom shadow node (`light.shadow.shadowNode`), so only direct sunlight is dimmed. As takram's aerial perspective: no optical depth tail, 8-sample filter; the filter radius is fixed at 2 texels where takram scales it by the shadow texel's size on screen |
 | Shadow pass temporal resolve (`shadowResolve.frag`) | done | Nine-sample variance clipping, takram's defaults (varianceGamma 1, temporalAlpha 0.01); non-finite values dropped |

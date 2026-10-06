@@ -4,8 +4,13 @@
 /** Features the renderer cannot work without. Add to this as stages are added. */
 export const REQUIRED_FEATURES: readonly GPUFeatureName[] = ['float32-filterable']
 
-/** Limits the renderer needs above the WebGPU defaults. */
-export const REQUIRED_LIMITS: Readonly<Record<string, number>> = {}
+/**
+ * Limits the renderer needs above the WebGPU defaults. The cloud pass writes three 32-bit RGBA
+ * targets at once (src/clouds/cloudsNode.ts), 48 bytes per sample where the default allows 32.
+ */
+export const REQUIRED_LIMITS: Readonly<Record<string, number>> = {
+  maxColorAttachmentBytesPerSample: 48
+}
 
 /**
  * Limits asked for up to these values when the adapter allows, without failing if it does not.

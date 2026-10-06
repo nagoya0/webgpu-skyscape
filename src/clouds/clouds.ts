@@ -27,6 +27,9 @@ import {
 } from 'three/tsl'
 import {
   Data3DTexture,
+  DataTexture,
+  FloatType,
+  RGBAFormat,
   LinearFilter,
   LinearMipmapLinearFilter,
   NoColorSpace,
@@ -80,7 +83,8 @@ export const CLOUD_FEATURES = [
   'TEMPORAL_UPSCALE',
   'HAZE',
   'TEMPORAL_PASS',
-  'TEMPORAL_JITTER'
+  'TEMPORAL_JITTER',
+  'SHADOW_LENGTH'
 ] as const
 export type CloudFeature = (typeof CLOUD_FEATURES)[number]
 export const DEFAULT_CLOUD_FEATURES: ReadonlySet<CloudFeature> = new Set(CLOUD_FEATURES)
@@ -208,6 +212,11 @@ export interface Clouds {
    * `shadow.shadowNode`: it dims the sunlight only.
    */
   sceneShadow: Node<'float'>
+  /**
+   * (shadow length, shadow start) along the view ray in the atmosphere's units, for the aerial
+   * perspective's light shafts.
+   */
+  shadowLength: Node<'vec2'>
 }
 
 const SHAPE_REPEAT = 0.0003
@@ -404,6 +413,15 @@ export async function createClouds(
   const sceneShadow = shadowOpticalDepth(positionWorld, float(0), float(2), 0, asNode<'float'>(stbn))
     .negate()
     .exp()
+  // Light shafts: the resolved shadow length, set each frame by the cloud passes, for the
+  // aerial perspective of the scene, in the atmosphere's units. Zero until the first frame.
+  // (min step, max iterations, max distance): takram's defaults.
+  const shadowLengthMarch = uniform(new Vector4(50, 500, 2e5, 0))
+  const shadowLengthOutput = texture(new DataTexture(new Float32Array(4), 1, 1, RGBAFormat, FloatType))
+  const shadowLength = shadowLengthOutput
+    .sample(screenUV)
+    .xy.mul(asNode<'float'>(ctx.parametersNode.worldToUnit))
+
   const sunWorld = new Vector3()
   const updateShadows = (renderer: WebGPURenderer): void => {
     sunWorld.copy(ctx.sunDirectionECEF.value).transformDirection(frame.ecefToWorld)
@@ -490,13 +508,17 @@ export async function createClouds(
           shadowSampler: sampler(shadows.textureNode),
           shadowMapSize: shadows.mapSizeNode,
           shadowTopHeight: shadowHeights.y,
-          pixel
+          pixel,
+          shadowLengthMarch
         })
       ).toVar() as unknown as { element(index: number): Node<'vec4'> }
       const cloud = result.element(0)
       const depthVelocity = result.element(1)
       const direction = result.element(2).xyz
       const hazeFar = result.element(2).w
+      // (shadow length, shadow start) in metres, and in the atmosphere's units.
+      const shadowLength = result.element(3)
+      const shadowLengthUnit = shadowLength.xy.mul(worldToUnit)
 
       // Aerial perspective between the camera and the clouds' front (applyAerialPerspective).
       // Where there are no clouds the colour is 0 and the result does not matter; the distance is
@@ -505,7 +527,7 @@ export async function createClouds(
       // least 1 m away.
       const front = cameraPosition.add(direction.mul(depthVelocity.x.clamp(1, 1e6)))
       const toFront = asNode(
-        getIndirectLuminanceToPoint(cameraUnit, toUnit(front), float(0), sunDirectionECEF)
+        getIndirectLuminanceToPoint(cameraUnit, toUnit(front), shadowLengthUnit, sunDirectionECEF)
       ) as unknown as { get(name: 'luminance' | 'transmittance'): Node<'vec3'> }
       const aerial = select(
         cloud.a.greaterThan(0),
@@ -528,42 +550,50 @@ export async function createClouds(
           phase,
           skyLightScale: light.w,
           haze: hazeParameters,
-          shadowLength: float(0)
+          shadowLength: shadowLength.x
         })
       )
-      return { color, depthVelocity }
+      return { color, depthVelocity, shadowLength }
     }
 
     const resolve: CloudPassInputs['resolve'] = ({
       color,
       depthVelocity,
+      shadowLength,
       history,
+      shadowLengthHistory,
       ownedOffset
-    }) =>
-      asNode<'vec4'>(
+    }) => {
+      const result = asNode<'mat2'>(
         functions.cloudsResolve({
           coord: ivec2(screenCoordinate.xy.floor()),
           uv: screenUV,
           colorTexture: color,
           colorSampler: sampler(color),
           depthVelocityTexture: depthVelocity,
+          shadowLengthTexture: shadowLength,
+          shadowLengthSampler: sampler(shadowLength),
           historyTexture: history,
           historySampler: sampler(history),
+          shadowLengthHistoryTexture: shadowLengthHistory,
           ownedOffset: ivec2(ownedOffset),
           // takram's CloudsResolveMaterial defaults.
           varianceGamma: float(2),
           temporalAlpha: float(0.1)
         })
-      )
+      ).toVar() as unknown as { element(index: number): Node<'vec4'> }
+      return { color: result.element(0), shadowLength: result.element(1) }
+    }
 
     return asNode<'vec4'>(
       new CloudsNode(input, camera, {
         march: marchPixel,
         resolve,
-        temporalUpscale: options.features.has('TEMPORAL_UPSCALE')
+        temporalUpscale: options.features.has('TEMPORAL_UPSCALE'),
+        shadowLengthOutput
       })
     )
   }
 
-  return { stage, coverage, setTime, updateShadows, sceneShadow }
+  return { stage, coverage, setTime, updateShadows, sceneShadow, shadowLength }
 }

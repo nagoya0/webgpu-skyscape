@@ -37,7 +37,11 @@ export function createPipeline(
   scene: Scene,
   camera: Camera,
   stages: readonly CompositeStage[] = [],
-  options: { lensFlare?: boolean } = {}
+  options: {
+    lensFlare?: boolean
+    /** (shadow length, shadow start) in the atmosphere's units, for light shafts. */
+    shadowLength?: Node<'vec2'>
+  } = {}
 ): Pipeline {
   const passNode = pass(scene, camera, { samples: 0 }).setMRT(
     mrt({ output, velocity: asNode(highpVelocity) })
@@ -46,7 +50,8 @@ export function createPipeline(
   const depth = passNode.getTextureNode('depth')
   const velocity = passNode.getTextureNode('velocity')
 
-  const aerial = aerialPerspective(color, depth)
+  // TYPE-BRIDGE: takram's aerialPerspective is typed against @types/three 0.184.
+  const aerial = aerialPerspective(color, depth, null, options.shadowLength as Parameters<typeof aerialPerspective>[3])
   const composited = stages.reduce<Node<'vec4'>>((input, stage) => stage(input, depth), asNode(aerial))
   const flare = options.lensFlare === false ? null : lensFlare(composited)
   const exposure = uniform(3)

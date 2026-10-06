@@ -160,8 +160,9 @@ Next stages, in the order agreed on 2026-10-05:
      what is drawn ([ADR 0008](adr/0008-precomputed-flight-path.md)).
 
    After the main steps and a check of the GPU cost, the takram features still missing are
-   added. The ones on in takram's default come first: light shafts (`SHADOW_LENGTH`),
-   turbulence, ground bounce and accurate sun and sky light ([clouds-parity.md](clouds-parity.md)).
+   added. The ones on in takram's default come first: light shafts (`SHADOW_LENGTH`, required
+   by the maintainer; done 2026-10-06), turbulence, ground bounce and accurate sun and sky light
+   ([clouds-parity.md](clouds-parity.md)).
 2. **Rain** ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
    [ADR 0020](adr/0020-effects-by-view.md)).
 3. **JSBSim path** with manoeuvres, replacing the placeholder.

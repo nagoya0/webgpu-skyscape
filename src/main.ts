@@ -128,7 +128,8 @@ async function start(): Promise<void> {
     ;(atmosphere.light.shadow as unknown as { shadowNode: unknown }).shadowNode = clouds.sceneShadow
   }
   const pipeline = createPipeline(renderer, scene, camera, clouds ? [clouds.stage] : [], {
-    lensFlare: params.flare
+    lensFlare: params.flare,
+    shadowLength: clouds?.shadowLength
   })
   pipeline.exposure.value = params.exposure
 
