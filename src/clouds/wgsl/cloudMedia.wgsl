@@ -1,7 +1,7 @@
 // Port of sampleMedia() from @takram/three-clouds 0.7.6 (src/shaders/clouds.glsl), MIT,
 // Copyright (c) 2024 Shota Matsuda.
-// Changes: GLSL globals became parameters; no turbulence, no evolution along the surface
-// normal; shape detail, when SHAPE_DETAIL is defined, is always sampled rather than by mip
+// Changes: GLSL globals became parameters; the caller computes the shape and detail positions,
+// with the offsets and the evolution along the surface normal; no turbulence; shape detail, when SHAPE_DETAIL is defined, is always sampled rather than by mip
 // level; the density profile has no exponential term; no absorption, so extinction equals
 // scattering. Returns (extinction per metre, sky gradient).
 fn cloudMedia(

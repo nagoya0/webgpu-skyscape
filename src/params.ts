@@ -1,5 +1,5 @@
 // Settings from the URL query, the only way to change them until the UI is designed (ADR 0019).
-// Unknown or malformed values fall back to the defaults.
+// Unknown or malformed values fall back to the defaults. Names and values are ASCII only.
 //
 //   date=YYYY-MM-DD   date in JST (default: today in JST)
 //   time=HH:MM        time of day in JST (default 16:30)
@@ -25,6 +25,8 @@
 //   terrain=0         leave out the GSI terrain and aerial photographs
 //   clouds=0          leave out the clouds
 //   coverage=0..1     cloud coverage (default 0.3)
+//   wind=E,N          wind in m/s towards the east and the north, moving the clouds, e.g.
+//                     wind=10,-5 (default 0,0, as takram)
 //   cloudfx=LIST      cloud feature switches, comma-separated: +NAME turns one on, -NAME off,
 //                     relative to the defaults (src/clouds/clouds.ts, docs/clouds-parity.md);
 //                     e.g. cloudfx=-POWDER
@@ -60,6 +62,8 @@ export interface Params {
   flare: boolean
   clouds: boolean
   coverage: number
+  /** Metres per second towards the east and the north. */
+  wind: { east: number; north: number }
   /** Cloud feature changes against the defaults, e.g. { POWDER: false }. */
   cloudFeatures: Record<string, boolean>
 }
@@ -91,6 +95,13 @@ export function readParams(search: string, now = new Date()): Params {
   }
   const date = new Date(Date.UTC(year, month, day) - JST_OFFSET_MS + minutes * 60_000)
 
+  // Two plain decimal numbers, each within ±100 m/s.
+  let wind = { east: 0, north: 0 }
+  const windMatch = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/.exec(query.get('wind') ?? '')
+  if (windMatch && Math.abs(Number(windMatch[1])) <= 100 && Math.abs(Number(windMatch[2])) <= 100) {
+    wind = { east: Number(windMatch[1]), north: Number(windMatch[2]) }
+  }
+
   return {
     date,
     flightStart: number('t', 0, -1e6, 1e6),
@@ -117,6 +128,7 @@ export function readParams(search: string, now = new Date()): Params {
     flare: query.get('flare') !== '0',
     clouds: query.get('clouds') !== '0',
     coverage: number('coverage', 0.3, 0, 1),
+    wind,
     cloudFeatures: Object.fromEntries(
       (query.get('cloudfx') ?? '')
         .split(',')

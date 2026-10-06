@@ -40,6 +40,14 @@ describe('readParams', () => {
     expect(readParams('', now).cloudFeatures).toEqual({})
   })
 
+  it('reads the wind', () => {
+    expect(readParams('?wind=10,-5.5', now).wind).toEqual({ east: 10, north: -5.5 })
+    expect(readParams('', now).wind).toEqual({ east: 0, north: 0 })
+    for (const bad of ['10', '10,abc', '200,0', '１０,0', '10, 5']) {
+      expect(readParams(`?wind=${encodeURIComponent(bad)}`, now).wind).toEqual({ east: 0, north: 0 })
+    }
+  })
+
   it('falls back on malformed or out-of-range values', () => {
     const params = readParams('?time=25:00&exposure=abc&bank=90&fov=', now)
     expect(params.date.toISOString()).toBe('2026-10-05T07:30:00.000Z')

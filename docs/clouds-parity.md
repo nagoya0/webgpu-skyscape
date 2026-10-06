@@ -40,8 +40,8 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 | Turbulence (`turbulence.png`) | on hold | The texture is in `public/clouds/` |
 | Density profile: linear and constant terms | done | |
 | Density profile: exponential term | on hold | takram's default does not use it |
-| Wind: weather, shape and detail velocities | planned (C2) | The offsets exist but stay at 0 |
-| Evolution along the surface normal | planned (C2) | |
+| Wind: weather, shape and detail velocities | partial | One wind vector, `?wind=E,N` in m/s, moves the weather map and the shape and detail noise together; takram has a velocity for each. Default 0, as takram. The offsets are computed from the time on the flight path, not accumulated per frame, so a given time always shows the same clouds |
+| Evolution along the surface normal | done | As takram: the shape moves along the normal by 2 × 10⁴ m per weather tile of offset |
 | Altitude correction for the ellipsoid | partial | One sphere touching the ellipsoid at the origin |
 
 ## Lighting

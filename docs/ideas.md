@@ -141,7 +141,9 @@ Next stages, in the order agreed on 2026-10-05:
      (port of `cloudsResolve.frag`), rendering at reduced resolution, blue noise, wind. The
      passes, the resolve and the blue noise are in (2026-10-06): takram's temporal upscaling,
      a quarter of the resolution in each direction filled in over 16 frames, rather than the
-     half resolution first planned here. Wind and evolution are still to do.
+     half resolution first planned here. Wind (`?wind=`) and evolution followed the same day,
+     which completes C2. The maintainer judged the grain of the temporal upscaling acceptable at
+     60 fps (2026-10-06), so takram's method stays as it is.
    - C3. Aerial perspective on the clouds.
    - C4. Cloud shadows; may move to the building-shadow work.
    - C5. Cloud density on the CPU for the path's cloud channel and the shake in clouds; on hold.

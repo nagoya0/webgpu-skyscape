@@ -15,7 +15,8 @@
 //   light          (scattering coefficient, powder scale, powder exponent, sky light scale)
 //   phase          (g1, g2, second lobe mix, unused)
 //   march          (min step, max step, perspective step scale, max distance)
-//   offsets        (weather offset u, weather offset v, shape offset x, shape offset z)
+//   weatherOffset  added to the weather map UV (in tiles); its length also drives the evolution
+//   shapeOffset, detailOffset  added to the shape and detail texture coordinates
 //   jitter         0 to 1, blue noise per pixel and frame
 //
 // Returns two columns, as takram's two render targets:
@@ -47,7 +48,9 @@ fn clouds(
   light: vec4f,
   phase: vec4f,
   march: vec4f,
-  offsets: vec4f,
+  weatherOffset: vec2f,
+  shapeOffset: vec3f,
+  detailOffset: vec3f,
   weatherTexture: texture_2d<f32>,
   weatherSampler: sampler,
   shapeTexture: texture_3d<f32>,
@@ -97,6 +100,10 @@ fn clouds(
   var weightedDistanceSum = 0.0;
   var transmittanceSum = 0.0;
 
+  // takram's evolution: the shape moves down along the surface normal as the weather moves, so
+  // the clouds change shape instead of only drifting.
+  let evolution = length(weatherOffset) * 2e4;
+
   if (far > near) {
     let cosTheta = dot(direction, sunDirection);
     let minStep = march.x;
@@ -113,7 +120,7 @@ fn clouds(
       let distance = near + t;
       let p = origin + direction * distance;
       let h = length(p - earthCenter) - earthRadius;
-      let weatherUv = p.xz * shape.z + offsets.xy;
+      let weatherUv = p.xz * shape.z + weatherOffset;
       let weather = cloudWeather(
         weatherUv, h, weatherTexture, weatherSampler,
         minHeights, maxHeights, weatherExponents, shapeAlteringBiases, shape.w, coverageFilterWidths
@@ -126,11 +133,11 @@ fn clouds(
         continue;
       }
 
-      let shapeOffset = vec3f(offsets.z, 0.0, offsets.w);
+      let normal = normalize(p - earthCenter);
       let media = cloudMedia(
         p, weather[0], weather[1],
         shapeTexture, shapeSampler, detailTexture, detailSampler,
-        (p + shapeOffset) * shape.x, p * shape.y,
+        (p - normal * evolution) * shape.x + shapeOffset, p * shape.y + detailOffset,
         shapeAmounts, detailAmounts, densityScales, profileLinear, profileConstant, light.x
       );
       let extinction = media.x;
@@ -144,13 +151,13 @@ fn clouds(
           let q = p + sunDirection * sunDistance;
           let hq = length(q - earthCenter) - earthRadius;
           let wq = cloudWeather(
-            q.xz * shape.z + offsets.xy, hq, weatherTexture, weatherSampler,
+            q.xz * shape.z + weatherOffset, hq, weatherTexture, weatherSampler,
             minHeights, maxHeights, weatherExponents, shapeAlteringBiases, shape.w, coverageFilterWidths
           );
           let mq = cloudMedia(
             q, wq[0], wq[1],
             shapeTexture, shapeSampler, detailTexture, detailSampler,
-            (q + shapeOffset) * shape.x, q * shape.y,
+            (q - normal * evolution) * shape.x + shapeOffset, q * shape.y + detailOffset,
             shapeAmounts, detailAmounts, densityScales, profileLinear, profileConstant, light.x
           );
           opticalDepth += mq.x * sunStep;

@@ -30,6 +30,7 @@ import {
   RepeatWrapping,
   TextureLoader,
   UnsignedByteType,
+  Vector2,
   Vector3,
   Vector4,
   type Node,
@@ -142,19 +143,33 @@ export interface CloudOptions {
   weatherTileMetres: number
   /** takram feature switches; fixed when the clouds are created. */
   features: ReadonlySet<CloudFeature>
+  /**
+   * Wind in metres per second towards the east and the north. It moves the weather map and the
+   * shape and detail noise together. takram's default velocities are 0.
+   */
+  wind: { east: number; north: number }
 }
 
 export const DEFAULT_CLOUDS: CloudOptions = {
   layers: DEFAULT_LAYERS,
   coverage: 0.3,
   weatherTileMetres: 100_000,
-  features: DEFAULT_CLOUD_FEATURES
+  features: DEFAULT_CLOUD_FEATURES,
+  wind: { east: 0, north: 0 }
 }
 
 export interface Clouds {
   stage: CompositeStage
   coverage: { value: number }
+  /**
+   * Places the clouds for a time in seconds on the flight path. The clouds depend on this time
+   * only, so the same time always shows the same clouds.
+   */
+  setTime(seconds: number): void
 }
+
+const SHAPE_REPEAT = 0.0003
+const DETAIL_REPEAT = 0.006
 
 const pack = (layers: CloudLayer[], pick: (layer: CloudLayer) => number, empty: number): Vector4 => {
   const values = [0, 1, 2, 3].map(i => (layers[i] ? pick(layers[i]) : empty))
@@ -189,14 +204,25 @@ export async function createClouds(
   const profileConstant = uniform(new Vector4().setScalar(0.25))
   const coverage = uniform(options.coverage)
   // takram's repeats: shape 0.0003 per metre, detail 0.006 per metre.
-  const shape = vec4(0.0003, 0.006, 1 / options.weatherTileMetres, coverage)
+  const shape = vec4(SHAPE_REPEAT, DETAIL_REPEAT, 1 / options.weatherTileMetres, coverage)
   // (scattering coefficient, powder scale, powder exponent, sky light scale)
   const light = uniform(new Vector4(1, 0.8, 150, 1))
   // takram's default anisotropy: 0.7 and -0.2, mixed half and half.
   const phase = uniform(new Vector4(0.7, -0.2, 0.5, 0))
   // (min step, max step, perspective step scale, max distance): takram's high preset steps.
   const march = uniform(new Vector4(50, 1000, 1.01, 80_000))
-  const offsets = uniform(new Vector4())
+  // Offsets as in takram, added to the texture coordinates. The pattern moves against the
+  // offset, so the wind enters with a minus sign. World axes: x north, z east.
+  const weatherOffset = uniform(new Vector2())
+  const shapeOffset = uniform(new Vector3())
+  const detailOffset = uniform(new Vector3())
+  const setTime = (seconds: number): void => {
+    const north = -options.wind.north * seconds
+    const east = -options.wind.east * seconds
+    weatherOffset.value.set(north, east).divideScalar(options.weatherTileMetres)
+    shapeOffset.value.set(north, 0, east).multiplyScalar(SHAPE_REPEAT)
+    detailOffset.value.set(north, 0, east).multiplyScalar(DETAIL_REPEAT)
+  }
 
   // The earth's centre in world coordinates and the distance to it from the origin, which is on
   // the ellipsoid: a sphere that touches the ellipsoid at the origin, close enough over the
@@ -270,7 +296,9 @@ export async function createClouds(
           light,
           phase,
           march,
-          offsets,
+          weatherOffset,
+          shapeOffset,
+          detailOffset,
           weatherTexture: weatherNode,
           weatherSampler: sampler(weatherNode),
           shapeTexture: shapeNode,
@@ -314,5 +342,5 @@ export async function createClouds(
     )
   }
 
-  return { stage, coverage }
+  return { stage, coverage, setTime }
 }

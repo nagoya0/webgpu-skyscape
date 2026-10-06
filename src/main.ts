@@ -112,7 +112,8 @@ async function start(): Promise<void> {
     ? await createClouds(atmosphere.context, camera, frame, {
         ...DEFAULT_CLOUDS,
         coverage: params.coverage,
-        features: cloudFeatures
+        features: cloudFeatures,
+        wind: params.wind
       })
     : null
   const pipeline = createPipeline(renderer, scene, camera, clouds ? [clouds.stage] : [], {
@@ -196,6 +197,7 @@ async function start(): Promise<void> {
   function step(flightDelta: number, elapsed: number): void {
     flightTime += flightDelta
     samplePath(path, flightTime, state)
+    clouds?.setTime(flightTime)
     cockpit.update(state, first ? 0 : flightDelta, elapsed)
     first = false
     if (buildings) {
