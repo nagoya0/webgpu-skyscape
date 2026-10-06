@@ -27,3 +27,6 @@ No tile data is hosted by the project so far. The terrain and photographs are lo
 from GSI ([ADR 0026](0026-own-terrain-from-gsi-tiles.md)), and the buildings directly from
 PLATEAU's distribution server, so object storage and its CORS settings are not needed for now.
 The site host is still to be chosen ([ideas](../ideas.md)).
+
+Update 2026-10-07: GSI's vector tiles, used for water ([ADR 0029](0029-water-from-gsi-data.md)),
+are loaded directly from GSI too.

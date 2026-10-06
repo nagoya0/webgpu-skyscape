@@ -26,3 +26,10 @@ provide all three, but:
 
 Every source must be credited on screen and in the README, for example "出典：国土地理院" for GSI
 data. The exact wording follows each source's terms.
+
+## Update 2026-10-07
+
+The area is now Sagami Bay, Hakone and Mount Fuji
+([ADR 0028](0028-area-sagami-bay-hakone-fuji.md)), without buildings; PLATEAU stays in use for
+the Tokyo area. GSI's vector tiles are used as well, for the water areas
+([ADR 0029](0029-water-from-gsi-data.md)).

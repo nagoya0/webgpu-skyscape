@@ -45,3 +45,18 @@ or bulk downloads are to be discussed with GSI first.
   demo's own lighting.
 - Small dark slivers can still show where tiles of different levels meet.
 - If the demo's traffic grows, GSI's guidance on heavy access applies.
+
+## Update 2026-10-07
+
+- The root tiles and their extent are set per area (`src/areas.ts`). In the Hakone area
+  ([ADR 0028](0028-area-sagami-bay-hakone-fuji.md)) the roots are at zoom 8 and cover 2.5°
+  around the origin, out to the horizon ([ADR 0030](0030-terrain-to-the-horizon.md)); up to
+  1,000 tiles are kept. At 3,000 m this loads about 170 to 185 tiles and 240 to 260 MB of
+  textures, about as much as Tokyo at low altitude, since a higher camera needs less detail
+  below it.
+- The photographs are corrected for the haze they carry
+  ([ADR 0031](0031-correct-the-sources-grade-at-the-end.md)), and water is drawn where GSI's
+  data shows sea, lakes and rivers ([ADR 0029](0029-water-from-gsi-data.md)).
+- Seen on the mountains: ridges drawn as straight segments by the 33 × 33 grid; dark wedges where
+  tiles of different levels meet on steep slopes, deeper than the 30 m skirts; and slopes facing
+  away from the sun look flat, being lit evenly by the sky only. Open in [ideas](../ideas.md).

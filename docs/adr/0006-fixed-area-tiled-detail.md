@@ -1,7 +1,8 @@
 # 6. A fixed area, made more detailed over time
 
-- Status: Accepted; area and vegetation settled by [0023](0023-area-central-tokyo.md), tiles from
-  the sources by [0026](0026-own-terrain-from-gsi-tiles.md) (update 2026-10-06 below)
+- Status: Accepted; area settled by [0023](0023-area-central-tokyo.md), then
+  [0028](0028-area-sagami-bay-hakone-fuji.md); tiles from the sources by
+  [0026](0026-own-terrain-from-gsi-tiles.md) (updates below)
 - Date: 2026-10-03
 
 ## Context
@@ -35,3 +36,9 @@ at once.
   PLATEAU's 3D Tiles, in the formats those sources publish (PNG and JPEG images, glTF with
   Draco). The tile hierarchies with levels of detail are kept. KTX2 and meshopt apply only if
   the project makes tiles of its own later.
+
+## Update 2026-10-07
+
+The area is now Sagami Bay, Hakone and Mount Fuji
+([ADR 0028](0028-area-sagami-bay-hakone-fuji.md)). The way vegetation is placed came from the
+Tokyo area (PLATEAU vegetation models) and is open again for the new area ([ideas](../ideas.md)).

@@ -61,3 +61,12 @@ Flight simulators give attitude relative to the horizon at the aircraft's own po
 must be rotated into world axes with the NED frame of that position, not the origin's; using the
 origin's would tilt the view against the horizon by up to 0.22°. `nedToWorldRotation` in
 `src/geo/localFrame.ts` does this, and its tests check the tilt.
+
+## Update 2026-10-07
+
+Each area has its own origin (`src/areas.ts`); in the Hakone area
+([ADR 0028](0028-area-sagami-bay-hakone-fuji.md)) it is north of Lake Ashi, and the aircraft
+stays within about 22 km of it. The curvature matters for anything placed on the tangent plane
+itself: the flat placeholder disc, 37 m below the origin, rose above the curving sea beyond
+about 25 km and hid it; a sea-level sphere replaces it there
+([ADR 0030](0030-terrain-to-the-horizon.md)).

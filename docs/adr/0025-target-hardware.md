@@ -45,3 +45,13 @@ The demo targets a mid-range gaming PC, described by the maintainer as:
   alone ([ADR 0024](0024-untextured-buildings-with-procedural-facades.md)).
 - The README's recommended environment ([ADR 0003](0003-webgpu-only.md)) is based on this class
   of hardware.
+
+## Update 2026-10-07
+
+- The cloud pass writes three 32-bit RGBA targets at once, 48 bytes per pixel, above WebGPU's
+  default limit of 32. The device asks for `maxColorAttachmentBytesPerSample` of 48
+  (`src/gpu/support.ts`); adapters without it get the guidance screen. Desktop GPUs of the
+  target class report higher limits; the development machine reports 128.
+- Frame time in the Hakone area ([ADR 0028](0028-area-sagami-bay-hakone-fuji.md)) at 1920 × 1080
+  on the development machine, with the clouds, their shadows and light shafts, and water: about
+  2.7 to 2.9 ms of GPU and 1.4 to 1.9 ms of JavaScript, well within the 7 ms.

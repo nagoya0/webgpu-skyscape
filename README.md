@@ -11,25 +11,27 @@ Work in progress. A demo video and tested browsers will be added here.
 In place:
 
 - Sky, sun and aerial perspective from `@takram/three-atmosphere`, for any date and time of day.
-- Terrain from GSI elevation tiles, covered with GSI aerial photographs (corrected for the haze
-  they carry), streamed in real time out towards the horizon
-  ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md)). The sea, lakes and rivers are drawn
-  as water with waves, the sky's reflection and the sun's glint.
+- Terrain from GSI elevation tiles, covered with GSI aerial photographs corrected for the haze
+  they carry ([ADR 0031](docs/adr/0031-correct-the-sources-grade-at-the-end.md)), streamed in
+  real time out to the horizon ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md),
+  [ADR 0030](docs/adr/0030-terrain-to-the-horizon.md)).
+- The sea, lakes and rivers drawn as water with waves, the sky's reflection and the sun's glint
+  ([ADR 0029](docs/adr/0029-water-from-gsi-data.md)).
 - The area: Sagami Bay, Hakone and Mount Fuji, flown at 3,000 m
   ([ADR 0028](docs/adr/0028-area-sagami-bay-hakone-fuji.md)). The earlier area, central Tokyo
   with PLATEAU LOD2 buildings for eight wards and procedural facades
   ([ADR 0024](docs/adr/0024-untextured-buildings-with-procedural-facades.md)), stays selectable
   with `?area=tokyo`.
 - Volumetric clouds ported from `@takram/three-clouds` to WGSL, with takram's temporal
-  upscaling, aerial perspective, haze, cascaded cloud shadows on the clouds, terrain and
-  buildings, and light shafts ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md)). Which of takram's features are in is
-  listed in [docs/clouds-parity.md](docs/clouds-parity.md).
+  upscaling, aerial perspective, haze, cascaded cloud shadows on the clouds and the ground, and
+  light shafts ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md)). Which of takram's
+  features are in is listed in [docs/clouds-parity.md](docs/clouds-parity.md).
 - A placeholder flight path at 250 m/s, out from Sagami Bay towards Mount Fuji and back, and a
   first-person camera.
 - Temporal anti-aliasing, lens flare and AgX tone mapping.
 
-Planned: water surfaces and forests, the rest of the clouds, rain, a flight path from JSBSim
-with manoeuvres, night scenes, and a UI. The order and the open questions are in
+Planned: finer mountain terrain and forests, the rest of the clouds, rain, a flight path from
+JSBSim with manoeuvres, night scenes, colour grading, and a UI. The order and the open questions are in
 [docs/ideas.md](docs/ideas.md).
 
 ## Requirements
@@ -39,7 +41,8 @@ what is missing ([ADR 0003](docs/adr/0003-webgpu-only.md)).
 
 The target is a mid-range gaming PC, such as a GeForce RTX 2060 or Radeon RX 6600 XT, at
 1920 × 1080 and 60 frames per second. Integrated GPUs are not targeted
-([ADR 0025](docs/adr/0025-target-hardware.md)).
+([ADR 0025](docs/adr/0025-target-hardware.md)). The GPU must support the `float32-filterable`
+feature and a `maxColorAttachmentBytesPerSample` limit of at least 48.
 
 ## Development
 
@@ -70,6 +73,7 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 | `buildings=0`, `terrain=0`, `clouds=0`, `flare=0` | Leave out a part of the scene |
 | `groundshadow=0` | Leave out the cloud shadows on the terrain and buildings |
 | `terraintexel=px` | Terrain detail: refine while a photograph texel covers more than this many pixels (default 1.5) |
+| `photodehaze`, `photocontrast`, `photosat` | Correction of the aerial photographs (defaults 0.15, 1.2, 1.4) |
 | `coverage=0..1`, `cloudfx=` | Cloud coverage; cloud feature switches, such as `cloudfx=-POWDER` |
 | `wind=E,N` | Wind moving the clouds, in m/s towards the east and the north, such as `wind=10,-5` |
 | `measure` | After loading, time 180 frames and report CPU and GPU times in `window.__debug` |
@@ -101,5 +105,6 @@ The licence of this project's own code is not decided yet.
 | [three.js](https://threejs.org/) | Renderer | MIT |
 | [@takram/three-atmosphere, @takram/three-geospatial](https://github.com/takram-design-engineering/three-geospatial) | Sky, aerial perspective, temporal anti-aliasing, lens flare | MIT |
 | [@takram/three-clouds](https://github.com/takram-design-engineering/three-geospatial) | The cloud shaders in `src/clouds/wgsl/` are ported from it, and its noise and weather textures are in `public/clouds/` | MIT, Copyright (c) 2024 Shota Matsuda ([licence](public/clouds/LICENSE-takram.txt)) |
+| [three-csm](https://github.com/StrandedKitty/three-csm/) | The cascaded shadow maps in `src/clouds/cascadedShadowMaps.ts`, through takram's version | MIT, Copyright (c) 2019 vtHawk |
 | [3DTilesRendererJS](https://github.com/NASA-AMMOS/3DTilesRendererJS) | Loading PLATEAU's 3D Tiles | Apache-2.0 |
 | [Draco](https://github.com/google/draco) | Decoding PLATEAU's compressed meshes (`public/draco/`) | Apache-2.0 |

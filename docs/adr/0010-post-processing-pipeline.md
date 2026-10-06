@@ -30,3 +30,13 @@ Post-processing uses the TSL post-processing of Three.js `WebGPURenderer`, in th
 
 Every pass reads the depth buffer, so the depth format had to be decided early. It is reversed Z
 ([ADR 0015](0015-reversed-z-depth.md)).
+
+## Update 2026-10-07: as built
+
+The pipeline (`src/render/pipeline.ts`) is: the scene pass with a velocity buffer, the aerial
+perspective, the clouds, lens flare, AgX tone mapping, takram's temporal anti-aliasing and
+dithering. The clouds render their own passes (a quarter-resolution march filled in over 16
+frames, and a temporal resolve) and composite over the aerial perspective
+([ADR 0013](0013-port-the-clouds-to-tsl.md)). Their shadow maps are rendered before the scene,
+which reads them for cloud shadows, and the shadow length they measure along each view ray goes
+to the aerial perspective for light shafts. Bloom and rain are not built yet.
