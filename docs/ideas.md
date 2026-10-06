@@ -37,10 +37,14 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   the photographs' green areas; close to the ground, 3D trees near the course. Not decided.
 - **The mountains' terrain** (seen 2026-10-07; work paused at the maintainer's request to update
   the documents first).
-  - Slopes facing away from the sun look flat and coarse. It is not the photographs' resolution:
-    in the morning the same slope near Mount Fuji shows full detail. Facing away from the sun, a
-    slope is lit evenly by the sky only, so it has no shading and the photograph's contrast
-    drops.
+  - Some slopes look flat and coarse, next to detailed ones. The maintainer saw the texture
+    change; checked 2026-10-07 on Mount Ashitaka (`?terraindebug=1` tints tiles by zoom level,
+    `?terraindebug=2` shows the photographs unlit): both parts are drawn at the same zoom level,
+    and the photographs are sharp down to zoom 18 in both. The difference is the season of the
+    photographs in GSI's mosaic: the summit's are from winter, bare trees with long shadows from
+    a low sun, which show every ridge; the slope's are from summer, an even green canopy with
+    little shading in it. Lighting adds to it: a slope facing away from the sun is lit evenly by
+    the sky only. Summer-photographed forest needs its relief from the demo's own shading.
   - Ridges are drawn as straight segments by the 33 × 33 grid, 75 to 150 m between vertices at
     3,000 m.
   - Dark wedges show where tiles of different levels meet on steep slopes, deeper than the 30 m
