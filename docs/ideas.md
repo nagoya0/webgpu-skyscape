@@ -149,7 +149,11 @@ Next stages, in the order agreed on 2026-10-05:
    - C4. Cloud shadows. Done 2026-10-06 ahead of the building shadows, as the maintainer chose:
      takram's cascaded shadow maps, used for the clouds' long-range self-shadowing and for
      shadows on the terrain and buildings through the sun light's shadow node, where building
-     shadows can be combined later. About 0.7 ms of GPU at 1920 × 1080.
+     shadows can be combined later. About 0.7 ms of GPU at 1920 × 1080. Of that, the shadows on
+     the ground take about 0.1 to 0.3 ms (`?groundshadow=0` leaves them out; medians of three
+     runs over the buildings: 2.6 ms without clouds, 3.3 ms with clouds but no ground shadows,
+     3.5 ms with both). Single runs vary by up to 0.5 ms with the tiles loaded, so compare
+     medians of several.
    - C5. Cloud density on the CPU for the path's cloud channel and the shake in clouds; on hold.
      The idea so far: the cloud shape data (weather map, layer settings) lives in files that
      both the GPU and the offline path tool read, so the path's cloud density channel matches

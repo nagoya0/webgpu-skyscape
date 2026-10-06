@@ -24,6 +24,7 @@
 //   draw=MODE         how the building tiles are drawn: batch (default), bundle or plain
 //   terrain=0         leave out the GSI terrain and aerial photographs
 //   clouds=0          leave out the clouds
+//   groundshadow=0    leave out the cloud shadows on the terrain and buildings
 //   coverage=0..1     cloud coverage (default 0.3)
 //   wind=E,N          wind in m/s towards the east and the north, moving the clouds, e.g.
 //                     wind=10,-5 (default 0,0, as takram)
@@ -63,6 +64,7 @@ export interface Params {
   raymarch: boolean
   flare: boolean
   clouds: boolean
+  groundShadow: boolean
   coverage: number
   /** Metres per second towards the east and the north. */
   wind: { east: number; north: number }
@@ -130,6 +132,7 @@ export function readParams(search: string, now = new Date()): Params {
     raymarch: query.get('raymarch') !== '0',
     flare: query.get('flare') !== '0',
     clouds: query.get('clouds') !== '0',
+    groundShadow: query.get('groundshadow') !== '0',
     coverage: number('coverage', 0.3, 0, 1),
     wind,
     cloudFeatures: Object.fromEntries(

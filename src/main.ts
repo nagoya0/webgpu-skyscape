@@ -119,7 +119,7 @@ async function start(): Promise<void> {
         wind: params.wind
       })
     : null
-  if (clouds) {
+  if (clouds && params.groundShadow) {
     // Cloud shadows dim the sunlight through the light's custom shadow node; no shadow map of
     // the scene is rendered. Objects opt in with receiveShadow.
     renderer.shadowMap.enabled = true
