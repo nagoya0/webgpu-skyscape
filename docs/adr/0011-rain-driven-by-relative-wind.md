@@ -22,11 +22,15 @@ Drops on the canopy are pushed backwards, not down.
   canopy glass.
 - **No drops in the air.** Streaks of rain in the air, coming from the direction of travel, were
   part of the first plan; the maintainer decided against them on 2026-10-07.
-- **Strength** comes from the cloud density channel of the path data
+- **The drops' course through a cloud**, as the maintainer described it (2026-10-07):
+  - Passing through a cloud, drops land on the screen or the canopy, and keep landing at a
+    steady rate while the aircraft is in the cloud.
+  - The water flows outwards or backwards, faster the faster the aircraft flies.
+  - Out of the cloud, no new drops land. After flying on for a while, the drops that are left
+    disappear, as if they evaporate.
+- **Whether the aircraft is in a cloud** comes from the cloud density channel of the path data
   ([ADR 0008](0008-precomputed-flight-path.md)).
-- **Order of effects.** On entering a cloud, the image first turns white and loses contrast. The
-  main moment to show is the few seconds just after leaving a cloud, when the remaining drops are
-  blown off the canopy.
+- On entering a cloud, the image first turns white and loses contrast.
 
 ## Consequences
 
