@@ -34,6 +34,15 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   decoder of our own (`src/terrain/vectorTile.ts`); they include rivers and ponds. With water in
   almost every tile the GPU time stayed about 2.7 ms. Clouds are not reflected. Rivers keep
   reflecting the sky: the maintainer finds that more real than toning them down (2026-10-06).
+- **Mountain slopes away from the sun look flat** (2026-10-07). The maintainer saw the left
+  slope of a mountain near Mount Fuji look coarse at 15:00 (`t=110`). It is not the photographs'
+  resolution: in the morning the same slope shows full detail. Facing away from the sun, it is
+  lit by sky light only, evenly, so it has no shading and the photograph's contrast drops. To
+  look at: finer normals from the elevation model, so sky light varies over the slope, and
+  ambient occlusion in the valleys. Finer terrain (`?terraintexel=`) sharpens the sunlit slopes
+  a little: 1.5 (default) 184 tiles and 257 MB of textures, 1.0 296 and 414 MB, 0.75 416 and
+  582 MB. Also seen there: ridges drawn as straight segments by the 33 × 33 grid, and dark
+  wedges where tiles of different levels meet on steep slopes, beyond the 30 m skirts.
 - **The placeholder disc and the earth's curvature.** The flat disc lies on the origin's
   tangent plane, so beyond about 25 km it rises above the curving sea and hid it. It is left
   out in the Hakone area, where the terrain reaches towards the horizon.

@@ -41,7 +41,7 @@ export const AREAS: Record<AreaName, Area> = {
       latitude: 35.23,
       extentDegrees: 2.5,
       rootZoom: 8,
-      maxTiles: 400
+      maxTiles: 1000
     },
     buildings: false,
     // From Sagami Bay off Odawara towards Mount Fuji (heading 293°), turn short of it, fly back

@@ -104,7 +104,9 @@ async function start(): Promise<void> {
   if (buildings) scene.add(buildings.group)
 
   photoGrade.value.set(params.photoDehaze, params.photoContrast, params.photoSaturation, 0)
-  const terrain = params.terrain ? createTerrain(frame, area.terrain, atmosphere.context) : null
+  const terrain = params.terrain
+    ? createTerrain(frame, { ...area.terrain, texelPixels: params.terrainTexelPixels }, atmosphere.context)
+    : null
   if (terrain) scene.add(terrain.group)
   showAttribution()
   const debugText = params.debugText ? showDebugText() : null

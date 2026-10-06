@@ -69,6 +69,7 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 | `altitude`, `speed`, `bank`, `rollrate` | Placeholder flight path |
 | `buildings=0`, `terrain=0`, `clouds=0`, `flare=0` | Leave out a part of the scene |
 | `groundshadow=0` | Leave out the cloud shadows on the terrain and buildings |
+| `terraintexel=px` | Terrain detail: refine while a photograph texel covers more than this many pixels (default 1.5) |
 | `coverage=0..1`, `cloudfx=` | Cloud coverage; cloud feature switches, such as `cloudfx=-POWDER` |
 | `wind=E,N` | Wind moving the clouds, in m/s towards the east and the north, such as `wind=10,-5` |
 | `measure` | After loading, time 180 frames and report CPU and GPU times in `window.__debug` |
