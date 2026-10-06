@@ -16,7 +16,7 @@ often do. The answer given: extend the terrain. Distant tiles are coarse, so the
 (from 1.5° to 2.5°, 48 more tiles and 67 MB more textures at 3,000 m); the far mountains and
 coasts are worth seeing on a clear day; and the physical aerial perspective already fades
 them. A fog strong enough to hide the terrain's end would take away the clear view, and the
-saving it would bring is not needed. The maintainer went on with this.
+saving it would bring is not needed. The maintainer agreed.
 
 ## Decision
 
