@@ -38,14 +38,13 @@ JSBSim with manoeuvres, night scenes, colour grading, and a UI. The order and th
 
 Beyond using the libraries listed under credits, this project does the following itself:
 
-- **Clouds on WebGPU.** takram's volumetric clouds are written for WebGL. Their shaders are
-  ported to WGSL and connected to Three.js's WebGPU renderer through TSL, with temporal
-  upscaling, cascaded cloud shadows and light shafts
+- **Clouds on WebGPU.** The released `@takram/three-clouds` (0.7.6) runs on Three.js's WebGL
+  renderer. Its shaders are ported to WGSL and connected to the WebGPU renderer through TSL,
+  including takram's temporal upscaling, cascaded cloud shadows and light shafts
   ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md),
-  [ADR 0022](docs/adr/0022-heavy-shaders-in-wgsl.md)). Non-finite values are dropped before they
-  can spread through the temporal history.
-- **Cloud shadows on the ground** through Three.js's own shadow system, so the terrain and
-  buildings darken under the clouds.
+  [ADR 0022](docs/adr/0022-heavy-shaders-in-wgsl.md)). The cloud shadows reach the terrain and
+  buildings through the WebGPU renderer's shadow system, and non-finite values are dropped
+  before they can spread through the temporal history.
 - **takram's packages on a newer Three.js**, patched to run on 0.186
   ([ADR 0016](docs/adr/0016-patch-takram-for-newer-three.md)).
 - **Terrain streamed from GSI tiles**: a quadtree refined by how large a photograph texel
@@ -53,7 +52,7 @@ Beyond using the libraries listed under credits, this project does the following
   beyond it ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md),
   [ADR 0030](docs/adr/0030-terrain-to-the-horizon.md)).
 - **Water from map data**: a water mask per tile from the elevation model's missing data and the
-  water polygons of GSI's vector tiles (read by a small decoder of our own), drawn with waves,
+  water polygons of GSI's vector tiles (read by a small decoder in this project), drawn with waves,
   the sky's reflection and the sun's glint
   ([ADR 0029](docs/adr/0029-water-from-gsi-data.md)).
 - **Aerial photographs as ground colour**: the haze in the photographs is removed so that it is
