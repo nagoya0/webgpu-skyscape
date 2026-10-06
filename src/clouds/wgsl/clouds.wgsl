@@ -24,14 +24,16 @@
 //                  beyond the marched sun ray (cloudShadowOpticalDepth.wgsl)
 //   pixel          full-resolution pixel, for the shadow filter's rotation
 //   shadowLengthMarch  (min step, max iterations, max distance, unused) for the light shafts
+//   hazeTopHeight  top of the haze above the sphere
 //
 // Returns columns:
 //   [0] cloud radiance (premultiplied) and opacity, before the aerial perspective
 //   [1] (front distance, velocity u, velocity v, 0): the distance to the clouds' front, or to
 //       the scene where there are no clouds; the velocity is this frame's UV minus last frame's
-//   [2] (ray direction in world space, haze ray length) for the aerial perspective and the haze
-//   [3] (shadow length, shadow start, 0, 0) in metres: how much of the view ray lies in cloud
-//       shadow, and where that stretch starts, for the light shafts (SHADOW_LENGTH)
+//   [2] (ray direction in world space, haze end) for the aerial perspective and the haze
+//   [3] (shadow length, shadow start, haze start, 0) in metres: how much of the view ray lies in
+//       cloud shadow and where that stretch starts, for the light shafts (SHADOW_LENGTH); and
+//       where the view ray enters the haze
 fn clouds(
   viewZ: f32,
   uv: vec2f,
@@ -83,7 +85,8 @@ fn clouds(
   shadowMapSize: f32,
   shadowTopHeight: f32,
   pixel: vec2f,
-  shadowLengthMarch: vec4f
+  shadowLengthMarch: vec4f,
+  hazeTopHeight: f32
 ) -> mat4x4f {
   // Ray in view space, then world space.
   let ndc = vec4f(uv.x * 2.0 - 1.0, 1.0 - uv.y * 2.0, 0.5, 1.0);
@@ -247,13 +250,24 @@ fn clouds(
 
   let alpha = saturate((transmittance - 1.0) / (minTransmittance - 1.0));
 
-  // The haze ray (getHazeRayNearFar): to the ground, else out of the top of the cloud layers;
-  // then no further than the scene, and towards the clouds' front by their opacity.
-  var hazeFar = select(max(outer.y, 0.0), ground.x, ground.x > 0.0);
+  // The haze ray (getHazeRayNearFar): to the ground, else out of the top of the haze; then no
+  // further than the scene, and towards the clouds' front by their opacity.
+  // Not in takram: the haze reaches up to hazeTopHeight (the top of the low layers) rather than
+  // the top of all layers, which includes the high thin layer at 8,000 m. Flown above the low
+  // clouds, takram's ceiling put hundreds of kilometres of haze in front of a level view and
+  // drew a grey band above the horizon. Above the haze, the ray starts where it enters it.
+  let hazeTop = raySphere(relative, direction, earthRadius + hazeTopHeight);
+  var hazeNear = 0.0;
+  var hazeFar = select(max(hazeTop.y, 0.0), ground.x, ground.x > 0.0);
+  if (height >= hazeTopHeight) {
+    hazeNear = max(hazeTop.x, 0.0);
+    hazeFar = select(hazeNear, hazeFar, hazeTop.x > 0.0);
+  }
   hazeFar = min(hazeFar, sceneDistance);
   if (transmittanceSum > 0.0) {
     hazeFar = mix(hazeFar, min(frontDistance, hazeFar), alpha);
   }
+  hazeFar = max(hazeFar, hazeNear);
 
   // Light shafts: the length of the view ray in cloud shadow (marchShadowLength), from the
   // camera to the ground, the top of the shadow layers, the scene or the clouds' front.
@@ -307,6 +321,6 @@ fn clouds(
     vec4f(radianceIntegral, alpha),
     vec4f(frontDistance, velocity, 0.0),
     vec4f(direction, hazeFar),
-    vec4f(shadowLength, 0.0, 0.0)
+    vec4f(shadowLength, hazeNear, 0.0)
   );
 }

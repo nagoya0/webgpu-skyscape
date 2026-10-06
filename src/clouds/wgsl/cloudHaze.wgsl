@@ -5,13 +5,15 @@
 //
 //   color           cloud colour (premultiplied) and opacity, after the aerial perspective
 //   direction       view ray in world space
-//   hazeDistance    length of the haze ray: to the ground, the top of the cloud layers, the
+//   hazeDistance    length of the haze ray, from `near`: to the ground, the top of the haze, the
 //                   scene or the clouds' front, whichever comes first
 //   relativeCamera  camera position relative to the earth's centre
+//   near            where the haze ray starts: at the camera, or where it enters the haze from
+//                   above
 //   groundSunE, groundSkyE  sun and sky illuminance at the camera
 //   phase           (g1, g2, second lobe mix, unused), as for the clouds
 //   haze            (density scale, exponent per metre, scattering, absorption)
-//   shadowLength    length of the ray in cloud shadow; 0 until SHADOW_LENGTH is ported
+//   shadowLength    length of the ray in cloud shadow (SHADOW_LENGTH)
 fn cloudHaze(
   color: vec4f,
   direction: vec3f,
@@ -29,19 +31,21 @@ fn cloudHaze(
   shadowLength: f32
 ) -> vec4f {
   #ifdef HAZE
-  let cameraHeight = length(relativeCamera) - earthRadius;
+  // takram uses the camera's height; here the height where the haze ray starts, which is the
+  // camera's unless the camera is above the haze.
+  let rayOrigin = relativeCamera + direction * near;
+  let originHeight = length(rayOrigin) - earthRadius;
   let modulation = saturate((coverage - 0.2) / 0.2);
-  if (cameraHeight * modulation < 0.0) {
+  if (originHeight * modulation < 0.0 || hazeDistance <= 0.0) {
     return color;
   }
-  let density = modulation * haze.x * exp(-cameraHeight * haze.y);
+  let density = modulation * haze.x * exp(-originHeight * haze.y);
   if (density < 1e-7) {
     return color; // Prevent artefacts in views from space
   }
 
   // Blend two normals by the difference in angle, so that the normal near the ground is that of
   // the origin, and in the sky that of the horizon.
-  let rayOrigin = relativeCamera + direction * near;
   let normalAtOrigin = normalize(rayOrigin);
   let normalAtHorizon = (rayOrigin - dot(rayOrigin, direction) * direction) / earthRadius;
   let alpha = saturate((dot(normalAtOrigin, normalAtHorizon) - 0.9) / 0.1);

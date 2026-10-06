@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Scene, Timer, WebGPURenderer, type Mesh } from 'three/webgpu'
+import { PerspectiveCamera, Scene, Timer, Vector3, WebGPURenderer, type Mesh } from 'three/webgpu'
 
 import { AREAS } from './areas'
 import { createAtmosphere } from './atmosphere/atmosphere'
@@ -12,13 +12,14 @@ import {
 import { createCockpitCamera } from './camera/cockpitCamera'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath } from './flight/placeholderPath'
-import { createLocalFrame } from './geo/localFrame'
+import { createLocalFrame, ecefToWorld } from './geo/localFrame'
 import { requestDevice } from './gpu/support'
 import { readParams } from './params'
 import { createPipeline } from './render/pipeline'
 import { createFacadeMaterial } from './scene/facadeMaterial'
 import { createBuildings, plateauBuildingUrls } from './scene/plateauBuildings'
 import { createPlaceholderGround } from './scene/placeholderGround'
+import { createSeaSphere } from './terrain/seaSphere'
 import { photoGrade } from './terrain/photoGrade'
 import { createTerrain } from './terrain/terrain'
 import { waterTime } from './terrain/water'
@@ -83,7 +84,11 @@ async function start(): Promise<void> {
   atmosphere.setFrame(frame)
   atmosphere.setDate(params.date)
   scene.add(atmosphere.light)
-  if (area.placeholderGround) scene.add(createPlaceholderGround())
+  scene.add(
+    area.beyondTerrain === 'sea'
+      ? createSeaSphere(atmosphere.context, ecefToWorld(frame, new Vector3(0, 0, 0)))
+      : createPlaceholderGround()
+  )
 
   const buildings = params.buildings && area.buildings
     ? createBuildings(

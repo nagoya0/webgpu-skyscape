@@ -509,7 +509,9 @@ export async function createClouds(
           shadowMapSize: shadows.mapSizeNode,
           shadowTopHeight: shadowHeights.y,
           pixel,
-          shadowLengthMarch
+          shadowLengthMarch,
+          // The haze lies below the top of the low layers (the shadow-casting ones).
+          hazeTopHeight: shadowHeights.y
         })
       ).toVar() as unknown as { element(index: number): Node<'vec4'> }
       const cloud = result.element(0)
@@ -518,6 +520,7 @@ export async function createClouds(
       const hazeFar = result.element(2).w
       // (shadow length, shadow start) in metres, and in the atmosphere's units.
       const shadowLength = result.element(3)
+      const hazeNear = shadowLength.z
       const shadowLengthUnit = shadowLength.xy.mul(worldToUnit)
 
       // Aerial perspective between the camera and the clouds' front (applyAerialPerspective).
@@ -539,10 +542,10 @@ export async function createClouds(
         functions.cloudHaze({
           color: aerial,
           direction,
-          hazeDistance: hazeFar.sub(near).max(0),
+          hazeDistance: hazeFar.sub(hazeNear).max(0),
           relativeCamera: cameraPosition.sub(earthCenter),
           earthRadius,
-          near,
+          near: hazeNear,
           sunDirection,
           groundSunE: groundLight.get('direct'),
           groundSkyE: groundLight.get('indirect'),

@@ -15,10 +15,11 @@ export interface Area {
   /** The placeholder course, centred on the origin. */
   course: RacetrackOptions
   /**
-   * Whether to draw the flat placeholder disc beyond the terrain. It lies on the origin's
-   * tangent plane, so beyond about 25 km it rises above the curving sea and hides it.
+   * What lies beyond the terrain: the flat placeholder disc, which lies on the origin's tangent
+   * plane and so beyond about 25 km rises above the curving sea and hides it; or a sea-level
+   * sphere drawn as water (src/terrain/seaSphere.ts).
    */
-  placeholderGround: boolean
+  beyondTerrain: 'disc' | 'sea'
 }
 
 export const AREAS: Record<AreaName, Area> = {
@@ -27,7 +28,7 @@ export const AREAS: Record<AreaName, Area> = {
     terrain: DEFAULT_TERRAIN,
     buildings: true,
     course: { ...DEFAULT_RACETRACK, height: 450 },
-    placeholderGround: true
+    beyondTerrain: 'disc'
   },
   // North of Lake Ashi: Mount Fuji about 28 km west-north-west, Sagami Bay about 15 km south-east.
   // Coarser root tiles reach the horizon, which is about 200 km away from 3 km up; at 1.5° the
@@ -46,7 +47,6 @@ export const AREAS: Record<AreaName, Area> = {
     // From Sagami Bay off Odawara towards Mount Fuji (heading 293°), turn short of it, fly back
     // and repeat; simple on purpose for looking into rendering problems (ADR 0028).
     course: { ...DEFAULT_RACETRACK, height: 3000, headingDegrees: 293, straightSeconds: 120, bankDegrees: 45 },
-    // The terrain reaches towards the horizon here.
-    placeholderGround: false
+    beyondTerrain: 'sea'
   }
 }
