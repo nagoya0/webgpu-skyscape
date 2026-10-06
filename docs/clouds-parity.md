@@ -22,7 +22,7 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 | `ACCURATE_PHASE_FUNCTION` | no | |
 | `ACCURATE_SUN_SKY_LIGHT` | no | |
 | `GROUND_BOUNCE` | no | |
-| `HAZE` | no | |
+| `HAZE` | yes | yes |
 | `SHADOW_LENGTH` | no | |
 | `TEMPORAL_UPSCALE` | yes | yes |
 | `TEMPORAL_PASS`, `TEMPORAL_JITTER` (shadow maps) | no | |
@@ -55,7 +55,7 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 | Optical depth to the sun from beer shadow maps (BSM, cascaded) | planned (C4) | Long-range self-shadowing |
 | Sky light with the sky gradient | done | |
 | Powder effect (`POWDER`) | done | |
-| Sun and sky light per height (interpolated between layer bottom and top) | planned (C3) | Now one value for the frame, at the middle of the main layer above the camera |
+| Sun and sky light per height (interpolated between layer bottom and top) | done | As takram's clouds.vert: at the bottom and top of all layers straight above the camera |
 | Accurate sun and sky light per sample (`ACCURATE_SUN_SKY_LIGHT`) | on hold | Costly; per-height interpolation first |
 | Ground bounce (`GROUND_BOUNCE`) | on hold | |
 
@@ -84,8 +84,8 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 
 | takram feature | Status | Notes |
 |---|---|---|
-| Aerial perspective on the clouds | planned (C3) | |
-| Haze below and between the clouds (`HAZE`) | planned (C3) | |
+| Aerial perspective on the clouds | done | `getIndirectLuminanceToPoint` from `@takram/three-atmosphere/webgpu` (takram's `GetSkyRadianceToPoint`) up to the clouds' front, applied in TSL after the WGSL march; without the shadow length |
+| Haze below and between the clouds (`HAZE`) | done | takram's defaults; the shadow length is 0 until `SHADOW_LENGTH` is ported |
 | Light shafts (`SHADOW_LENGTH`, epipolar shadow length in the atmosphere) | planned (after C4) | Needs the cloud shadow maps |
 | Cloud shadows on the scene (terrain, buildings) | planned (C4) | May come with the building shadows |
 | Shadow pass temporal resolve (`shadowResolve.frag`) | planned (C4) | |

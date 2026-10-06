@@ -144,7 +144,8 @@ Next stages, in the order agreed on 2026-10-05:
      half resolution first planned here. Wind (`?wind=`) and evolution followed the same day,
      which completes C2. The maintainer judged the grain of the temporal upscaling acceptable at
      60 fps (2026-10-06), so takram's method stays as it is.
-   - C3. Aerial perspective on the clouds.
+   - C3. Aerial perspective on the clouds, haze below and between them, and sun and sky light
+     by height. Done 2026-10-06; the GPU time is within the measurement noise (about 0.1 ms).
    - C4. Cloud shadows; may move to the building-shadow work.
    - C5. Cloud density on the CPU for the path's cloud channel and the shake in clouds; on hold.
      The idea so far: the cloud shape data (weather map, layer settings) lives in files that

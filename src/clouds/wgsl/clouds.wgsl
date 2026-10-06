@@ -9,7 +9,9 @@
 //   viewZ          view-space z of the scene at this pixel (negative); very large for the sky
 //   uv             screen UV of the pixel centre, origin top left
 //   previousViewProjection  last frame's projection × view matrix, for the velocity
-//   sunE, skyE     sun and sky illuminance at the clouds, from the atmosphere tables
+//   sunE0, skyE0   sun and sky illuminance at the bottom of the cloud layers above the camera,
+//   sunE1, skyE1   and at their top, from the atmosphere tables; interpolated by height as in
+//                  takram (without ACCURATE_SUN_SKY_LIGHT)
 //   layers         heights: minHeights, maxHeights
 //   shape          (shape repeat, detail repeat, weather repeat, coverage) per metre
 //   light          (scattering coefficient, powder scale, powder exponent, sky light scale)
@@ -19,10 +21,11 @@
 //   shapeOffset, detailOffset  added to the shape and detail texture coordinates
 //   jitter         0 to 1, blue noise per pixel and frame
 //
-// Returns two columns, as takram's two render targets:
-//   [0] cloud radiance (premultiplied) and opacity
+// Returns columns:
+//   [0] cloud radiance (premultiplied) and opacity, before the aerial perspective
 //   [1] (front distance, velocity u, velocity v, 0): the distance to the clouds' front, or to
 //       the scene where there are no clouds; the velocity is this frame's UV minus last frame's
+//   [2] (ray direction in world space, haze ray length) for the aerial perspective and the haze
 fn clouds(
   viewZ: f32,
   uv: vec2f,
@@ -30,8 +33,10 @@ fn clouds(
   cameraWorld: mat4x4f,
   previousViewProjection: mat4x4f,
   sunDirection: vec3f,
-  sunE: vec3f,
-  skyE: vec3f,
+  sunE0: vec3f,
+  skyE0: vec3f,
+  sunE1: vec3f,
+  skyE1: vec3f,
   earthCenter: vec3f,
   earthRadius: f32,
   minHeights: vec4f,
@@ -165,6 +170,10 @@ fn clouds(
           sunStep *= 2.0;
         }
 
+        // Sun and sky light at this height (getCloudsSunSkyIrradiance).
+        let lightMix = saturate((h - bottom) / max(top - bottom, 1.0));
+        let sunE = mix(sunE0, sunE1, lightMix);
+        let skyE = mix(skyE0, skyE1, lightMix);
         var radiance = sunE * cloudMultipleScattering(opticalDepth, cosTheta, phase.xyz);
         radiance += skyE * 0.07957747 * media.y * light.w;
         radiance *= extinction; // scattering equals extinction without absorption
@@ -204,10 +213,19 @@ fn clouds(
   let velocity = select(vec2f(1e3), uv - previousUv, previousClip.w > 0.0);
 
   let alpha = saturate((transmittance - 1.0) / (minTransmittance - 1.0));
+
+  // The haze ray (getHazeRayNearFar): to the ground, else out of the top of the cloud layers;
+  // then no further than the scene, and towards the clouds' front by their opacity.
+  var hazeFar = select(max(outer.y, 0.0), ground.x, ground.x > 0.0);
+  hazeFar = min(hazeFar, sceneDistance);
+  if (transmittanceSum > 0.0) {
+    hazeFar = mix(hazeFar, min(frontDistance, hazeFar), alpha);
+  }
+
   return mat4x4f(
     vec4f(radianceIntegral, alpha),
     vec4f(frontDistance, velocity, 0.0),
-    vec4f(0.0),
+    vec4f(direction, hazeFar),
     vec4f(0.0)
   );
 }

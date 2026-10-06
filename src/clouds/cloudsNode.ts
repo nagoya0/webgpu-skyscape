@@ -31,8 +31,15 @@ const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 
 /** Inputs of the cloud passes, as nodes. */
 export interface CloudPassInputs {
-  /** Builds the ray march for a full-resolution pixel and its UV; returns clouds.wgsl's columns. */
-  march(pixel: Node<'vec2'>, uv: Node<'vec2'>, previousViewProjection: Node<'mat4'>): Node<'mat4'>
+  /**
+   * Builds the ray march for a full-resolution pixel and its UV; returns the cloud colour and
+   * (front distance, velocity).
+   */
+  march(
+    pixel: Node<'vec2'>,
+    uv: Node<'vec2'>,
+    previousViewProjection: Node<'mat4'>
+  ): { color: Node<'vec4'>; depthVelocity: Node<'vec4'> }
   /** Builds the resolve; takes the textures and returns the resolved colour. */
   resolve(inputs: {
     color: TextureNode
@@ -100,14 +107,10 @@ export class CloudsNode extends TempNode {
     const texelCoord = screenCoordinate.xy.floor()
     const pixel = inputs.temporalUpscale ? texelCoord.mul(4).add(this.ownedOffset) : texelCoord
     const uv = pixel.add(0.5).div(this.fullSize)
-    // A matrix's element is its column; @types/three 0.186 does not type element() on VarNode.
-    const result = inputs.march(pixel, uv, this.previousViewProjection).toVar() as unknown as {
-      element(index: number): Node<'vec4'>
-    }
-    const color = result.element(0)
+    const { color, depthVelocity } = inputs.march(pixel, uv, this.previousViewProjection)
     this.marchMaterial.name = 'clouds_march'
     this.marchMaterial.outputNode = color
-    this.marchMaterial.mrtNode = mrt({ output: color, depthVelocity: result.element(1) })
+    this.marchMaterial.mrtNode = mrt({ output: color, depthVelocity })
 
     this.historyNode = texture(this.historyTarget.texture)
     this.resolveMaterial.name = 'clouds_resolve'

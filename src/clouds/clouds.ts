@@ -1,7 +1,11 @@
 // Volumetric clouds (ADR 0013, ADR 0022): the ray marching and the temporal resolve are WGSL
 // ported from @takram/three-clouds; TSL gathers the inputs, and CloudsNode runs the passes.
 // Composited right after the aerial perspective.
-import { getSplitScalarIlluminance, type AtmosphereContext } from '@takram/three-atmosphere/webgpu'
+import {
+  getIndirectLuminanceToPoint,
+  getSplitScalarIlluminance,
+  type AtmosphereContext
+} from '@takram/three-atmosphere/webgpu'
 import { stbn } from '@takram/three-geospatial/webgpu'
 import {
   float,
@@ -17,7 +21,6 @@ import {
   texture3D,
   uniform,
   vec2,
-  vec3,
   vec4,
   wgslFn
 } from 'three/tsl'
@@ -41,8 +44,9 @@ import {
 import { ecefToWorld, type LocalFrame } from '../geo/localFrame'
 import { asNode, type CompositeStage } from '../render/pipeline'
 import { preprocess } from '../shaders/preprocess'
-import { CloudsNode } from './cloudsNode'
+import { CloudsNode, type CloudPassInputs } from './cloudsNode'
 import clipAABBCode from './wgsl/clipAABB.wgsl?raw'
+import cloudHazeCode from './wgsl/cloudHaze.wgsl?raw'
 import cloudMediaCode from './wgsl/cloudMedia.wgsl?raw'
 import cloudMultipleScatteringCode from './wgsl/cloudMultipleScattering.wgsl?raw'
 import cloudsCode from './wgsl/clouds.wgsl?raw'
@@ -61,12 +65,13 @@ const include = (fn: unknown): Include => fn as Include
  * takram's feature switches that the port supports (docs/clouds-parity.md), and the ones on by
  * default, as in takram's defaults.
  */
-export const CLOUD_FEATURES = ['SHAPE_DETAIL', 'POWDER', 'TEMPORAL_UPSCALE'] as const
+export const CLOUD_FEATURES = ['SHAPE_DETAIL', 'POWDER', 'TEMPORAL_UPSCALE', 'HAZE'] as const
 export type CloudFeature = (typeof CLOUD_FEATURES)[number]
 export const DEFAULT_CLOUD_FEATURES: ReadonlySet<CloudFeature> = new Set([
   'SHAPE_DETAIL',
   'POWDER',
-  'TEMPORAL_UPSCALE'
+  'TEMPORAL_UPSCALE',
+  'HAZE'
 ])
 
 /** The WGSL functions, preprocessed for a set of features. */
@@ -86,7 +91,8 @@ function buildFunctions(features: ReadonlySet<string>) {
       include(cloudMedia),
       include(cloudMultipleScattering)
     ]),
-    cloudsResolve: fn(cloudsResolveCode, [include(varianceClipping)])
+    cloudsResolve: fn(cloudsResolveCode, [include(varianceClipping)]),
+    cloudHaze: fn(cloudHazeCode)
   }
 }
 
@@ -211,6 +217,8 @@ export async function createClouds(
   const phase = uniform(new Vector4(0.7, -0.2, 0.5, 0))
   // (min step, max step, perspective step scale, max distance): takram's high preset steps.
   const march = uniform(new Vector4(50, 1000, 1.01, 80_000))
+  // takram's haze defaults: (density scale, exponent per metre, scattering, absorption).
+  const hazeParameters = uniform(new Vector4(3e-5, 1e-3, 0.9, 0.5))
   // Offsets as in takram, added to the texture coordinates. The pattern moves against the
   // offset, so the wind enters with a minus sign. World axes: x north, z east.
   const weatherOffset = uniform(new Vector2())
@@ -247,30 +255,42 @@ export async function createClouds(
       sunDirectionECEF: Node
       altitudeCorrectionECEF: Node
       correctAltitude: boolean
-      parametersNode: { worldToUnit: Node }
+      parametersNode: { worldToUnit: Node; bottomRadius: Node }
     }
     const sunDirectionECEF = asNode<'vec3'>(ctx.sunDirectionECEF)
     const sunDirection = asNode<'mat4'>(ctx.matrixECEFToWorld).mul(vec4(sunDirectionECEF, 0)).xyz.normalize()
-    // Sun and sky light in the middle of the main cumulus layer above the camera.
-    const layerMiddle = (layers[1] ?? layers[0]).altitude + (layers[1] ?? layers[0]).height / 2
-    const point = vec3(cameraPosition.x, float(layerMiddle), cameraPosition.z)
-    let pointECEF = asNode<'mat4'>(ctx.matrixWorldToECEF).mul(vec4(point, 1)).xyz
-    if (ctx.correctAltitude) pointECEF = pointECEF.add(asNode<'vec3'>(ctx.altitudeCorrectionECEF))
-    const pointUnit = pointECEF.mul(asNode<'float'>(ctx.parametersNode.worldToUnit))
-    const illuminance = asNode(getSplitScalarIlluminance(pointUnit, sunDirectionECEF)) as unknown as {
-      get(name: string): Node<'vec3'>
+    const worldToUnit = asNode<'float'>(ctx.parametersNode.worldToUnit)
+    // A world position in the atmosphere's units, with its altitude correction.
+    const toUnit = (point: Node<'vec3'>): Node<'vec3'> => {
+      let ecef = asNode<'mat4'>(ctx.matrixWorldToECEF).mul(vec4(point, 1)).xyz
+      if (ctx.correctAltitude) ecef = ecef.add(asNode<'vec3'>(ctx.altitudeCorrectionECEF))
+      return ecef.mul(worldToUnit)
     }
+    type Split = { get(name: 'direct' | 'indirect'): Node<'vec3'> }
+    const illuminanceAt = (pointUnit: Node<'vec3'>): Split =>
+      asNode(getSplitScalarIlluminance(pointUnit, sunDirectionECEF)) as unknown as Split
+    // As takram's clouds.vert: sun and sky light at the camera (for the haze), and at the bottom
+    // and top of the cloud layers straight above the camera (interpolated by height).
+    const cameraUnit = toUnit(cameraPosition)
+    const up = cameraUnit.normalize()
+    const radiusUnit = asNode<'float'>(ctx.parametersNode.bottomRadius)
+    const bottom = Math.min(...layers.map(l => l.altitude))
+    const top = Math.max(...layers.map(l => l.altitude + l.height))
+    const groundLight = illuminanceAt(cameraUnit)
+    const bottomLight = illuminanceAt(up.mul(radiusUnit.add(worldToUnit.mul(bottom))))
+    const topLight = illuminanceAt(up.mul(radiusUnit.add(worldToUnit.mul(top))))
 
     const weatherNode = texture(weather)
     const shapeNode = texture3D(shapeVolume)
     const detailNode = texture3D(detailVolume)
 
-    const marchPixel = (pixel: Node<'vec2'>, uv: Node<'vec2'>, previousViewProjection: Node<'mat4'>): Node<'mat4'> => {
+    const marchPixel: CloudPassInputs['march'] = (pixel, uv, previousViewProjection) => {
       // Reversed Z (ADR 0015): the sky has depth 0.
       const lastPixel = vec2(asNode<'uvec2'>(depth.size(int(0)))).sub(1)
       const sceneDepth = depth.load(ivec2(min(pixel, lastPixel))).r
       const viewZ = select(sceneDepth.lessThanEqual(0), float(-1e9), perspectiveDepthToViewZ(sceneDepth, near, far))
-      return asNode<'mat4'>(
+      // A matrix's element is its column; @types/three 0.186 does not type element() on VarNode.
+      const result = asNode<'mat4'>(
         functions.clouds({
           viewZ,
           uv,
@@ -278,8 +298,10 @@ export async function createClouds(
           cameraWorld,
           previousViewProjection,
           sunDirection,
-          sunE: illuminance.get('direct'),
-          skyE: illuminance.get('indirect'),
+          sunE0: bottomLight.get('direct'),
+          skyE0: bottomLight.get('indirect'),
+          sunE1: topLight.get('direct'),
+          skyE1: topLight.get('indirect'),
           earthCenter,
           earthRadius,
           minHeights,
@@ -308,10 +330,47 @@ export async function createClouds(
           // Blue noise per pixel and frame, as takram's getSTBN().
           jitter: asNode<'float'>(stbn)
         })
+      ).toVar() as unknown as { element(index: number): Node<'vec4'> }
+      const cloud = result.element(0)
+      const depthVelocity = result.element(1)
+      const direction = result.element(2).xyz
+      const hazeFar = result.element(2).w
+
+      // Aerial perspective between the camera and the clouds' front (applyAerialPerspective).
+      // Where there are no clouds the colour is 0 and the result does not matter; the distance is
+      // capped there so the atmosphere functions get a finite point.
+      const front = cameraPosition.add(direction.mul(min(depthVelocity.x, float(1e6))))
+      const toFront = asNode(
+        getIndirectLuminanceToPoint(cameraUnit, toUnit(front), float(0), sunDirectionECEF)
+      ) as unknown as { get(name: 'luminance' | 'transmittance'): Node<'vec3'> }
+      const aerial = select(
+        cloud.a.greaterThan(0),
+        vec4(cloud.rgb.mul(toFront.get('transmittance')).add(toFront.get('luminance').mul(cloud.a)), cloud.a),
+        cloud
       )
+
+      const color = asNode<'vec4'>(
+        functions.cloudHaze({
+          color: aerial,
+          direction,
+          hazeDistance: hazeFar.sub(near).max(0),
+          relativeCamera: cameraPosition.sub(earthCenter),
+          earthRadius,
+          near,
+          sunDirection,
+          groundSunE: groundLight.get('direct'),
+          groundSkyE: groundLight.get('indirect'),
+          coverage,
+          phase,
+          skyLightScale: light.w,
+          haze: hazeParameters,
+          shadowLength: float(0)
+        })
+      )
+      return { color, depthVelocity }
     }
 
-    const resolve: ConstructorParameters<typeof CloudsNode>[2]['resolve'] = ({
+    const resolve: CloudPassInputs['resolve'] = ({
       color,
       depthVelocity,
       history,
