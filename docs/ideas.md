@@ -74,8 +74,18 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   internals the cloud port changes ([ADR 0016](adr/0016-patch-takram-for-newer-three.md)).
   Step C1 needed no changes to the library: the cloud code is our own WGSL and uses only the
   atmosphere's public functions.
-- **Look of the image.** Tone mapping (AgX for now) and exposure (3 for now). Terrain, buildings
-  and the first clouds are now in, so this can be judged by eye.
+- **Look of the image.** Tone mapping (AgX for now) and exposure (3 for now). The maintainer
+  finds the image short of vividness (2026-10-06). Agreed order: first correct the sources,
+  then grade the whole image at the end, once the scene is complete, so the grading is not
+  redone as parts change. Done so far: the aerial photographs carry the day's haze under the
+  demo's own aerial perspective, so they are corrected (`src/terrain/wgsl/photoGrade.wgsl`):
+  haze removed 0.15, contrast 1.2, saturation 1.4, picked by the maintainer from four
+  strengths. Still to look at: the uniform grey of the buildings, and at the end colour grading
+  and the choice of tone mapping (AgX is muted by design).
+- **Priority after the clouds.** The maintainer finds the clouds good enough for now and the
+  ground lagging behind (2026-10-06), so ground quality comes before the remaining cloud
+  features. Candidates: building shadows and ambient occlusion, water surfaces, the aerial
+  photographs' resolution, facade colours, vegetation. Order not decided yet.
 
 ## Night
 

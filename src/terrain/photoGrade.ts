@@ -7,7 +7,10 @@ import photoGradeCode from './wgsl/photoGrade.wgsl?raw'
 
 const photoGradeFn = wgslFn(photoGradeCode)
 
-/** (dehaze, contrast, saturation, unused); (0, 1, 1) leaves the photographs unchanged. */
+/**
+ * (dehaze, contrast, saturation, unused); (0, 1, 1) leaves the photographs unchanged. The
+ * defaults, (0.15, 1.2, 1.4), are set from src/params.ts.
+ */
 export const photoGrade = uniform(new Vector4(0, 1, 1, 0))
 
 /** The graded colour of a photograph tile. */
