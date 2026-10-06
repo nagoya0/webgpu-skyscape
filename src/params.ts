@@ -33,6 +33,7 @@
 //   raymarch=0        look up the aerial perspective in tables instead of ray marching it
 //   flare=0           leave out the lens flare
 //   measure           after loading, time 180 frames and report them in window.__debug
+//   debug             show debug text: flight time, height, load factor, frame time
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 
@@ -56,6 +57,7 @@ export interface Params {
   textures: boolean
   terrain: boolean
   measure: boolean
+  debugText: boolean
   tileError: number
   drawMode: 'batch' | 'bundle' | 'plain'
   raymarch: boolean
@@ -122,6 +124,7 @@ export function readParams(search: string, now = new Date()): Params {
     textures: query.get('textures') === '1',
     terrain: query.get('terrain') !== '0',
     measure: query.has('measure'),
+    debugText: query.has('debug'),
     tileError: number('tileerror', 20, 0.5, 200),
     drawMode: (['batch', 'bundle', 'plain'] as const).find(m => m === query.get('draw')) ?? 'batch',
     raymarch: query.get('raymarch') !== '0',

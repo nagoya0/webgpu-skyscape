@@ -35,7 +35,10 @@ fn cloudsResolve(
   let sourceUv = uv;
   #endif // TEMPORAL_UPSCALE
 
-  let current = textureLoad(colorTexture, sourceCoord, 0);
+  // Not in takram: values that are not finite are dropped here, since one would otherwise stay
+  // in the history and spread to its neighbours frame after frame.
+  let loaded = textureLoad(colorTexture, sourceCoord, 0);
+  let current = select(vec4f(0.0), loaded, isFinite4(loaded));
 
   #ifdef TEMPORAL_UPSCALE
   if (all(coord % 4 == ownedOffset)) {
@@ -55,11 +58,14 @@ fn cloudsResolve(
     }
   }
   let previousUv = uv - closest.gb;
-  if (any(previousUv < vec2f(0.0)) || any(previousUv > vec2f(1.0))) {
+  if (!isFinite4(closest) || any(previousUv < vec2f(0.0)) || any(previousUv > vec2f(1.0))) {
     return current; // Rejection
   }
 
   let history = textureSampleLevel(historyTexture, historySampler, previousUv, 0.0);
+  if (!isFinite4(history)) {
+    return current;
+  }
 
   #ifdef TEMPORAL_UPSCALE
   // takram: variance clipping with a large gamma works for upsampling; it adds ghosting, which

@@ -52,6 +52,7 @@ import cloudMultipleScatteringCode from './wgsl/cloudMultipleScattering.wgsl?raw
 import cloudsCode from './wgsl/clouds.wgsl?raw'
 import cloudsResolveCode from './wgsl/cloudsResolve.wgsl?raw'
 import cloudWeatherCode from './wgsl/cloudWeather.wgsl?raw'
+import isFinite4Code from './wgsl/isFinite4.wgsl?raw'
 import raySphereCode from './wgsl/raySphere.wgsl?raw'
 import remapClamped4Code from './wgsl/remapClamped4.wgsl?raw'
 import varianceClippingCode from './wgsl/varianceClipping.wgsl?raw'
@@ -91,7 +92,7 @@ function buildFunctions(features: ReadonlySet<string>) {
       include(cloudMedia),
       include(cloudMultipleScattering)
     ]),
-    cloudsResolve: fn(cloudsResolveCode, [include(varianceClipping)]),
+    cloudsResolve: fn(cloudsResolveCode, [include(varianceClipping), include(fn(isFinite4Code))]),
     cloudHaze: fn(cloudHazeCode)
   }
 }
@@ -338,8 +339,10 @@ export async function createClouds(
 
       // Aerial perspective between the camera and the clouds' front (applyAerialPerspective).
       // Where there are no clouds the colour is 0 and the result does not matter; the distance is
-      // capped there so the atmosphere functions get a finite point.
-      const front = cameraPosition.add(direction.mul(min(depthVelocity.x, float(1e6))))
+      // capped there so the atmosphere functions get a finite point. Inside a cloud the front
+      // can be at the camera, where the atmosphere function divides 0 by 0, so it is kept at
+      // least 1 m away.
+      const front = cameraPosition.add(direction.mul(depthVelocity.x.clamp(1, 1e6)))
       const toFront = asNode(
         getIndirectLuminanceToPoint(cameraUnit, toUnit(front), float(0), sunDirectionECEF)
       ) as unknown as { get(name: 'luminance' | 'transmittance'): Node<'vec3'> }

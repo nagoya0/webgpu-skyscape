@@ -63,7 +63,7 @@ blocks (`src/shaders/preprocess.ts`) instead of cutting them out.
 Do not add on-screen controls; the UI is designed once the features are in
 ([ADR 0019](docs/adr/0019-no-ui-until-features-are-in.md)). Add a URL parameter instead.
 URL parameter names and values are ASCII only; parse values strictly and fall back to the
-default on anything else.
+default on anything else. Text output for debugging is allowed (`?debug`, `src/ui/debugText.ts`).
 
 ## Secrets and data
 

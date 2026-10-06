@@ -20,6 +20,7 @@ import { createBuildings, plateauBuildingUrls } from './scene/plateauBuildings'
 import { createPlaceholderGround } from './scene/placeholderGround'
 import { createTerrain } from './terrain/terrain'
 import { showAttribution } from './ui/attribution'
+import { showDebugText } from './ui/debugText'
 import { showGuidance } from './ui/guidance'
 import { showLoading } from './ui/loading'
 
@@ -97,6 +98,8 @@ async function start(): Promise<void> {
   const terrain = params.terrain ? createTerrain(frame) : null
   if (terrain) scene.add(terrain.group)
   showAttribution()
+  const debugText = params.debugText ? showDebugText() : null
+  let frameMs = 0
 
   const cloudFeatures = new Set<CloudFeature>(DEFAULT_CLOUD_FEATURES)
   for (const [name, on] of Object.entries(params.cloudFeatures)) {
@@ -189,6 +192,16 @@ async function start(): Promise<void> {
       return
     }
     step(loaded && !params.paused ? dt : 0, timer.getElapsed())
+    if (debugText) {
+      frameMs += (timer.getDelta() * 1000 - frameMs) * 0.1
+      debugText.update([
+        `t      ${flightTime.toFixed(1)} s${loaded ? '' : ' (loading)'}`,
+        // Height above the origin's tangent plane; close to the altitude over the demo area.
+        `y      ${camera.position.y.toFixed(0)} m`,
+        `load   ${state.loadFactor.toFixed(2)} G`,
+        `frame  ${frameMs.toFixed(1)} ms`
+      ])
+    }
   })
 
   let lastBoundsTime = -Infinity

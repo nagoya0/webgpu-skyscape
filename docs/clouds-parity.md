@@ -75,7 +75,7 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 |---|---|---|
 | Separate cloud buffer (colour, opacity) | done | `src/clouds/cloudsNode.ts`; 32-bit floats, since the front distance goes beyond half floats |
 | Front depth and velocity output | done | Velocity from last frame's view-projection in world space; takram reprojects the no-cloud case in view space for precision, which the local frame does not need |
-| Temporal resolve with reprojection and variance clipping (`cloudsResolve.frag`) | done | Four neighbours, bilinear history, as takram's defaults (varianceGamma 2, temporalAlpha 0.1) |
+| Temporal resolve with reprojection and variance clipping (`cloudsResolve.frag`) | done | Four neighbours, bilinear history, as takram's defaults (varianceGamma 2, temporalAlpha 0.1). Added: values that are not finite are dropped, since one NaN in the history spread until the screen went black (found 2026-10-06 when flying into a cloud) |
 | Temporal upscaling from a lower resolution (`TEMPORAL_UPSCALE`) | done | Quarter resolution in each direction, filled in over 16 frames in takram's Bayer order. Off (`?cloudfx=-TEMPORAL_UPSCALE`), the clouds are marched at full resolution and blended into the history |
 | Shadow length in the resolve (`SHADOW_LENGTH`) | planned (after C4) | With the light shafts |
 | Quality presets | on hold | One target machine ([ADR 0025](adr/0025-target-hardware.md)) |
