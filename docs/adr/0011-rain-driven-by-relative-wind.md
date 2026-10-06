@@ -1,13 +1,13 @@
 # 11. Rain moves with the relative wind, not with gravity
 
-- Status: Accepted
+- Status: Accepted; drops in the air dropped, and the views settled by
+  [ADR 0020](0020-effects-by-view.md) (2026-10-07)
 - Date: 2026-10-03
 
 ## Context
 
 When an aircraft flies through rain, the airflow from its own speed is much stronger than gravity.
-Drops on the canopy are pushed backwards, and drops in the air come towards the viewer from the
-direction of travel, not from above.
+Drops on the canopy are pushed backwards, not down.
 
 ## Decision
 
@@ -15,12 +15,13 @@ direction of travel, not from above.
   velocity). Drops move with the relative wind projected into camera space plus a little gravity,
   and nearby drops merge. When drawn, each drop refracts the scene colour along its normal, and
   the area under it is slightly blurred. Reference: the ShaderToy shader "Heartfelt", with its flow
-  direction changed from gravity to the wind direction. In the first-person view this buffer
-  covers the whole screen as a game-style shortcut, and the drops flow outwards radially from
-  the direction of travel; in the cockpit view the drops sit on the canopy glass
-  ([ADR 0020](0020-effects-by-view.md)).
-- **Drops in the air.** Particles stretched along the relative velocity. They appear as streaks
-  coming radially from the vanishing point of the direction of travel.
+  direction changed from gravity to the wind direction.
+- **Where the drops sit depends on the view** ([ADR 0020](0020-effects-by-view.md)). In the
+  first-person view the buffer covers the whole screen as a game-style shortcut, and the drops
+  flow outwards radially from the direction of travel; in the cockpit view the drops sit on the
+  canopy glass.
+- **No drops in the air.** Streaks of rain in the air, coming from the direction of travel, were
+  part of the first plan; the maintainer decided against them on 2026-10-07.
 - **Strength** comes from the cloud density channel of the path data
   ([ADR 0008](0008-precomputed-flight-path.md)).
 - **Order of effects.** On entering a cloud, the image first turns white and loses contrast. The
