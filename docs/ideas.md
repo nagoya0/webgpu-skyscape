@@ -35,8 +35,10 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   much of the image. Proposed, by altitude: from about 1.5 km up, the photographs with finer
   shading from the elevation model only; lower, instanced trees placed from land cover data or
   the photographs' green areas; close to the ground, 3D trees near the course. Not decided.
-- **The mountains' terrain** (seen 2026-10-07; work paused at the maintainer's request to update
-  the documents first).
+- **The mountains' terrain** (seen 2026-10-07). After the land became diffuse
+  ([ADR 0032](adr/0032-land-reflects-diffusely.md)) the maintainer judged the terrain good
+  enough. Only the skirts were changed; the other items below are on hold as room for
+  improvement, listed in the README. Changes for performance are still welcome.
   - Some slopes look flat and coarse, next to detailed ones. The maintainer saw the texture
     change; checked 2026-10-07 on Mount Ashitaka (`?terraindebug=1` tints tiles by zoom level,
     `?terraindebug=2` shows the photographs unlit): both parts are drawn at the same zoom level,
@@ -54,11 +56,16 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     texture shows on those slopes.
   - Ridges are drawn as straight segments by the 33 × 33 grid, 75 to 150 m between vertices at
     3,000 m.
-  - Dark wedges show where tiles of different levels meet on steep slopes, deeper than the 30 m
-    skirts.
-  - Proposed: normals from the elevation model at its full resolution, so sky light varies over
+  - Dark wedges showed where tiles of different levels meet on steep slopes, deeper than the
+    30 m skirts. The skirts now hang as deep as their edge rises and falls plus 30 m, straight
+    down at the tile rather than along the frame's y. `?terraindebug=4` shows them in magenta;
+    at 15:00 and 17:00 from the course none shows, so no gaps are open there.
+  - Small bright triangles at 17:00 on the slopes are not gaps (they stay unchanged with the
+    skirts in magenta): they are faces of the ridges turned to the low sun, made angular by the
+    33 × 33 grid.
+  - On hold: normals from the elevation model at its full resolution, so sky light varies over
     a slope; ambient occlusion in the valleys; a 65 × 65 grid; the terrain's relief in the
-    refinement test; skirts as deep as the tile needs. Finer terrain (`?terraintexel=`) sharpens
+    refinement test. Finer terrain (`?terraintexel=`) sharpens
     the sunlit slopes a little: 1.5 (default) 184 tiles and 257 MB of textures, 1.0 296 and
     414 MB, 0.75 416 and 582 MB.
 - **Frame time** ([ADR 0025](adr/0025-target-hardware.md): about 7 ms per frame on the
@@ -141,14 +148,14 @@ Done:
   ([ADR 0031](adr/0031-correct-the-sources-grade-at-the-end.md)).
 
 Next, in this order (the maintainer put the ground's quality before the remaining cloud
-features on 2026-10-06):
+features on 2026-10-06, and on 2026-10-07 put the rest of the terrain and of the clouds on hold
+as room for improvement, listed in the README; changes for performance are still considered):
 
-1. **The ground's quality.** The mountains' terrain (above, paused), then forests.
-2. **The rest of the clouds**, takram's features that are on in its default first: turbulence,
-   ground bounce and accurate sun and sky light ([clouds-parity.md](clouds-parity.md)). Step C5
-   (cloud density on the CPU for the path's cloud channel and the shake in clouds) is on hold;
-   the idea so far is that the cloud shape data lives in files that both the GPU and the
-   offline path tool read ([ADR 0008](adr/0008-precomputed-flight-path.md)).
+1. **Forests** (above; not decided whether they are needed).
+2. **Step C5 of the clouds** (cloud density on the CPU for the path's cloud channel and the
+   shake in clouds) is on hold; the idea so far is that the cloud shape data lives in files that
+   both the GPU and the offline path tool read
+   ([ADR 0008](adr/0008-precomputed-flight-path.md)).
 3. **Rain** ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
    [ADR 0020](adr/0020-effects-by-view.md)).
 4. **JSBSim path** with manoeuvres, replacing the placeholder.

@@ -59,6 +59,8 @@ or bulk downloads are to be discussed with GSI first.
   data shows sea, lakes and rivers ([ADR 0029](0029-water-from-gsi-data.md)).
 - Seen on the mountains: ridges drawn as straight segments by the 33 × 33 grid; dark wedges where
   tiles of different levels meet on steep slopes, deeper than the 30 m skirts; and slopes facing
-  away from the sun look flat, being lit evenly by the sky only. Open in [ideas](../ideas.md).
+  away from the sun look flat, being lit evenly by the sky only. The skirts now hang as deep as
+  their edge rises and falls, plus 30 m (2026-10-07); the rest is on hold as room for
+  improvement ([ideas](../ideas.md)).
 - The land reflects light diffusely only; water keeps its specular reflection
   ([ADR 0032](0032-land-reflects-diffusely.md)).

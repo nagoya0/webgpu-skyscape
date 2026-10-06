@@ -15,7 +15,7 @@ import {
   Vector3,
   type PerspectiveCamera
 } from 'three/webgpu'
-import { mix, texture as textureNode, vec3 } from 'three/tsl'
+import { attribute, mix, texture as textureNode, vec3 } from 'three/tsl'
 
 import { Geodetic, radians } from '@takram/three-geospatial'
 
@@ -62,9 +62,10 @@ export interface TerrainOptions {
   maxLoading: number
   /**
    * Debugging: 'levels' tints each tile by its zoom level; 'unlit' shows the photographs as they
-   * are, without lighting or water; 'water' shows the water mask in red.
+   * are, without lighting or water; 'water' shows the water mask in red; 'skirts' shows the
+   * skirts in magenta.
    */
-  debug?: 'levels' | 'unlit' | 'water' | null
+  debug?: 'levels' | 'unlit' | 'water' | 'skirts' | null
 }
 
 // Zoom level colours for debugging, repeating every eight levels: zoom 8 red, 9 orange,
@@ -232,6 +233,9 @@ export function createTerrain(
           // ?terraindebug=2: the photograph as emission, without lighting, water or correction.
           material.colorNode = vec3(0)
           material.emissiveNode = textureNode(texture).rgb
+        } else if (options.debug === 'skirts') {
+          // ?terraindebug=4: the skirts in magenta, lit as the rest.
+          material.colorNode = mix(land, vec3(1, 0, 1), attribute<'float'>('skirt'))
         } else if (options.debug === 'water') {
           // ?terraindebug=3: the water mask in red over the photograph, without water shading.
           if (mask) {

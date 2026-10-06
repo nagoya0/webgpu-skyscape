@@ -10,8 +10,12 @@ import { tileXToLongitude, tileYToLatitude, type TileKey } from './webMercator'
 
 /** Grid segments per tile side. */
 export const SEGMENTS = 32
-/** How far the skirt hangs below the tile edge, in metres. */
-const SKIRT_DEPTH = 30
+/**
+ * How far the skirt hangs below the tile edge at least, in metres. Along an edge it hangs this
+ * much further than the edge's own rise and fall: a coarser neighbour draws the shared edge with
+ * fewer vertices, and on a steep edge the gap between the two can be as large as that range.
+ */
+const SKIRT_MIN_DEPTH = 30
 
 /**
  * Geoid height over central Tokyo, from GSI's geoid calculator (2026-10-06): 36.69 m at
@@ -74,36 +78,66 @@ export function buildTileGeometry(
   const count = surfaceCount + perimeter.length
   const world = new Float64Array(count * 3)
   const uvs = new Float32Array(count * 2)
+  const longitudes = new Float64Array(cols)
+  const latitudes = new Float64Array(cols)
+  const surfaceHeights = new Float64Array(surfaceCount)
   const geodetic = new Geodetic()
   const ecef = new Vector3()
   const point = new Vector3()
+  const place = (k: number, i: number, j: number, height: number): void => {
+    geodetic.set(radians(longitudes[i]), radians(latitudes[j]), height).toECEF(ecef)
+    ecefToWorld(frame, ecef, point)
+    world[k * 3] = point.x
+    world[k * 3 + 1] = point.y
+    world[k * 3 + 2] = point.z
+  }
 
   const west = tileXToLongitude(tile.x, tile.z)
   const east = tileXToLongitude(tile.x + 1, tile.z)
+  for (let n = 0; n < cols; n++) {
+    longitudes[n] = west + ((east - west) * n) / SEGMENTS
+    latitudes[n] = tileYToLatitude(tile.y + n / SEGMENTS, tile.z)
+  }
   for (let j = 0; j < cols; j++) {
     const v = j / SEGMENTS
-    const latitude = tileYToLatitude(tile.y + v, tile.z)
     for (let i = 0; i < cols; i++) {
       const u = i / SEGMENTS
-      const longitude = west + (east - west) * u
-      const height = sampleHeight(heights, u, v) + GEOID_HEIGHT
-      geodetic.set(radians(longitude), radians(latitude), height).toECEF(ecef)
-      ecefToWorld(frame, ecef, point)
       const k = j * cols + i
-      world[k * 3] = point.x
-      world[k * 3 + 1] = point.y
-      world[k * 3 + 2] = point.z
+      surfaceHeights[k] = sampleHeight(heights, u, v) + GEOID_HEIGHT
+      place(k, i, j, surfaceHeights[k])
       uvs[k * 2] = u
       uvs[k * 2 + 1] = v
     }
   }
 
-  // Skirt: a copy of the perimeter, lowered, to hide cracks between levels of detail.
+  // Skirt: a copy of the perimeter, lowered straight down (along the ellipsoid normal, not the
+  // frame's y, which leans away from up far from the origin) to hide cracks between levels of
+  // detail. Each edge's skirt is as deep as the edge rises and falls, plus a margin.
+  const edgeRange = (indices: number[]): number => {
+    let low = Infinity
+    let high = -Infinity
+    for (const k of indices) {
+      low = Math.min(low, surfaceHeights[k])
+      high = Math.max(high, surfaceHeights[k])
+    }
+    return high - low
+  }
+  const line = (from: number, step: number): number[] => Array.from({ length: cols }, (_, n) => from + n * step)
+  const north = edgeRange(line(0, 1))
+  const south = edgeRange(line((cols - 1) * cols, 1))
+  const westEdge = edgeRange(line(0, cols))
+  const eastEdge = edgeRange(line(cols - 1, cols))
   perimeter.forEach((source, p) => {
+    const i = source % cols
+    const j = Math.floor(source / cols)
+    // A corner takes the deeper of its two edges.
+    let range = 0
+    if (j === 0) range = Math.max(range, north)
+    if (j === cols - 1) range = Math.max(range, south)
+    if (i === 0) range = Math.max(range, westEdge)
+    if (i === cols - 1) range = Math.max(range, eastEdge)
     const k = surfaceCount + p
-    world[k * 3] = world[source * 3]
-    world[k * 3 + 1] = world[source * 3 + 1] - SKIRT_DEPTH
-    world[k * 3 + 2] = world[source * 3 + 2]
+    place(k, i, j, surfaceHeights[source] - range - SKIRT_MIN_DEPTH)
     uvs[k * 2] = uvs[source * 2]
     uvs[k * 2 + 1] = uvs[source * 2 + 1]
   })
@@ -148,6 +182,8 @@ export function buildTileGeometry(
   const geometry = new BufferGeometry()
   geometry.setAttribute('position', new BufferAttribute(positions, 3))
   geometry.setAttribute('uv', new BufferAttribute(uvs, 2))
+  // 1 on the skirt, for debugging (?terraindebug=4).
+  geometry.setAttribute('skirt', new BufferAttribute(new Float32Array(count).fill(1, surfaceCount), 1))
   // Normals from the surface alone: including the skirt would tilt the edge normals sideways
   // and draw dark lines along every tile edge. Skirt vertices copy their edge vertex's normal.
   geometry.setIndex(indices.slice(0, surfaceIndexCount))

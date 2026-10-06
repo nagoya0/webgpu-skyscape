@@ -30,9 +30,8 @@ In place:
   first-person camera.
 - Temporal anti-aliasing, lens flare and AgX tone mapping.
 
-Planned: finer mountain terrain and forests, the rest of the clouds, rain, a flight path from
-JSBSim with manoeuvres, night scenes, colour grading, and a UI. The order and the open questions are in
-[docs/ideas.md](docs/ideas.md).
+Planned: rain, a flight path from JSBSim with manoeuvres, night scenes, colour grading, and a
+UI; forests are still open. The order and the open questions are in [docs/ideas.md](docs/ideas.md).
 
 ## What this project adds
 
@@ -68,6 +67,18 @@ Beyond using the libraries listed under credits, this project does the following
 - **Buildings in the Tokyo area**: PLATEAU's untextured models with procedural facades, drawn as
   one batched mesh ([ADR 0024](docs/adr/0024-untextured-buildings-with-procedural-facades.md),
   [ADR 0027](docs/adr/0027-batched-building-tiles.md)).
+
+## Room for improvement (on hold)
+
+The image is good enough for now; these would raise its quality further and are on hold.
+Changes that make the demo faster are still welcome.
+
+- **Terrain**: shading from the elevation model at its full resolution, so slopes in the shade
+  show their folds; ambient occlusion in the valleys; a finer grid per tile, so ridges are not
+  drawn as straight segments; the terrain's relief in the choice of tile detail.
+- **Clouds**: the rest of takram's default features: turbulence, light bounced from the ground,
+  and sun and sky light computed per sample. The full list is in
+  [docs/clouds-parity.md](docs/clouds-parity.md).
 
 ## Requirements
 
@@ -109,7 +120,8 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 | `groundshadow=0` | Leave out the cloud shadows on the terrain and buildings |
 | `terraintexel=px` | Terrain detail: refine while a photograph texel covers more than this many pixels (default 1.5) |
 | `photodehaze`, `photocontrast`, `photosat` | Correction of the aerial photographs (defaults 0.15, 1.2, 1.4) |
-| `terraindebug=1`, `2`, `3` | Debugging: tint terrain tiles by zoom level; show the photographs without lighting; show the water mask in red |
+| `landspecular=0..1` | Specular reflection of the land: 0 diffuse only (default), 1 as a standard material |
+| `terraindebug=1`, `2`, `3`, `4` | Debugging: tint terrain tiles by zoom level; show the photographs without lighting; show the water mask in red; show the tile skirts in magenta |
 | `coverage=0..1`, `cloudfx=` | Cloud coverage; cloud feature switches, such as `cloudfx=-POWDER` |
 | `wind=E,N` | Wind moving the clouds, in m/s towards the east and the north, such as `wind=10,-5` |
 | `measure` | After loading, time 180 frames and report CPU and GPU times in `window.__debug` |

@@ -17,7 +17,9 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 "takram's default" is takram's default quality preset (`qualityPresets.ts`, the same as its high
 preset). Until 2026-10-06 this table did not say that `TURBULENCE`, `ACCURATE_SUN_SKY_LIGHT`,
 `GROUND_BOUNCE` and `SHADOW_LENGTH` are on in takram's default; of these, `SHADOW_LENGTH` is now
-ported, and the other three are the switches still missing for the default look.
+ported, and the other three are the switches still missing for the default look. On 2026-10-07
+the maintainer put the remaining features on hold as room for improvement (listed in the
+README); changes for performance are still considered.
 
 | Switch | Ported | On by default here | takram's default |
 |---|---|---|---|
