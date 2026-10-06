@@ -91,8 +91,10 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   haze removed 0.15, contrast 1.2, saturation 1.4, picked by the maintainer from four
   strengths. Still to look at: the uniform grey of the buildings, and at the end colour grading
   and the choice of tone mapping (AgX is muted by design).
-- **Seen in the Hakone trial, still to look at** (2026-10-06): a light band along the horizon;
-  dark specks along the horizon line. The photographs' colour differences (mosaics of different
+- **Seen in the Hakone trial, still to look at** (2026-10-06): a light band along the horizon,
+  which comes from the clouds' haze (`HAZE`; gone with `?cloudfx=-HAZE`). The dark specks along
+  the horizon line were the end of the terrain short of the horizon; fixed by covering 2.5°
+  around the origin (172 tiles, 240 MB of textures at 3,000 m). The photographs' colour differences (mosaics of different
   dates and seasons, such as an orange strip east of Mount Fuji, present before the correction)
   are left as they are, by the maintainer's decision.
 - **Priority after the clouds.** The maintainer finds the clouds good enough for now and the

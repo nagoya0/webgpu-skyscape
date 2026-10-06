@@ -30,14 +30,15 @@ export const AREAS: Record<AreaName, Area> = {
     placeholderGround: true
   },
   // North of Lake Ashi: Mount Fuji about 28 km west-north-west, Sagami Bay about 15 km south-east.
-  // Coarser root tiles reach the horizon, which is about 200 km away from 3 km up.
+  // Coarser root tiles reach the horizon, which is about 200 km away from 3 km up; at 1.5° the
+  // terrain stopped short of it and left a dark line of specks along the horizon.
   hakone: {
     origin: { longitude: 139.02, latitude: 35.23, height: 0 },
     terrain: {
       ...DEFAULT_TERRAIN,
       longitude: 139.02,
       latitude: 35.23,
-      extentDegrees: 1.5,
+      extentDegrees: 2.5,
       rootZoom: 8,
       maxTiles: 400
     },
