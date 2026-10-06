@@ -4,13 +4,18 @@
 // Requests are limited in number at a time to keep the load on GSI's servers modest.
 import type { TileKey } from './webMercator'
 
+import { readPolygonLayer, type PolygonLayer } from './vectorTile'
+
 const DEM5A = 'https://cyberjapandata.gsi.go.jp/xyz/dem5a_png'
+const VECTOR = 'https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1'
 const DEM10 = 'https://cyberjapandata.gsi.go.jp/xyz/dem_png'
 const PHOTO = 'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto'
 
 export const DEM5A_ZOOM = 15
 export const DEM10_ZOOM = 14
 export const PHOTO_MAX_ZOOM = 18
+/** GSI's vector tiles go from zoom 4 to 16. */
+export const VECTOR_MAX_ZOOM = 16
 
 const MAX_CONCURRENT = 6
 let active = 0
@@ -83,6 +88,29 @@ export function loadHeights(tile: TileKey, signal?: AbortSignal): Promise<Height
     )
     promise.catch(() => heightCache.delete(key))
     heightCache.set(key, promise)
+  }
+  return promise
+}
+
+const waterCache = new Map<string, Promise<PolygonLayer | null>>()
+
+/**
+ * Water areas (sea, lakes, wide rivers) of a vector tile: the WA layer of GSI's vector tiles
+ * (optimal_bvmap-v1), as polygons. Null where the tile has none or does not exist.
+ */
+export function loadWaterAreas(tile: TileKey, signal?: AbortSignal): Promise<PolygonLayer | null> {
+  const key = `${tile.z}/${tile.x}/${tile.y}`
+  let promise = waterCache.get(key)
+  if (!promise) {
+    promise = limited(async () => {
+      // An aborted request throws, so that it is not cached as "no water".
+      signal?.throwIfAborted()
+      const response = await fetch(`${VECTOR}/${key}.pbf`, { signal })
+      if (!response.ok) return null
+      return readPolygonLayer(new Uint8Array(await response.arrayBuffer()), 'WA')
+    })
+    promise.catch(() => waterCache.delete(key))
+    waterCache.set(key, promise)
   }
   return promise
 }

@@ -13,8 +13,8 @@ In place:
 - Sky, sun and aerial perspective from `@takram/three-atmosphere`, for any date and time of day.
 - Terrain from GSI elevation tiles, covered with GSI aerial photographs (corrected for the haze
   they carry), streamed in real time out towards the horizon
-  ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md)). The sea is drawn as water with
-  waves, the sky's reflection and the sun's glint.
+  ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md)). The sea, lakes and rivers are drawn
+  as water with waves, the sky's reflection and the sun's glint.
 - The area: Sagami Bay, Hakone and Mount Fuji, flown at 3,000 m
   ([ADR 0028](docs/adr/0028-area-sagami-bay-hakone-fuji.md)). The earlier area, central Tokyo
   with PLATEAU LOD2 buildings for eight wards and procedural facades
@@ -88,7 +88,8 @@ The licence of this project's own code is not decided yet.
 - Terrain and aerial photographs: [GSI tiles (地理院タイル)](https://maps.gsi.go.jp/development/ichiran.html),
   Geospatial Information Authority of Japan (出典：国土地理院). The elevation tiles
   (`dem5a_png`, `dem_png`) and the seamless photographs (`seamlessphoto`) are processed into
-  terrain meshes and textures by this project.
+  terrain meshes and textures, and the water areas of the vector tiles (`optimal_bvmap-v1`) into
+  water masks, by this project.
 - Buildings: [3D City Model (Project PLATEAU)](https://www.mlit.go.jp/plateau/), Ministry of
   Land, Infrastructure, Transport and Tourism (3D都市モデル（Project PLATEAU）国土交通省).
 

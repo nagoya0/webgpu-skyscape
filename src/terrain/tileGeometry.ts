@@ -50,31 +50,6 @@ function sampleHeight(source: HeightSource, u: number, v: number): number {
   return top * (1 - ty) + bottom * ty
 }
 
-/**
- * A water mask over the tile, `size` × `size` values from 0 to 255 (255 = water), where the
- * elevation model has no data: sea. GSI serves no file for an elevation tile that is all sea,
- * so a missing grid is all water. Lakes have heights in the model and are not included. Null
- * when the tile has no water at all.
- */
-export function buildWaterMask(source: HeightSource, size = 64): Uint8Array | null {
-  const { grid } = source
-  if (!grid) return new Uint8Array(size * size).fill(255)
-  const n = grid.size
-  const mask = new Uint8Array(size * size)
-  let any = false
-  for (let j = 0; j < size; j++) {
-    for (let i = 0; i < size; i++) {
-      const x = Math.min(Math.max(Math.floor((source.u0 + ((i + 0.5) / size) * source.size) * n), 0), n - 1)
-      const y = Math.min(Math.max(Math.floor((source.v0 + ((j + 0.5) / size) * source.size) * n), 0), n - 1)
-      if (Number.isNaN(grid.heights[y * n + x])) {
-        mask[j * size + i] = 255
-        any = true
-      }
-    }
-  }
-  return any ? mask : null
-}
-
 export interface TileMesh {
   geometry: BufferGeometry
   /** World position of the tile centre. */

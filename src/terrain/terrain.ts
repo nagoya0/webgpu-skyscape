@@ -20,10 +20,19 @@ import {
 import { Geodetic, radians } from '@takram/three-geospatial'
 
 import { ecefToWorld, type LocalFrame } from '../geo/localFrame'
-import { DEM10_ZOOM, DEM5A_ZOOM, loadHeights, loadPhoto, pendingRequests } from './gsiSources'
+import {
+  DEM10_ZOOM,
+  DEM5A_ZOOM,
+  loadHeights,
+  loadPhoto,
+  loadWaterAreas,
+  pendingRequests,
+  VECTOR_MAX_ZOOM
+} from './gsiSources'
 import { gradedPhoto } from './photoGrade'
-import { buildTileGeometry, buildWaterMask, GEOID_HEIGHT, type HeightSource } from './tileGeometry'
+import { buildTileGeometry, GEOID_HEIGHT, type HeightSource } from './tileGeometry'
 import { terrainShading } from './water'
+import { buildWaterMask, MASK_SIZE } from './waterMask'
 import {
   ancestorOf,
   childrenOf,
@@ -163,19 +172,26 @@ export function createTerrain(
     loading++
     const abort = new AbortController()
     tile.abort = abort
-    // The water mask comes from the 10 m DEM, which covers all land; the 5 m DEM has gaps on
-    // land that would read as sea.
-    const maskSource = async (): Promise<HeightSource> => {
+    // The water mask: the sea from the 10 m DEM, which covers all land (the 5 m DEM has gaps on
+    // land that would read as sea), and lakes from the vector tiles' water areas.
+    const maskSource = async (): Promise<[HeightSource, Parameters<typeof buildWaterMask>[1]]> => {
       const coarse = ancestorOf(tile.key, Math.min(tile.key.z, DEM10_ZOOM))
-      const grid = await loadHeights(coarse.tile, abort.signal)
-      return { grid, u0: coarse.u0, v0: coarse.v0, size: coarse.size }
+      const vector = ancestorOf(tile.key, Math.min(tile.key.z, VECTOR_MAX_ZOOM))
+      const [grid, layer] = await Promise.all([
+        loadHeights(coarse.tile, abort.signal),
+        loadWaterAreas(vector.tile, abort.signal)
+      ])
+      return [
+        { grid, u0: coarse.u0, v0: coarse.v0, size: coarse.size },
+        { layer, u0: vector.u0, v0: vector.v0, size: vector.size }
+      ]
     }
     Promise.all([
       heightSource(tile.key, abort.signal),
       loadPhoto(tile.key, options.photoLevels, abort.signal),
       atmosphereContext ? maskSource() : null
     ])
-      .then(([heights, photo, maskHeights]) => {
+      .then(([heights, photo, maskSources]) => {
         if (abort.signal.aborted || !photo) {
           tile.state = 'empty'
           return
@@ -192,11 +208,11 @@ export function createTerrain(
           side: DoubleSide
         })
         const land = gradedPhoto(texture)
-        const mask = maskHeights && atmosphereContext ? buildWaterMask(maskHeights) : null
+        const mask = maskSources && atmosphereContext ? buildWaterMask(...maskSources) : null
         let waterMask: DataTexture | null = null
         if (mask && atmosphereContext) {
           // Only tiles with water get the water shading, which costs a sky lookup per pixel.
-          waterMask = new DataTexture(mask, 64, 64, RedFormat, UnsignedByteType)
+          waterMask = new DataTexture(mask, MASK_SIZE, MASK_SIZE, RedFormat, UnsignedByteType)
           waterMask.minFilter = LinearFilter
           waterMask.magFilter = LinearFilter
           waterMask.needsUpdate = true
