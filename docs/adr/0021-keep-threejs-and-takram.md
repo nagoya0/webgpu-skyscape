@@ -18,7 +18,7 @@ documentation; Babylon.js was not run:
 |---|---|---|
 | Volumetric clouds for WebGPU | None; written by us | None; written by us |
 | Atmosphere | Bruneton's precomputed tables with Hillaire's multiple scattering; aerial perspective ray marched per pixel; light shafts, moon, stars. Already running here | Official add-on using Hillaire's lookup tables, with the aerial perspective in a coarse volume texture |
-| Upkeep of the atmosphere | One maintainer, stalled; our patches needed for Three.js r185 and r186 | Maintained with the engine by a team |
+| Upkeep of the atmosphere | One maintainer; last commit 2026-05-27; our patches needed for Three.js r185 and r186 | Maintained with the engine by a team |
 | Shaders | TSL; WGSL through `wgslFn` | WGSL supported directly |
 | 3D Tiles | 3DTilesRendererJS, whose primary target is Three.js | The same library, with a Babylon.js renderer added later |
 | Large-world coordinates | Our local frame ([ADR 0017](0017-local-world-frame.md)) | Built in |

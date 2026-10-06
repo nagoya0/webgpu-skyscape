@@ -10,8 +10,8 @@ in TSL. Since then:
 
 - this project hit two TSL changes between Three.js releases (the shape of `struct()` in r185,
   the render pipeline hooks in r186; [ADR 0016](0016-patch-takram-for-newer-three.md));
-- the author of the takram packages wrote on 2026-05-28 that TSL has no clear language
-  specification, with operator and type conversion behaviour depending on the implementation;
+- TSL has no formal language specification; how its operators and type conversions behave is
+  defined by its implementation;
 - TSL's main advantage, producing both WGSL and GLSL, is not needed: the demo is WebGPU only
   ([ADR 0003](0003-webgpu-only.md)).
 

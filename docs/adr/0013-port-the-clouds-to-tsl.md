@@ -62,12 +62,12 @@ write anew come to an estimated 2,500 to 3,000 lines.
   cumulus along a fixed path. They are not a general library. Not having to support every
   altitude, several layer types and general use is what keeps the work small. If the result turns
   out well, it may be extracted and published later, but that is not a goal.
-- **Upstream.** The upstream repository has had no commits since 2026-05-27, and the pull request
-  for three r185 (#118) has been open since 2026-10-02 without response. Waiting for upstream
-  WebGPU clouds is not a plan; the module stays replaceable, but we build the clouds ourselves.
-- **Shader language.** The upstream author wrote on 2026-05-28 that TSL has no clear language
-  specification, with operator and type conversion behaviour left to the implementation; this
-  project has already hit two TSL changes between releases. Writing the heavy shader code in WGSL
+- **Upstream.** The last commit to the upstream repository is from 2026-05-27, and the pull
+  request for three r185 (#118), opened on 2026-10-02, is not merged. There is no date for
+  WebGPU clouds to plan around; the module stays replaceable, but we build the clouds ourselves.
+- **Shader language.** TSL has no formal language specification; how its operators and type
+  conversions behave is defined by its implementation, and this project has already hit two TSL
+  changes between releases. Writing the heavy shader code in WGSL
   and using TSL only to connect it (`wgslFn`) may be more reliable, since this project needs no
   WebGL path ([ADR 0003](0003-webgpu-only.md)). A short trial decides this; see
   [ideas](../ideas.md).

@@ -74,7 +74,12 @@ Do not add on-screen controls; the UI is designed once the features are in
 
 ## Repository hygiene
 
-- This repository will become public. Keep personal circumstances, employers, details of the
-  maintainer's own machine and other private context out of documents, code, comments and commit
-  messages.
+- This repository will become public. Write every document, comment and commit message to be
+  read by anyone.
+- Keep personal circumstances, employers and other private context out of the repository, and
+  anything that identifies the maintainer's own environment, such as user names, local paths and
+  account names. The GPU model used for measurements may be named, since the measurements depend
+  on it.
+- Write about other projects and their authors neutrally: state facts with dates (last commit,
+  open pull requests) without judging them, and do not cite people's social media posts.
 - Commit author is the maintainer's GitHub noreply address; do not change it.
