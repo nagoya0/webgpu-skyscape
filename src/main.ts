@@ -18,6 +18,7 @@ import { createPipeline } from './render/pipeline'
 import { createFacadeMaterial } from './scene/facadeMaterial'
 import { createBuildings, plateauBuildingUrls } from './scene/plateauBuildings'
 import { createPlaceholderGround } from './scene/placeholderGround'
+import { photoGrade } from './terrain/photoGrade'
 import { createTerrain } from './terrain/terrain'
 import { showAttribution } from './ui/attribution'
 import { showDebugText } from './ui/debugText'
@@ -95,6 +96,7 @@ async function start(): Promise<void> {
     : null
   if (buildings) scene.add(buildings.group)
 
+  photoGrade.value.set(params.photoDehaze, params.photoContrast, params.photoSaturation, 0)
   const terrain = params.terrain ? createTerrain(frame) : null
   if (terrain) scene.add(terrain.group)
   showAttribution()

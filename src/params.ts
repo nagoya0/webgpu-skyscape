@@ -23,6 +23,9 @@
 //   tileerror=pixels  screen-space error target for the building tiles (default 20)
 //   draw=MODE         how the building tiles are drawn: batch (default), bundle or plain
 //   terrain=0         leave out the GSI terrain and aerial photographs
+//   photodehaze=0..0.9   remove this much flat haze from the aerial photographs (default 0)
+//   photocontrast=x   contrast of the aerial photographs, 1 unchanged (default 1)
+//   photosat=x        saturation of the aerial photographs, 1 unchanged (default 1)
 //   clouds=0          leave out the clouds
 //   groundshadow=0    leave out the cloud shadows on the terrain and buildings
 //   coverage=0..1     cloud coverage (default 0.3)
@@ -57,6 +60,10 @@ export interface Params {
   buildings: boolean
   textures: boolean
   terrain: boolean
+  /** Aerial photograph correction: haze removed, contrast, saturation. */
+  photoDehaze: number
+  photoContrast: number
+  photoSaturation: number
   measure: boolean
   debugText: boolean
   tileError: number
@@ -125,6 +132,9 @@ export function readParams(search: string, now = new Date()): Params {
     buildings: query.get('buildings') !== '0',
     textures: query.get('textures') === '1',
     terrain: query.get('terrain') !== '0',
+    photoDehaze: number('photodehaze', 0, 0, 0.9),
+    photoContrast: number('photocontrast', 1, 0, 4),
+    photoSaturation: number('photosat', 1, 0, 4),
     measure: query.has('measure'),
     debugText: query.has('debug'),
     tileError: number('tileerror', 20, 0.5, 200),

@@ -16,6 +16,7 @@ import { Geodetic, radians } from '@takram/three-geospatial'
 
 import { ecefToWorld, type LocalFrame } from '../geo/localFrame'
 import { DEM10_ZOOM, DEM5A_ZOOM, loadHeights, loadPhoto, pendingRequests } from './gsiSources'
+import { gradedPhoto } from './photoGrade'
 import { buildTileGeometry, GEOID_HEIGHT, type HeightSource } from './tileGeometry'
 import {
   ancestorOf,
@@ -158,6 +159,7 @@ export function createTerrain(frame: LocalFrame, options: TerrainOptions = DEFAU
           metalness: 0,
           side: DoubleSide
         })
+        material.colorNode = gradedPhoto(texture)
         const mesh = new Mesh(geometry, material)
         mesh.name = `terrain ${tileId(tile.key)}`
         mesh.position.copy(center)
