@@ -1,7 +1,7 @@
 // Ray-marched cloud layers composited over the scene. Port of marchClouds() and parts of main()
 // from @takram/three-clouds 0.7.6 (src/shaders/clouds.frag), MIT, Copyright (c) 2024 Shota
-// Matsuda, cut down to this demo's needs (ADR 0013): no shadow maps, no light shafts, no
-// ground bounce, no haze, sun and sky light given for the whole frame.
+// Matsuda. takram's feature switches are kept as preprocessor blocks (src/shaders/preprocess.ts);
+// which takram features are ported is tracked in docs/clouds-parity.md.
 //
 // The layers are spherical shells around the earth's centre, given in world coordinates, so
 // they follow the curvature of the earth to the horizon.
@@ -165,7 +165,9 @@ fn clouds(
       var radiance = sunE * cloudMultipleScattering(opticalDepth, cosTheta, phase.xyz);
       radiance += skyE * 0.07957747 * media.y * light.w;
       radiance *= extinction; // scattering equals extinction without absorption
-      radiance *= 1.0 - light.y * exp(-extinction * light.z); // powder
+      #ifdef POWDER
+      radiance *= 1.0 - light.y * exp(-extinction * light.z);
+      #endif // POWDER
 
       // Energy-conserving integration over the step (Frostbite 2016, 5.6.3).
       let stepTransmittance = exp(-extinction * stepSize);

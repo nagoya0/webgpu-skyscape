@@ -1,7 +1,13 @@
 import { PerspectiveCamera, Scene, Timer, WebGPURenderer, type Mesh } from 'three/webgpu'
 
 import { createAtmosphere } from './atmosphere/atmosphere'
-import { createClouds, DEFAULT_CLOUDS } from './clouds/clouds'
+import {
+  CLOUD_FEATURES,
+  createClouds,
+  DEFAULT_CLOUD_FEATURES,
+  DEFAULT_CLOUDS,
+  type CloudFeature
+} from './clouds/clouds'
 import { createCockpitCamera } from './camera/cockpitCamera'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath, DEFAULT_RACETRACK } from './flight/placeholderPath'
@@ -92,8 +98,22 @@ async function start(): Promise<void> {
   if (terrain) scene.add(terrain.group)
   showAttribution()
 
+  const cloudFeatures = new Set<CloudFeature>(DEFAULT_CLOUD_FEATURES)
+  for (const [name, on] of Object.entries(params.cloudFeatures)) {
+    if (!(CLOUD_FEATURES as readonly string[]).includes(name)) {
+      console.warn(`Unknown cloud feature "${name}"; known: ${CLOUD_FEATURES.join(', ')}`)
+      continue
+    }
+    if (on) cloudFeatures.add(name as CloudFeature)
+    else cloudFeatures.delete(name as CloudFeature)
+  }
+  debug.cloudFeatures = [...cloudFeatures]
   const clouds = params.clouds
-    ? await createClouds(atmosphere.context, camera, frame, { ...DEFAULT_CLOUDS, coverage: params.coverage })
+    ? await createClouds(atmosphere.context, camera, frame, {
+        ...DEFAULT_CLOUDS,
+        coverage: params.coverage,
+        features: cloudFeatures
+      })
     : null
   const pipeline = createPipeline(renderer, scene, camera, clouds ? [clouds.stage] : [], {
     lensFlare: params.flare

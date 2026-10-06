@@ -25,6 +25,9 @@
 //   terrain=0         leave out the GSI terrain and aerial photographs
 //   clouds=0          leave out the clouds
 //   coverage=0..1     cloud coverage (default 0.3)
+//   cloudfx=LIST      cloud feature switches, comma-separated: +NAME turns one on, -NAME off,
+//                     relative to the defaults (src/clouds/clouds.ts, docs/clouds-parity.md);
+//                     e.g. cloudfx=-POWDER
 //   raymarch=0        look up the aerial perspective in tables instead of ray marching it
 //   flare=0           leave out the lens flare
 //   measure           after loading, time 180 frames and report them in window.__debug
@@ -57,6 +60,8 @@ export interface Params {
   flare: boolean
   clouds: boolean
   coverage: number
+  /** Cloud feature changes against the defaults, e.g. { POWDER: false }. */
+  cloudFeatures: Record<string, boolean>
 }
 
 export function readParams(search: string, now = new Date()): Params {
@@ -111,6 +116,13 @@ export function readParams(search: string, now = new Date()): Params {
     raymarch: query.get('raymarch') !== '0',
     flare: query.get('flare') !== '0',
     clouds: query.get('clouds') !== '0',
-    coverage: number('coverage', 0.3, 0, 1)
+    coverage: number('coverage', 0.3, 0, 1),
+    cloudFeatures: Object.fromEntries(
+      (query.get('cloudfx') ?? '')
+        .split(',')
+        .map(item => item.trim())
+        .filter(item => /^[+-]?[A-Z_]+$/.test(item))
+        .map(item => [item.replace(/^[+-]/, ''), !item.startsWith('-')])
+    )
   }
 }

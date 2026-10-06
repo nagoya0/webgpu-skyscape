@@ -10,6 +10,23 @@ it whenever a cloud feature is added, changed or deferred.
 Status: **done**, **partial** (in, with a difference noted), **planned** (with the step from
 [ideas](ideas.md)), **on hold**, **not needed**.
 
+Where takram has a `#ifdef` switch for a feature, the port keeps it as a preprocessor block
+([ADR 0022](adr/0022-heavy-shaders-in-wgsl.md)) and lists it in `CLOUD_FEATURES` in
+`src/clouds/clouds.ts`. Switches are set with `?cloudfx=` (for example `?cloudfx=-POWDER`).
+
+| Switch | Ported | On by default |
+|---|---|---|
+| `SHAPE_DETAIL` | yes | yes |
+| `POWDER` | yes | yes |
+| `TURBULENCE` | no | |
+| `ACCURATE_PHASE_FUNCTION` | no | |
+| `ACCURATE_SUN_SKY_LIGHT` | no | |
+| `GROUND_BOUNCE` | no | |
+| `HAZE` | no | |
+| `SHADOW_LENGTH` | no | |
+| `TEMPORAL_UPSCALE`, `TEMPORAL_PASS`, `TEMPORAL_JITTER` | no | |
+| `SHADOW` | no | |
+
 ## Shape and density
 
 | takram feature | Status | Notes |

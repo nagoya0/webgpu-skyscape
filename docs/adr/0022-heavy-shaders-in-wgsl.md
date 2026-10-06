@@ -38,6 +38,18 @@ layer in WGSL and connected it with Three.js `wgslFn`. Results on 2026-10-05:
 - Post-processing stages receive the scene camera's values as explicit uniforms.
 - Ported code keeps the original copyright notice in the `.wgsl` file.
 
+## Update 2026-10-06: feature switches
+
+WGSL has no preprocessor, and takram's shaders switch features with `#ifdef`. A small
+preprocessor of our own (`src/shaders/preprocess.ts`, with tests) runs on the WGSL text before
+`wgslFn`: `#ifdef`, `#ifndef`, `#if` and `#elif` with `defined()`, `!`, `&&`, `||` and
+parentheses, `#else`, `#endif`. Dropped lines become empty lines, so compiler error line numbers
+still match the file. Ported shaders keep takram's `#ifdef` blocks rather than cutting them out,
+which keeps the port close to the original and lets features be compared. Switches are fixed
+when the shader is built, from URL parameters (for the clouds, `?cloudfx=`); numeric settings
+stay uniforms. Agreed with the maintainer on 2026-10-06. WGSL `override` constants would do the
+same without our own code, but Three.js offers no way to set them.
+
 ## Consequences
 
 Changes in TSL can still break the connecting code, but not the WGSL functions themselves.

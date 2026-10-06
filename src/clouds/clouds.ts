@@ -34,6 +34,7 @@ import {
 
 import { ecefToWorld, type LocalFrame } from '../geo/localFrame'
 import { asNode, type CompositeStage } from '../render/pipeline'
+import { preprocess } from '../shaders/preprocess'
 import cloudMediaCode from './wgsl/cloudMedia.wgsl?raw'
 import cloudMultipleScatteringCode from './wgsl/cloudMultipleScattering.wgsl?raw'
 import cloudsCode from './wgsl/clouds.wgsl?raw'
@@ -46,17 +47,29 @@ import remapClamped4Code from './wgsl/remapClamped4.wgsl?raw'
 type Include = Parameters<typeof wgslFn>[1] extends (infer T)[] | undefined ? T : never
 const include = (fn: unknown): Include => fn as Include
 
-const remapClamped4 = wgslFn(remapClamped4Code)
-const raySphere = wgslFn(raySphereCode)
-const cloudWeather = wgslFn(cloudWeatherCode, [include(remapClamped4)])
-const cloudMedia = wgslFn(cloudMediaCode, [include(remapClamped4)])
-const cloudMultipleScattering = wgslFn(cloudMultipleScatteringCode)
-const cloudsFn = wgslFn(cloudsCode, [
-  include(raySphere),
-  include(cloudWeather),
-  include(cloudMedia),
-  include(cloudMultipleScattering)
-])
+/**
+ * takram's feature switches that the port supports (docs/clouds-parity.md), and the ones on by
+ * default, as in takram's defaults.
+ */
+export const CLOUD_FEATURES = ['SHAPE_DETAIL', 'POWDER'] as const
+export type CloudFeature = (typeof CLOUD_FEATURES)[number]
+export const DEFAULT_CLOUD_FEATURES: ReadonlySet<CloudFeature> = new Set(['SHAPE_DETAIL', 'POWDER'])
+
+/** The WGSL functions, preprocessed for a set of features. */
+function buildFunctions(features: ReadonlySet<string>) {
+  const fn = (code: string, includes: Include[] = []) => wgslFn(preprocess(code, features), includes)
+  const remapClamped4 = fn(remapClamped4Code)
+  const raySphere = fn(raySphereCode)
+  const cloudWeather = fn(cloudWeatherCode, [include(remapClamped4)])
+  const cloudMedia = fn(cloudMediaCode, [include(remapClamped4)])
+  const cloudMultipleScattering = fn(cloudMultipleScatteringCode)
+  return fn(cloudsCode, [
+    include(raySphere),
+    include(cloudWeather),
+    include(cloudMedia),
+    include(cloudMultipleScattering)
+  ])
+}
 
 const ASSETS = `${import.meta.env.BASE_URL}clouds/`
 
@@ -109,12 +122,15 @@ export interface CloudOptions {
   coverage: number
   /** One weather map tile spans this many metres. */
   weatherTileMetres: number
+  /** takram feature switches; fixed when the clouds are created. */
+  features: ReadonlySet<CloudFeature>
 }
 
 export const DEFAULT_CLOUDS: CloudOptions = {
   layers: DEFAULT_LAYERS,
   coverage: 0.3,
-  weatherTileMetres: 100_000
+  weatherTileMetres: 100_000,
+  features: DEFAULT_CLOUD_FEATURES
 }
 
 export interface Clouds {
@@ -140,6 +156,7 @@ export async function createClouds(
   ])
 
   const { layers } = options
+  const cloudsFn = buildFunctions(options.features)
   // Unused layers get an empty height range far above everything.
   const minHeights = uniform(pack(layers, l => l.altitude, 1e6))
   const maxHeights = uniform(pack(layers, l => l.altitude + l.height, 1e6))

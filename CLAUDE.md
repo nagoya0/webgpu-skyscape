@@ -54,7 +54,8 @@ values as uniforms; the `three/tsl` camera accessors refer to the full-screen qu
 The clouds aim to reproduce as much of `@takram/three-clouds` as possible
 ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md)). Whenever a cloud feature is added, changed
 or deferred, update [docs/clouds-parity.md](docs/clouds-parity.md), and never leave a takram
-feature out without a row there saying so.
+feature out without a row there saying so. Keep takram's `#ifdef` switches as preprocessor
+blocks (`src/shaders/preprocess.ts`) instead of cutting them out.
 
 Do not add on-screen controls; the UI is designed once the features are in
 ([ADR 0019](docs/adr/0019-no-ui-until-features-are-in.md)). Add a URL parameter instead.

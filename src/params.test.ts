@@ -31,6 +31,15 @@ describe('readParams', () => {
     expect(params.bank).toBe(60)
   })
 
+  it('reads cloud feature switches', () => {
+    expect(readParams('?cloudfx=-POWDER,+HAZE,SHADOW_LENGTH,bad-name', now).cloudFeatures).toEqual({
+      POWDER: false,
+      HAZE: true,
+      SHADOW_LENGTH: true
+    })
+    expect(readParams('', now).cloudFeatures).toEqual({})
+  })
+
   it('falls back on malformed or out-of-range values', () => {
     const params = readParams('?time=25:00&exposure=abc&bank=90&fov=', now)
     expect(params.date.toISOString()).toBe('2026-10-05T07:30:00.000Z')
