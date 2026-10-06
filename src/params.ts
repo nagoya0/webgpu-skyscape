@@ -32,6 +32,7 @@
 //   terraindebug=1    tint terrain tiles by zoom level: 8 red, 9 orange, 10 yellow, 11 green,
 //                     12 cyan, 13 blue, 14 purple, 15 white, 16 red
 //   terraindebug=2    show the aerial photographs as they are, without lighting or water
+//   terraindebug=3    show the water mask in red
 //   photodehaze=0..0.9   remove this much flat haze from the aerial photographs (default 0.15)
 //   photocontrast=x   contrast of the aerial photographs, 1 unchanged (default 1.2)
 //   photosat=x        saturation of the aerial photographs, 1 unchanged (default 1.4)
@@ -73,7 +74,7 @@ export interface Params {
   textures: boolean
   terrain: boolean
   terrainTexelPixels: number
-  terrainDebug: 'levels' | 'unlit' | null
+  terrainDebug: 'levels' | 'unlit' | 'water' | null
   /** Aerial photograph correction: haze removed, contrast, saturation. */
   photoDehaze: number
   photoContrast: number
@@ -153,7 +154,7 @@ export function readParams(search: string, now = new Date()): Params {
     textures: query.get('textures') === '1',
     terrain: query.get('terrain') !== '0',
     terrainTexelPixels: number('terraintexel', 1.5, 0.25, 8),
-    terrainDebug: ({ '1': 'levels', '2': 'unlit' } as const)[query.get('terraindebug') ?? ''] ?? null,
+    terrainDebug: ({ '1': 'levels', '2': 'unlit', '3': 'water' } as const)[query.get('terraindebug') ?? ''] ?? null,
     photoDehaze: number('photodehaze', 0.15, 0, 0.9),
     photoContrast: number('photocontrast', 1.2, 0, 4),
     photoSaturation: number('photosat', 1.4, 0, 4),

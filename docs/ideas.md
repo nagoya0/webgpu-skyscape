@@ -43,8 +43,11 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     and the photographs are sharp down to zoom 18 in both. The difference is the season of the
     photographs in GSI's mosaic: the summit's are from winter, bare trees with long shadows from
     a low sun, which show every ridge; the slope's are from summer, an even green canopy with
-    little shading in it. Lighting adds to it: a slope facing away from the sun is lit evenly by
-    the sky only. Summer-photographed forest needs its relief from the demo's own shading.
+    little shading in it. At 15:00 the slopes seen from the course face away from the sun and
+    are lit evenly by the sky only: the winter photographs keep their own shadows, the summer
+    ones go flat. At 09:00 the same slopes are in direct sun and the terrain's relief shows
+    through the demo's shading. The water mask (`?terraindebug=3`) is not involved.
+    Summer-photographed forest needs its relief from the demo's own shading, also in the shade.
   - Ridges are drawn as straight segments by the 33 × 33 grid, 75 to 150 m between vertices at
     3,000 m.
   - Dark wedges show where tiles of different levels meet on steep slopes, deeper than the 30 m

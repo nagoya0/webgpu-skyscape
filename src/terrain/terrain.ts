@@ -62,9 +62,9 @@ export interface TerrainOptions {
   maxLoading: number
   /**
    * Debugging: 'levels' tints each tile by its zoom level; 'unlit' shows the photographs as they
-   * are, without lighting or water.
+   * are, without lighting or water; 'water' shows the water mask in red.
    */
-  debug?: 'levels' | 'unlit' | null
+  debug?: 'levels' | 'unlit' | 'water' | null
 }
 
 // Zoom level colours for debugging, repeating every eight levels: zoom 8 red, 9 orange,
@@ -229,6 +229,17 @@ export function createTerrain(
           // ?terraindebug=2: the photograph as emission, without lighting, water or correction.
           material.colorNode = vec3(0)
           material.emissiveNode = textureNode(texture).rgb
+        } else if (options.debug === 'water') {
+          // ?terraindebug=3: the water mask in red over the photograph, without water shading.
+          if (mask) {
+            waterMask = new DataTexture(mask, MASK_SIZE, MASK_SIZE, RedFormat, UnsignedByteType)
+            waterMask.minFilter = LinearFilter
+            waterMask.magFilter = LinearFilter
+            waterMask.needsUpdate = true
+            material.colorNode = mix(land, vec3(1, 0, 0), textureNode(waterMask).r.mul(0.8))
+          } else {
+            material.colorNode = land
+          }
         } else if (mask && atmosphereContext) {
           // Only tiles with water get the water shading, which costs a sky lookup per pixel.
           waterMask = new DataTexture(mask, MASK_SIZE, MASK_SIZE, RedFormat, UnsignedByteType)
