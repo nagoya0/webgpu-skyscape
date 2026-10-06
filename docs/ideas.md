@@ -123,7 +123,21 @@ Next stages, proposed 2026-10-05:
    against the target hardware ([ADR 0025](adr/0025-target-hardware.md)), leaving GPU time and
    memory for the clouds.
 3. **Buildings.** PLATEAU 3D Tiles in the local frame, detailed along the path.
-4. **Clouds**, in this demo's scope ([ADR 0013](adr/0013-port-the-clouds-to-tsl.md)). The cloud
+4. **Clouds**, in this demo's scope ([ADR 0013](adr/0013-port-the-clouds-to-tsl.md)), started
+   2026-10-06 in these steps, agreed with the maintainer:
+   - C1. A separate cloud pass (colour, transmittance, front distance); the layer as a spherical
+     shell following the earth's curvature; takram's shape and detail noise textures and weather
+     map; sun and sky light from the atmosphere; the multiple-scattering approximation.
+     Done 2026-10-06 (`src/clouds/`), for now as a full-resolution stage after the aerial
+     perspective; the separate pass and front distance come with C2. takram's three default
+     layers (750–1400 m, 1000–2200 m, 7500–8000 m), coverage 0.3 (`?coverage=`). About 2.5 to
+     3 ms of GPU at 1902 × 984 on the development machine.
+   - C2. Temporal accumulation (port of `cloudsResolve.frag`), rendering at half resolution.
+   - C3. Aerial perspective on the clouds.
+   - C4. Cloud shadows; may move to the building-shadow work.
+   - C5. Cloud density on the CPU for the path's cloud channel and the shake in clouds; on hold.
+
+   Earlier note: The cloud
    shape data (weather map, layer settings) lives in files that both the GPU and the offline
    path tool read, so the path's cloud density channel matches what is drawn
    ([ADR 0008](adr/0008-precomputed-flight-path.md)).

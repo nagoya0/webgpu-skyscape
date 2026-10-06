@@ -23,6 +23,8 @@
 //   tileerror=pixels  screen-space error target for the building tiles (default 20)
 //   draw=MODE         how the building tiles are drawn: batch (default), bundle or plain
 //   terrain=0         leave out the GSI terrain and aerial photographs
+//   clouds=0          leave out the clouds
+//   coverage=0..1     cloud coverage (default 0.3)
 //   raymarch=0        look up the aerial perspective in tables instead of ray marching it
 //   flare=0           leave out the lens flare
 //   measure           after loading, time 180 frames and report them in window.__debug
@@ -53,6 +55,8 @@ export interface Params {
   drawMode: 'batch' | 'bundle' | 'plain'
   raymarch: boolean
   flare: boolean
+  clouds: boolean
+  coverage: number
 }
 
 export function readParams(search: string, now = new Date()): Params {
@@ -105,6 +109,8 @@ export function readParams(search: string, now = new Date()): Params {
     tileError: number('tileerror', 20, 0.5, 200),
     drawMode: (['batch', 'bundle', 'plain'] as const).find(m => m === query.get('draw')) ?? 'batch',
     raymarch: query.get('raymarch') !== '0',
-    flare: query.get('flare') !== '0'
+    flare: query.get('flare') !== '0',
+    clouds: query.get('clouds') !== '0',
+    coverage: number('coverage', 0.3, 0, 1)
   }
 }

@@ -1,6 +1,7 @@
 import { PerspectiveCamera, Scene, Timer, WebGPURenderer, type Mesh } from 'three/webgpu'
 
 import { createAtmosphere } from './atmosphere/atmosphere'
+import { createClouds, DEFAULT_CLOUDS } from './clouds/clouds'
 import { createCockpitCamera } from './camera/cockpitCamera'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath, DEFAULT_RACETRACK } from './flight/placeholderPath'
@@ -91,7 +92,12 @@ async function start(): Promise<void> {
   if (terrain) scene.add(terrain.group)
   showAttribution()
 
-  const pipeline = createPipeline(renderer, scene, camera, [], { lensFlare: params.flare })
+  const clouds = params.clouds
+    ? await createClouds(atmosphere.context, camera, frame, { ...DEFAULT_CLOUDS, coverage: params.coverage })
+    : null
+  const pipeline = createPipeline(renderer, scene, camera, clouds ? [clouds.stage] : [], {
+    lensFlare: params.flare
+  })
   pipeline.exposure.value = params.exposure
 
   const { path, seamGap } = createPlaceholderPath(frame, {
