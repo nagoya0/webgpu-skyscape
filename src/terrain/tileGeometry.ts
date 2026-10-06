@@ -182,8 +182,6 @@ export function buildTileGeometry(
   const geometry = new BufferGeometry()
   geometry.setAttribute('position', new BufferAttribute(positions, 3))
   geometry.setAttribute('uv', new BufferAttribute(uvs, 2))
-  // 1 on the skirt, for debugging (?terraindebug=4).
-  geometry.setAttribute('skirt', new BufferAttribute(new Float32Array(count).fill(1, surfaceCount), 1))
   // Normals from the surface alone: including the skirt would tilt the edge normals sideways
   // and draw dark lines along every tile edge. Skirt vertices copy their edge vertex's normal.
   geometry.setIndex(indices.slice(0, surfaceIndexCount))

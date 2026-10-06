@@ -15,7 +15,7 @@ import {
   Vector3,
   type PerspectiveCamera
 } from 'three/webgpu'
-import { attribute, mix, normalViewGeometry, normalWorld, texture as textureNode, vec3 } from 'three/tsl'
+import { mix, normalViewGeometry, normalWorld, texture as textureNode, vec3 } from 'three/tsl'
 
 import { Geodetic, radians } from '@takram/three-geospatial'
 
@@ -62,11 +62,10 @@ export interface TerrainOptions {
   maxLoading: number
   /**
    * Debugging: 'levels' tints each tile by its zoom level; 'unlit' shows the photographs as they
-   * are, without lighting or water; 'water' shows the water mask in red; 'skirts' shows the
-   * skirts in magenta; 'plain' draws the terrain plain grey, lit, without photographs or water;
-   * 'normals' shows the normal used for lighting as colour.
+   * are, without lighting or water; 'water' shows the water mask in red; 'plain' draws the terrain plain grey,
+   * lit, without photographs or water; 'normals' shows the normal used for lighting as colour.
    */
-  debug?: 'levels' | 'unlit' | 'water' | 'skirts' | 'plain' | 'normals' | null
+  debug?: 'levels' | 'unlit' | 'water' | 'plain' | 'normals' | null
 }
 
 // Zoom level colours for debugging, repeating every eight levels: zoom 8 red, 9 orange,
@@ -239,17 +238,13 @@ export function createTerrain(
           material.colorNode = vec3(0)
           material.emissiveNode = textureNode(texture).rgb
         } else if (options.debug === 'plain') {
-          // ?terraindebug=5: plain grey, lit, without the photographs or water, to see the shape.
+          // ?terraindebug=4: plain grey, lit, without the photographs or water, to see the shape.
           material.colorNode = vec3(0.5)
         } else if (options.debug === 'normals') {
-          // ?terraindebug=6: the normal used for lighting, in world space, as colour (x, y, z to
+          // ?terraindebug=5: the normal used for lighting, in world space, as colour (x, y, z to
           // red, green, blue, from −1..1 to 0..1), unlit. It includes three's flip on back faces.
           material.colorNode = vec3(0)
           material.emissiveNode = normalWorld.mul(0.5).add(0.5)
-        } else if (options.debug === 'skirts') {
-          // ?terraindebug=4: the skirts in bright magenta, unlit, so that they show even in shade.
-          material.colorNode = mix(land, vec3(0), attribute<'float'>('skirt'))
-          material.emissiveNode = vec3(1, 0, 1).mul(attribute<'float'>('skirt'))
         } else if (options.debug === 'water') {
           // ?terraindebug=3: the water mask in red over the photograph, without water shading.
           if (mask) {
