@@ -76,3 +76,14 @@ write anew come to an estimated 2,500 to 3,000 lines.
   left the clouds' sampling noise), aerial perspective on the clouds (distant clouds came out too
   dark without it), rendering at half resolution (the trial took about 5 ms per frame at
   1262 × 624 on a desktop GPU), and tuning the look.
+
+## Update 2026-10-06: aim for takram parity
+
+After the first port (step C1) left out light shafts, ground bounce, wind and other features to
+keep the work small, the maintainer set the aim: in the end, reproduce as much of takram's clouds
+as possible. The main features come first and the GPU cost is checked before adding the rest;
+the order is left to the implementer. This replaces the scope limit above as the final goal; the
+limit still describes the order of work.
+
+Which takram features are done, planned or on hold is tracked in
+[docs/clouds-parity.md](../clouds-parity.md), updated with every cloud change.
