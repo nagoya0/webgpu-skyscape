@@ -15,8 +15,8 @@ In place:
 - PLATEAU LOD2 buildings for eight central wards (Shinjuku, Shibuya, Minato, Chiyoda, Chuo,
   Taito, Sumida, Koto), streamed as 3D Tiles and shaded with procedural facades
   ([ADR 0024](docs/adr/0024-untextured-buildings-with-procedural-facades.md)).
-- Volumetric clouds ported from `@takram/three-clouds` to WGSL, first step
-  ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md)). Which of takram's features are in is
+- Volumetric clouds ported from `@takram/three-clouds` to WGSL, with takram's temporal
+  upscaling ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md)). Which of takram's features are in is
   listed in [docs/clouds-parity.md](docs/clouds-parity.md).
 - A placeholder flight path (a racetrack at 250 m/s and 450 m) and a first-person camera.
 - Temporal anti-aliasing, lens flare and AgX tone mapping.

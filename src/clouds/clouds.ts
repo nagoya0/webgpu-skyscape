@@ -1,17 +1,22 @@
-// Volumetric clouds (ADR 0013, ADR 0022): the ray marching is WGSL ported from
-// @takram/three-clouds; TSL gathers the inputs. Step C1 of the cloud stage (ideas.md): drawn at
-// full resolution, composited right after the aerial perspective.
+// Volumetric clouds (ADR 0013, ADR 0022): the ray marching and the temporal resolve are WGSL
+// ported from @takram/three-clouds; TSL gathers the inputs, and CloudsNode runs the passes.
+// Composited right after the aerial perspective.
 import { getSplitScalarIlluminance, type AtmosphereContext } from '@takram/three-atmosphere/webgpu'
+import { stbn } from '@takram/three-geospatial/webgpu'
 import {
   float,
-  frameId,
+  int,
+  ivec2,
+  min,
   perspectiveDepthToViewZ,
   sampler,
+  screenCoordinate,
   screenUV,
   select,
   texture,
   texture3D,
   uniform,
+  vec2,
   vec3,
   vec4,
   wgslFn
@@ -35,12 +40,16 @@ import {
 import { ecefToWorld, type LocalFrame } from '../geo/localFrame'
 import { asNode, type CompositeStage } from '../render/pipeline'
 import { preprocess } from '../shaders/preprocess'
+import { CloudsNode } from './cloudsNode'
+import clipAABBCode from './wgsl/clipAABB.wgsl?raw'
 import cloudMediaCode from './wgsl/cloudMedia.wgsl?raw'
 import cloudMultipleScatteringCode from './wgsl/cloudMultipleScattering.wgsl?raw'
 import cloudsCode from './wgsl/clouds.wgsl?raw'
+import cloudsResolveCode from './wgsl/cloudsResolve.wgsl?raw'
 import cloudWeatherCode from './wgsl/cloudWeather.wgsl?raw'
 import raySphereCode from './wgsl/raySphere.wgsl?raw'
 import remapClamped4Code from './wgsl/remapClamped4.wgsl?raw'
+import varianceClippingCode from './wgsl/varianceClipping.wgsl?raw'
 
 // TYPE-BRIDGE: @types/three 0.186 does not accept a wgslFn result as an include, although
 // Three.js itself does (the result proxies the FunctionNode).
@@ -51,9 +60,13 @@ const include = (fn: unknown): Include => fn as Include
  * takram's feature switches that the port supports (docs/clouds-parity.md), and the ones on by
  * default, as in takram's defaults.
  */
-export const CLOUD_FEATURES = ['SHAPE_DETAIL', 'POWDER'] as const
+export const CLOUD_FEATURES = ['SHAPE_DETAIL', 'POWDER', 'TEMPORAL_UPSCALE'] as const
 export type CloudFeature = (typeof CLOUD_FEATURES)[number]
-export const DEFAULT_CLOUD_FEATURES: ReadonlySet<CloudFeature> = new Set(['SHAPE_DETAIL', 'POWDER'])
+export const DEFAULT_CLOUD_FEATURES: ReadonlySet<CloudFeature> = new Set([
+  'SHAPE_DETAIL',
+  'POWDER',
+  'TEMPORAL_UPSCALE'
+])
 
 /** The WGSL functions, preprocessed for a set of features. */
 function buildFunctions(features: ReadonlySet<string>) {
@@ -63,12 +76,17 @@ function buildFunctions(features: ReadonlySet<string>) {
   const cloudWeather = fn(cloudWeatherCode, [include(remapClamped4)])
   const cloudMedia = fn(cloudMediaCode, [include(remapClamped4)])
   const cloudMultipleScattering = fn(cloudMultipleScatteringCode)
-  return fn(cloudsCode, [
-    include(raySphere),
-    include(cloudWeather),
-    include(cloudMedia),
-    include(cloudMultipleScattering)
-  ])
+  const clipAABB = fn(clipAABBCode)
+  const varianceClipping = fn(varianceClippingCode, [include(clipAABB)])
+  return {
+    clouds: fn(cloudsCode, [
+      include(raySphere),
+      include(cloudWeather),
+      include(cloudMedia),
+      include(cloudMultipleScattering)
+    ]),
+    cloudsResolve: fn(cloudsResolveCode, [include(varianceClipping)])
+  }
 }
 
 const ASSETS = `${import.meta.env.BASE_URL}clouds/`
@@ -156,7 +174,7 @@ export async function createClouds(
   ])
 
   const { layers } = options
-  const cloudsFn = buildFunctions(options.features)
+  const functions = buildFunctions(options.features)
   // Unused layers get an empty height range far above everything.
   const minHeights = uniform(pack(layers, l => l.altitude, 1e6))
   const maxHeights = uniform(pack(layers, l => l.altitude + l.height, 1e6))
@@ -217,47 +235,81 @@ export async function createClouds(
       get(name: string): Node<'vec3'>
     }
 
-    // Reversed Z (ADR 0015): the sky has depth 0.
-    const sceneDepth = depth.sample(screenUV).r
-    const viewZ = select(sceneDepth.lessThanEqual(0), float(-1e9), perspectiveDepthToViewZ(sceneDepth, near, far))
-
     const weatherNode = texture(weather)
     const shapeNode = texture3D(shapeVolume)
     const detailNode = texture3D(detailVolume)
+
+    const marchPixel = (pixel: Node<'vec2'>, uv: Node<'vec2'>, previousViewProjection: Node<'mat4'>): Node<'mat4'> => {
+      // Reversed Z (ADR 0015): the sky has depth 0.
+      const lastPixel = vec2(asNode<'uvec2'>(depth.size(int(0)))).sub(1)
+      const sceneDepth = depth.load(ivec2(min(pixel, lastPixel))).r
+      const viewZ = select(sceneDepth.lessThanEqual(0), float(-1e9), perspectiveDepthToViewZ(sceneDepth, near, far))
+      return asNode<'mat4'>(
+        functions.clouds({
+          viewZ,
+          uv,
+          projectionInverse,
+          cameraWorld,
+          previousViewProjection,
+          sunDirection,
+          sunE: illuminance.get('direct'),
+          skyE: illuminance.get('indirect'),
+          earthCenter,
+          earthRadius,
+          minHeights,
+          maxHeights,
+          densityScales,
+          shapeAmounts,
+          detailAmounts,
+          weatherExponents,
+          shapeAlteringBiases,
+          coverageFilterWidths,
+          profileLinear,
+          profileConstant,
+          shape,
+          light,
+          phase,
+          march,
+          offsets,
+          weatherTexture: weatherNode,
+          weatherSampler: sampler(weatherNode),
+          shapeTexture: shapeNode,
+          shapeSampler: sampler(shapeNode),
+          detailTexture: detailNode,
+          detailSampler: sampler(detailNode),
+          // Blue noise per pixel and frame, as takram's getSTBN().
+          jitter: asNode<'float'>(stbn)
+        })
+      )
+    }
+
+    const resolve: ConstructorParameters<typeof CloudsNode>[2]['resolve'] = ({
+      color,
+      depthVelocity,
+      history,
+      ownedOffset
+    }) =>
+      asNode<'vec4'>(
+        functions.cloudsResolve({
+          coord: ivec2(screenCoordinate.xy.floor()),
+          uv: screenUV,
+          colorTexture: color,
+          colorSampler: sampler(color),
+          depthVelocityTexture: depthVelocity,
+          historyTexture: history,
+          historySampler: sampler(history),
+          ownedOffset: ivec2(ownedOffset),
+          // takram's CloudsResolveMaterial defaults.
+          varianceGamma: float(2),
+          temporalAlpha: float(0.1)
+        })
+      )
+
     return asNode<'vec4'>(
-      cloudsFn({
-        color: input,
-        viewZ,
-        uv: screenUV,
-        projectionInverse,
-        cameraWorld,
-        sunDirection,
-        sunE: illuminance.get('direct'),
-        skyE: illuminance.get('indirect'),
-        earthCenter,
-        earthRadius,
-        minHeights,
-        maxHeights,
-        densityScales,
-        shapeAmounts,
-        detailAmounts,
-        weatherExponents,
-        shapeAlteringBiases,
-        coverageFilterWidths,
-        profileLinear,
-        profileConstant,
-        shape,
-        light,
-        phase,
-        march,
-        offsets,
-        weatherTexture: weatherNode,
-        weatherSampler: sampler(weatherNode),
-        shapeTexture: shapeNode,
-        shapeSampler: sampler(shapeNode),
-        detailTexture: detailNode,
-        detailSampler: sampler(detailNode),
-        frame: float(frameId)
+      new CloudsNode(input, camera, {
+        march: marchPixel,
+        resolve,
+        temporalUpscale: options.features.has('TEMPORAL_UPSCALE')
       })
     )
   }

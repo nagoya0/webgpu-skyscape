@@ -37,7 +37,10 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   The clouds (step C1, full resolution) were measured the same day at the start of the path
   (t = 0, paused): GPU 1.8 ms without them, 4.3 ms with them, 4.9 ms with them at 1,500 m
   (`?altitude=1500`). So they add about 2.5 to 3 ms; together with the buildings this comes
-  close to the budget. Rendering them at half resolution (step C2) is meant to reduce it.
+  close to the budget. With step C2's temporal upscaling, measured at 1920 × 1080 at the same
+  spot: 2.5 ms without clouds, 2.8 ms with them; 5.1 ms with them at full resolution
+  (`?cloudfx=-TEMPORAL_UPSCALE`). The clouds now take about 0.3 ms. The price is visible grain
+  at the cloud edges, since each pixel holds a single sample refreshed every 16 frames.
   Still to look at: JavaScript time while flying (new
   tiles are parsed in the same frames, so frames vary), and updating the tile traversal less
   often than every frame if JavaScript becomes the limit. How to read `?measure`: GPU time from
@@ -135,7 +138,10 @@ Next stages, in the order agreed on 2026-10-05:
      stage after the aerial perspective. takram's three default layers (750–1400 m,
      1000–2200 m, 7500–8000 m), coverage 0.3 (`?coverage=`).
    - C2. A separate cloud pass (colour, transmittance, front distance), temporal accumulation
-     (port of `cloudsResolve.frag`), rendering at half resolution. Next.
+     (port of `cloudsResolve.frag`), rendering at reduced resolution, blue noise, wind. The
+     passes, the resolve and the blue noise are in (2026-10-06): takram's temporal upscaling,
+     a quarter of the resolution in each direction filled in over 16 frames, rather than the
+     half resolution first planned here. Wind and evolution are still to do.
    - C3. Aerial perspective on the clouds.
    - C4. Cloud shadows; may move to the building-shadow work.
    - C5. Cloud density on the CPU for the path's cloud channel and the shake in clouds; on hold.

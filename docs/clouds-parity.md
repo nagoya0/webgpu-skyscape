@@ -24,7 +24,8 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 | `GROUND_BOUNCE` | no | |
 | `HAZE` | no | |
 | `SHADOW_LENGTH` | no | |
-| `TEMPORAL_UPSCALE`, `TEMPORAL_PASS`, `TEMPORAL_JITTER` | no | |
+| `TEMPORAL_UPSCALE` | yes | yes |
+| `TEMPORAL_PASS`, `TEMPORAL_JITTER` (shadow maps) | no | |
 | `SHADOW` | no | |
 
 ## Shape and density
@@ -66,17 +67,17 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 | Skipping between layers (`insideLayerIntervals`) | on hold | |
 | Mip-level based detail reduction | on hold | |
 | Maximum iterations | partial | 160; takram's high preset uses 500 |
-| Spatiotemporal blue noise (STBN) for the jitter | planned (C2) | Now a hash; `@takram/three-geospatial/webgpu` has STBN |
-| Temporal jitter (`TEMPORAL_JITTER`) | partial | Per-frame hash jitter |
+| Spatiotemporal blue noise (STBN) for the jitter | done | `stbn` from `@takram/three-geospatial/webgpu`, indexed like takram's `getSTBN()`: cloud buffer pixel and frame modulo 64 |
 
 ## Temporal and resolution
 
 | takram feature | Status | Notes |
 |---|---|---|
-| Separate cloud buffer (colour, transmittance) | planned (C2) | Now composited directly |
-| Front depth and velocity output | planned (C2) | |
-| Temporal resolve with reprojection and variance clipping (`cloudsResolve.frag`) | planned (C2) | |
-| Temporal upscaling from a lower resolution (`TEMPORAL_UPSCALE`) | planned (C2) | |
+| Separate cloud buffer (colour, opacity) | done | `src/clouds/cloudsNode.ts`; 32-bit floats, since the front distance goes beyond half floats |
+| Front depth and velocity output | done | Velocity from last frame's view-projection in world space; takram reprojects the no-cloud case in view space for precision, which the local frame does not need |
+| Temporal resolve with reprojection and variance clipping (`cloudsResolve.frag`) | done | Four neighbours, bilinear history, as takram's defaults (varianceGamma 2, temporalAlpha 0.1) |
+| Temporal upscaling from a lower resolution (`TEMPORAL_UPSCALE`) | done | Quarter resolution in each direction, filled in over 16 frames in takram's Bayer order. Off (`?cloudfx=-TEMPORAL_UPSCALE`), the clouds are marched at full resolution and blended into the history |
+| Shadow length in the resolve (`SHADOW_LENGTH`) | planned (after C4) | With the light shafts |
 | Quality presets | on hold | One target machine ([ADR 0025](adr/0025-target-hardware.md)) |
 
 ## Atmosphere and scene
