@@ -21,6 +21,7 @@ import { createBuildings, plateauBuildingUrls } from './scene/plateauBuildings'
 import { createPlaceholderGround } from './scene/placeholderGround'
 import { photoGrade } from './terrain/photoGrade'
 import { createTerrain } from './terrain/terrain'
+import { waterTime } from './terrain/water'
 import { showAttribution } from './ui/attribution'
 import { showDebugText } from './ui/debugText'
 import { showGuidance } from './ui/guidance'
@@ -81,7 +82,8 @@ async function start(): Promise<void> {
   const atmosphere = createAtmosphere(renderer, camera, params.raymarch)
   atmosphere.setFrame(frame)
   atmosphere.setDate(params.date)
-  scene.add(atmosphere.light, createPlaceholderGround())
+  scene.add(atmosphere.light)
+  if (area.placeholderGround) scene.add(createPlaceholderGround())
 
   const buildings = params.buildings && area.buildings
     ? createBuildings(
@@ -97,7 +99,7 @@ async function start(): Promise<void> {
   if (buildings) scene.add(buildings.group)
 
   photoGrade.value.set(params.photoDehaze, params.photoContrast, params.photoSaturation, 0)
-  const terrain = params.terrain ? createTerrain(frame, area.terrain) : null
+  const terrain = params.terrain ? createTerrain(frame, area.terrain, atmosphere.context) : null
   if (terrain) scene.add(terrain.group)
   showAttribution()
   const debugText = params.debugText ? showDebugText() : null
@@ -222,6 +224,7 @@ async function start(): Promise<void> {
     flightTime += flightDelta
     samplePath(path, flightTime, state)
     clouds?.setTime(flightTime)
+    waterTime.value = flightTime
     cockpit.update(state, first ? 0 : flightDelta, elapsed)
     first = false
     if (buildings) {

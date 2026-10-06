@@ -23,8 +23,16 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   Ashi and the wooded mountains fill much of the image. Proposed for forests, by altitude: from
   about 1.5 km up, the photographs with shading from the elevation model only; lower, instanced
   trees placed from land cover data or the photographs' green areas; close to the ground, 3D
-  trees near the course. Water: a surface that reflects the sky and the sun where the
-  photographs show sea or lake. Not decided.
+  trees near the course. Not decided.
+  Water, first version (2026-10-06, `src/terrain/water.ts`): where the 10 m elevation model has
+  no data (sea; GSI serves no file for a tile that is all sea), the terrain is drawn as water: a
+  dark body colour, small moving waves that flatten with distance, the sky's luminance in the
+  reflected direction weighted by Fresnel, and the sun's glint from the sun light's specular.
+  About 2.7 ms of GPU in all with the sea filling half the view. Lakes (Lake Ashi, the Fuji
+  lakes) have heights in the elevation model and are not water yet; clouds are not reflected.
+- **The placeholder disc and the earth's curvature.** The flat disc lies on the origin's
+  tangent plane, so beyond about 25 km it rises above the curving sea and hid it. It is left
+  out in the Hakone area, where the terrain reaches towards the horizon.
 - **Frame time** ([ADR 0025](adr/0025-target-hardware.md): about 7 ms per frame on the
   development machine). After batching the buildings ([ADR 0027](adr/0027-batched-building-tiles.md)),
   measured 2026-10-06 with `?measure`, 1902 × 984, paused over the buildings at t = 5 s:
@@ -83,9 +91,10 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   haze removed 0.15, contrast 1.2, saturation 1.4, picked by the maintainer from four
   strengths. Still to look at: the uniform grey of the buildings, and at the end colour grading
   and the choice of tone mapping (AgX is muted by design).
-- **Seen in the Hakone trial, still to look at** (2026-10-06): some photographs turn orange
-  with the photograph correction (mosaics of different dates); a light band along the horizon;
-  the sea where photographs are missing.
+- **Seen in the Hakone trial, still to look at** (2026-10-06): a light band along the horizon;
+  dark specks along the horizon line. The photographs' colour differences (mosaics of different
+  dates and seasons, such as an orange strip east of Mount Fuji, present before the correction)
+  are left as they are, by the maintainer's decision.
 - **Priority after the clouds.** The maintainer finds the clouds good enough for now and the
   ground lagging behind (2026-10-06), so ground quality comes before the remaining cloud
   features. With the area moved to Sagami Bay, Hakone and Mount Fuji

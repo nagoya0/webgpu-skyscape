@@ -1,13 +1,18 @@
 // Terrain from GSI elevation and aerial photograph tiles (ADR 0026): a quadtree of XYZ tiles,
 // refined where a photo texel would cover more than a pixel or so. A tile is drawn until all
 // four of its children are ready, so the surface never has holes while loading.
+import type { AtmosphereContext } from '@takram/three-atmosphere/webgpu'
 import {
   CanvasTexture,
+  DataTexture,
   DoubleSide,
   Group,
+  LinearFilter,
   Mesh,
   MeshStandardNodeMaterial,
+  RedFormat,
   SRGBColorSpace,
+  UnsignedByteType,
   Vector3,
   type PerspectiveCamera
 } from 'three/webgpu'
@@ -17,7 +22,8 @@ import { Geodetic, radians } from '@takram/three-geospatial'
 import { ecefToWorld, type LocalFrame } from '../geo/localFrame'
 import { DEM10_ZOOM, DEM5A_ZOOM, loadHeights, loadPhoto, pendingRequests } from './gsiSources'
 import { gradedPhoto } from './photoGrade'
-import { buildTileGeometry, GEOID_HEIGHT, type HeightSource } from './tileGeometry'
+import { buildTileGeometry, buildWaterMask, GEOID_HEIGHT, type HeightSource } from './tileGeometry'
+import { terrainShading } from './water'
 import {
   ancestorOf,
   childrenOf,
@@ -76,10 +82,25 @@ interface Tile {
 export interface Terrain {
   group: Group
   update(camera: PerspectiveCamera, height: number): void
-  stats(): { ready: number; loading: number; drawn: number; requests: number; textureMB: number }
+  stats(): {
+    ready: number
+    loading: number
+    drawn: number
+    requests: number
+    textureMB: number
+    /** Ready tiles drawn with water. */
+    water: number
+    /** Tiles whose loading failed; they leave holes. */
+    failed: number
+  }
 }
 
-export function createTerrain(frame: LocalFrame, options: TerrainOptions = DEFAULT_TERRAIN): Terrain {
+export function createTerrain(
+  frame: LocalFrame,
+  options: TerrainOptions = DEFAULT_TERRAIN,
+  /** For the sky reflected on water; without it, water is drawn as the photograph. */
+  atmosphereContext: AtmosphereContext | null = null
+): Terrain {
   const group = new Group()
   group.name = 'Terrain'
   const tiles = new Map<string, Tile>()
@@ -142,8 +163,19 @@ export function createTerrain(frame: LocalFrame, options: TerrainOptions = DEFAU
     loading++
     const abort = new AbortController()
     tile.abort = abort
-    Promise.all([heightSource(tile.key, abort.signal), loadPhoto(tile.key, options.photoLevels, abort.signal)])
-      .then(([heights, photo]) => {
+    // The water mask comes from the 10 m DEM, which covers all land; the 5 m DEM has gaps on
+    // land that would read as sea.
+    const maskSource = async (): Promise<HeightSource> => {
+      const coarse = ancestorOf(tile.key, Math.min(tile.key.z, DEM10_ZOOM))
+      const grid = await loadHeights(coarse.tile, abort.signal)
+      return { grid, u0: coarse.u0, v0: coarse.v0, size: coarse.size }
+    }
+    Promise.all([
+      heightSource(tile.key, abort.signal),
+      loadPhoto(tile.key, options.photoLevels, abort.signal),
+      atmosphereContext ? maskSource() : null
+    ])
+      .then(([heights, photo, maskHeights]) => {
         if (abort.signal.aborted || !photo) {
           tile.state = 'empty'
           return
@@ -159,9 +191,22 @@ export function createTerrain(frame: LocalFrame, options: TerrainOptions = DEFAU
           metalness: 0,
           side: DoubleSide
         })
-        material.colorNode = gradedPhoto(texture)
+        const land = gradedPhoto(texture)
+        const mask = maskHeights && atmosphereContext ? buildWaterMask(maskHeights) : null
+        let waterMask: DataTexture | null = null
+        if (mask && atmosphereContext) {
+          // Only tiles with water get the water shading, which costs a sky lookup per pixel.
+          waterMask = new DataTexture(mask, 64, 64, RedFormat, UnsignedByteType)
+          waterMask.minFilter = LinearFilter
+          waterMask.magFilter = LinearFilter
+          waterMask.needsUpdate = true
+          Object.assign(material, terrainShading(atmosphereContext, land, waterMask))
+        } else {
+          material.colorNode = land
+        }
         const mesh = new Mesh(geometry, material)
         mesh.name = `terrain ${tileId(tile.key)}`
+        mesh.userData.waterMask = waterMask
         mesh.position.copy(center)
         mesh.receiveShadow = true // cloud shadows
         mesh.visible = false
@@ -192,6 +237,7 @@ export function createTerrain(frame: LocalFrame, options: TerrainOptions = DEFAU
       tile.mesh.geometry.dispose()
       const material = tile.mesh.material as MeshStandardNodeMaterial
       material.map?.dispose()
+      ;(tile.mesh.userData.waterMask as DataTexture | null)?.dispose()
       material.dispose()
       tile.mesh = null
     }
@@ -269,13 +315,18 @@ export function createTerrain(frame: LocalFrame, options: TerrainOptions = DEFAU
     },
     stats() {
       let ready = 0
+      let failed = 0
+      let water = 0
       let textureBytes = 0
       for (const tile of tiles.values()) {
         if (tile.state === 'ready') {
           ready++
+          if (tile.mesh?.userData.waterMask) water++
           const side = 256 * 2 ** options.photoLevels
           // RGBA8 with mipmaps.
           textureBytes += side * side * 4 * (4 / 3)
+        } else if (tile.state === 'failed') {
+          failed++
         }
       }
       return {
@@ -283,7 +334,9 @@ export function createTerrain(frame: LocalFrame, options: TerrainOptions = DEFAU
         loading,
         drawn,
         requests: pendingRequests(),
-        textureMB: Math.round(textureBytes / 1e6)
+        textureMB: Math.round(textureBytes / 1e6),
+        water,
+        failed
       }
     }
   }

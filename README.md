@@ -13,7 +13,8 @@ In place:
 - Sky, sun and aerial perspective from `@takram/three-atmosphere`, for any date and time of day.
 - Terrain from GSI elevation tiles, covered with GSI aerial photographs (corrected for the haze
   they carry), streamed in real time out towards the horizon
-  ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md)).
+  ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md)). The sea is drawn as water with
+  waves, the sky's reflection and the sun's glint.
 - The area: Sagami Bay, Hakone and Mount Fuji, flown at 3,000 m
   ([ADR 0028](docs/adr/0028-area-sagami-bay-hakone-fuji.md)). The earlier area, central Tokyo
   with PLATEAU LOD2 buildings for eight wards and procedural facades
