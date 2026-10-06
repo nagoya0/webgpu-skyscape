@@ -2,7 +2,7 @@
 // placed in the local frame (ADR 0017). Positions are relative to the tile's centre, which
 // becomes the mesh position, so 32-bit vertex positions stay small.
 import { Geodetic, radians } from '@takram/three-geospatial'
-import { BufferAttribute, BufferGeometry, Vector3 } from 'three/webgpu'
+import { BufferAttribute, BufferGeometry, Sphere, Vector3 } from 'three/webgpu'
 
 import { ecefToWorld, type LocalFrame } from '../geo/localFrame'
 import type { HeightGrid } from './gsiSources'
@@ -10,12 +10,6 @@ import { tileXToLongitude, tileYToLatitude, type TileKey } from './webMercator'
 
 /** Grid segments per tile side. */
 export const SEGMENTS = 32
-/**
- * How far the skirt hangs below the tile edge at least, in metres. Along an edge it hangs this
- * much further than the edge's own rise and fall: a coarser neighbour draws the shared edge with
- * fewer vertices, and on a steep edge the gap between the two can be as large as that range.
- */
-const SKIRT_MIN_DEPTH = 30
 
 /**
  * Geoid height over central Tokyo, from GSI's geoid calculator (2026-10-06): 36.69 m at
@@ -112,37 +106,19 @@ export function buildTileGeometry(
 
   // Skirt: a copy of the perimeter, lowered straight down (along the ellipsoid normal, not the
   // frame's y, which leans away from up far from the origin) to hide cracks between levels of
-  // detail. Each edge's skirt is as deep as the edge rises and falls, plus a margin.
-  const edgeRange = (indices: number[]): number => {
-    let low = Infinity
-    let high = -Infinity
-    for (const k of indices) {
-      low = Math.min(low, surfaceHeights[k])
-      high = Math.max(high, surfaceHeights[k])
-    }
-    return high - low
-  }
-  const line = (from: number, step: number): number[] => Array.from({ length: cols }, (_, n) => from + n * step)
-  const north = edgeRange(line(0, 1))
-  const south = edgeRange(line((cols - 1) * cols, 1))
-  const westEdge = edgeRange(line(0, cols))
-  const eastEdge = edgeRange(line(cols - 1, cols))
+  // detail. It hangs as deep as the tile is wide: far more than any gap, and a long skirt costs
+  // nothing more, as it stays hidden behind the neighbouring tile.
+  const last = (cols - 1) * 3
+  const depth = Math.hypot(world[last] - world[0], world[last + 1] - world[1], world[last + 2] - world[2])
   perimeter.forEach((source, p) => {
-    const i = source % cols
-    const j = Math.floor(source / cols)
-    // A corner takes the deeper of its two edges.
-    let range = 0
-    if (j === 0) range = Math.max(range, north)
-    if (j === cols - 1) range = Math.max(range, south)
-    if (i === 0) range = Math.max(range, westEdge)
-    if (i === cols - 1) range = Math.max(range, eastEdge)
     const k = surfaceCount + p
-    place(k, i, j, surfaceHeights[source] - range - SKIRT_MIN_DEPTH)
+    place(k, source % cols, Math.floor(source / cols), surfaceHeights[source] - depth)
     uvs[k * 2] = uvs[source * 2]
     uvs[k * 2 + 1] = uvs[source * 2 + 1]
   })
 
-  // Centre and radius, then positions relative to the centre in 32 bits.
+  // Centre and radius, then positions relative to the centre in 32 bits. The radius, which ranks
+  // tiles for refinement and culls them, covers the surface only, not the long skirt.
   const center = new Vector3()
   const c = Math.floor(surfaceCount / 2)
   center.set(world[c * 3], world[c * 3 + 1], world[c * 3 + 2])
@@ -155,7 +131,7 @@ export function buildTileGeometry(
     positions[k * 3] = x
     positions[k * 3 + 1] = y
     positions[k * 3 + 2] = z
-    radius = Math.max(radius, Math.hypot(x, y, z))
+    if (k < surfaceCount) radius = Math.max(radius, Math.hypot(x, y, z))
   }
 
   // Triangles: surface, then skirt. Columns run east (+z) and rows south (−x), so (a, d, b)
@@ -191,6 +167,6 @@ export function buildTileGeometry(
     normals.setXYZ(surfaceCount + p, normals.getX(source), normals.getY(source), normals.getZ(source))
   })
   geometry.setIndex(indices)
-  geometry.computeBoundingSphere()
+  geometry.boundingSphere = new Sphere(new Vector3(), radius)
   return { geometry, center, radius }
 }

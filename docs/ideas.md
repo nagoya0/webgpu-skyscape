@@ -57,8 +57,10 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   - Ridges are drawn as straight segments by the 33 × 33 grid, 75 to 150 m between vertices at
     3,000 m.
   - Dark wedges showed where tiles of different levels meet on steep slopes, deeper than the
-    30 m skirts. The skirts now hang as deep as their edge rises and falls plus 30 m, straight
-    down at the tile rather than along the frame's y.
+    30 m skirts. The skirts now hang as deep as the tile is wide, straight down at the tile
+    rather than along the frame's y (the maintainer's choice: a long skirt costs nothing, as it
+    stays hidden). The tile's radius and bounding sphere cover the surface only, so the long
+    skirts do not change refinement or culling. The wedges were most likely the black lines below.
   - The black lines along tile edges that remained (found by the maintainer at t=110, clearest
     at `?altitude=1000&terraindebug=4`) were skirts seen from behind through the gaps: three
     flips the normal on the back faces of a double-sided material, so they faced down, away

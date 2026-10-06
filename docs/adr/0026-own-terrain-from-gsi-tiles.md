@@ -24,8 +24,8 @@ or bulk downloads are to be discussed with GSI first.
 - The terrain is ours (`src/terrain/`): a quadtree of XYZ tiles in Web Mercator, the scheme GSI
   tiles use, from zoom 10 roots around the area down to zoom 17. A tile is refined while one
   texel of its photograph would cover more than 1.5 pixels, and is drawn until all four children
-  are ready, so the surface has no holes while loading. Tile edges hang a 30 m skirt to hide
-  cracks between levels.
+  are ready, so the surface has no holes while loading. Tile edges hang a skirt to hide cracks
+  between levels (30 m at first; as deep as the tile is wide since 2026-10-07).
 - Heights come from GSI's 5 m DEM (`dem5a_png`, zoom 15) where available, else the 10 m DEM
   (`dem_png`, up to zoom 14); missing values, mostly sea, are taken as 0 m. GSI heights are above
   the geoid, while PLATEAU and the atmosphere use the ellipsoid, so a constant geoid height of
@@ -60,7 +60,7 @@ or bulk downloads are to be discussed with GSI first.
 - Seen on the mountains: ridges drawn as straight segments by the 33 × 33 grid; dark wedges where
   tiles of different levels meet on steep slopes, deeper than the 30 m skirts; and slopes facing
   away from the sun look flat, being lit evenly by the sky only. The skirts now hang as deep as
-  their edge rises and falls, plus 30 m (2026-10-07); the rest is on hold as room for
-  improvement ([ideas](../ideas.md)).
+  the tile is wide, and their back faces no longer show black (2026-10-07); the rest is on hold
+  as room for improvement ([ideas](../ideas.md)).
 - The land reflects light diffusely only; water keeps its specular reflection
   ([ADR 0032](0032-land-reflects-diffusely.md)).
