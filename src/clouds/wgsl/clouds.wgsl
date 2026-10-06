@@ -20,6 +20,9 @@
 //   weatherOffset  added to the weather map UV (in tiles); its length also drives the evolution
 //   shapeOffset, detailOffset  added to the shape and detail texture coordinates
 //   jitter         0 to 1, blue noise per pixel and frame
+//   shadow...      the cloud shadow maps and their cascades, for the optical depth to the sun
+//                  beyond the marched sun ray (cloudShadowOpticalDepth.wgsl)
+//   pixel          full-resolution pixel, for the shadow filter's rotation
 //
 // Returns columns:
 //   [0] cloud radiance (premultiplied) and opacity, before the aerial perspective
@@ -62,7 +65,21 @@ fn clouds(
   shapeSampler: sampler,
   detailTexture: texture_3d<f32>,
   detailSampler: sampler,
-  jitter: f32
+  jitter: f32,
+  viewMatrix: mat4x4f,
+  shadowMatrix0: mat4x4f,
+  shadowMatrix1: mat4x4f,
+  shadowMatrix2: mat4x4f,
+  shadowIntervalsA: vec4f,
+  shadowIntervalsB: vec4f,
+  shadowCascadeCount: i32,
+  cameraNear: f32,
+  shadowFar: f32,
+  shadowTexture: texture_2d<f32>,
+  shadowSampler: sampler,
+  shadowMapSize: f32,
+  shadowTopHeight: f32,
+  pixel: vec2f
 ) -> mat4x4f {
   // Ray in view space, then world space.
   let ndc = vec4f(uv.x * 2.0 - 1.0, 1.0 - uv.y * 2.0, 0.5, 1.0);
@@ -168,6 +185,18 @@ fn clouds(
           opticalDepth += mq.x * sunStep;
           sunDistance += sunStep;
           sunStep *= 2.0;
+        }
+
+        // Beyond the marched ray, the optical depth from the shadow maps (BSM), filtered more
+        // when the sun is near the horizon.
+        if (h < shadowTopHeight) {
+          let sunHeight = dot(sunDirection, normal);
+          opticalDepth += cloudShadowOpticalDepth(
+            p, sunDistance, 6.0 * saturate((sunHeight - 0.1) / -0.1), 1.0, jitter,
+            viewMatrix, shadowMatrix0, shadowMatrix1, shadowMatrix2, shadowIntervalsA,
+            shadowIntervalsB, shadowCascadeCount, cameraNear, shadowFar, shadowTexture,
+            shadowSampler, shadowMapSize, sunDirection, earthCenter, earthRadius, shadowTopHeight, pixel
+          );
         }
 
         // Sun and sky light at this height (getCloudsSunSkyIrradiance).

@@ -161,6 +161,7 @@ export function createTerrain(frame: LocalFrame, options: TerrainOptions = DEFAU
         const mesh = new Mesh(geometry, material)
         mesh.name = `terrain ${tileId(tile.key)}`
         mesh.position.copy(center)
+        mesh.receiveShadow = true // cloud shadows
         mesh.visible = false
         group.add(mesh)
         tile.mesh = mesh

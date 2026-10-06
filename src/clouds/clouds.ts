@@ -13,6 +13,7 @@ import {
   ivec2,
   min,
   perspectiveDepthToViewZ,
+  positionWorld,
   sampler,
   screenCoordinate,
   screenUV,
@@ -38,12 +39,14 @@ import {
   Vector4,
   type Node,
   type PerspectiveCamera,
-  type Texture
+  type Texture,
+  type WebGPURenderer
 } from 'three/webgpu'
 
 import { ecefToWorld, type LocalFrame } from '../geo/localFrame'
 import { asNode, type CompositeStage } from '../render/pipeline'
 import { preprocess } from '../shaders/preprocess'
+import { CloudShadows, SHADOW_CASCADES } from './cloudShadows'
 import { CloudsNode, type CloudPassInputs } from './cloudsNode'
 import clipAABBCode from './wgsl/clipAABB.wgsl?raw'
 import cloudHazeCode from './wgsl/cloudHaze.wgsl?raw'
@@ -51,8 +54,13 @@ import cloudMediaCode from './wgsl/cloudMedia.wgsl?raw'
 import cloudMultipleScatteringCode from './wgsl/cloudMultipleScattering.wgsl?raw'
 import cloudsCode from './wgsl/clouds.wgsl?raw'
 import cloudsResolveCode from './wgsl/cloudsResolve.wgsl?raw'
+import cloudShadowMarchCode from './wgsl/cloudShadowMarch.wgsl?raw'
+import cloudShadowOpticalDepthCode from './wgsl/cloudShadowOpticalDepth.wgsl?raw'
+import cloudShadowResolveCode from './wgsl/cloudShadowResolve.wgsl?raw'
 import cloudWeatherCode from './wgsl/cloudWeather.wgsl?raw'
 import isFinite4Code from './wgsl/isFinite4.wgsl?raw'
+import structuredPlanesCode from './wgsl/structuredPlanes.wgsl?raw'
+import structureNormalCode from './wgsl/structureNormal.wgsl?raw'
 import raySphereCode from './wgsl/raySphere.wgsl?raw'
 import remapClamped4Code from './wgsl/remapClamped4.wgsl?raw'
 import varianceClippingCode from './wgsl/varianceClipping.wgsl?raw'
@@ -66,14 +74,16 @@ const include = (fn: unknown): Include => fn as Include
  * takram's feature switches that the port supports (docs/clouds-parity.md), and the ones on by
  * default, as in takram's defaults.
  */
-export const CLOUD_FEATURES = ['SHAPE_DETAIL', 'POWDER', 'TEMPORAL_UPSCALE', 'HAZE'] as const
-export type CloudFeature = (typeof CLOUD_FEATURES)[number]
-export const DEFAULT_CLOUD_FEATURES: ReadonlySet<CloudFeature> = new Set([
+export const CLOUD_FEATURES = [
   'SHAPE_DETAIL',
   'POWDER',
   'TEMPORAL_UPSCALE',
-  'HAZE'
-])
+  'HAZE',
+  'TEMPORAL_PASS',
+  'TEMPORAL_JITTER'
+] as const
+export type CloudFeature = (typeof CLOUD_FEATURES)[number]
+export const DEFAULT_CLOUD_FEATURES: ReadonlySet<CloudFeature> = new Set(CLOUD_FEATURES)
 
 /** The WGSL functions, preprocessed for a set of features. */
 function buildFunctions(features: ReadonlySet<string>) {
@@ -85,15 +95,26 @@ function buildFunctions(features: ReadonlySet<string>) {
   const cloudMultipleScattering = fn(cloudMultipleScatteringCode)
   const clipAABB = fn(clipAABBCode)
   const varianceClipping = fn(varianceClippingCode, [include(clipAABB)])
+  const cloudShadowOpticalDepth = fn(cloudShadowOpticalDepthCode, [include(raySphere)])
   return {
     clouds: fn(cloudsCode, [
       include(raySphere),
       include(cloudWeather),
       include(cloudMedia),
-      include(cloudMultipleScattering)
+      include(cloudMultipleScattering),
+      include(cloudShadowOpticalDepth)
     ]),
     cloudsResolve: fn(cloudsResolveCode, [include(varianceClipping), include(fn(isFinite4Code))]),
-    cloudHaze: fn(cloudHazeCode)
+    cloudHaze: fn(cloudHazeCode),
+    cloudShadowMarch: fn(cloudShadowMarchCode, [
+      include(raySphere),
+      include(fn(structureNormalCode)),
+      include(fn(structuredPlanesCode)),
+      include(cloudWeather),
+      include(cloudMedia)
+    ]),
+    cloudShadowOpticalDepth,
+    cloudShadowResolve: fn(cloudShadowResolveCode, [include(clipAABB), include(fn(isFinite4Code))])
   }
 }
 
@@ -133,14 +154,21 @@ export interface CloudLayer {
   weatherExponent: number
   shapeAlteringBias: number
   coverageFilterWidth: number
+  /** Whether the layer is in the shadow maps. */
+  shadow: boolean
 }
 
-// takram's defaults: two cumulus layers (weather channels r and g) and a thin high layer (b).
+// takram's defaults: two cumulus layers (weather channels r and g) that cast shadows, and a
+// thin high layer (b) that does not.
 export const DEFAULT_LAYERS: CloudLayer[] = [
-  { altitude: 750, height: 650, densityScale: 0.2, shapeAmount: 1, detailAmount: 1, weatherExponent: 1, shapeAlteringBias: 0.35, coverageFilterWidth: 0.6 },
-  { altitude: 1000, height: 1200, densityScale: 0.2, shapeAmount: 1, detailAmount: 1, weatherExponent: 1, shapeAlteringBias: 0.35, coverageFilterWidth: 0.6 },
-  { altitude: 7500, height: 500, densityScale: 0.003, shapeAmount: 0.4, detailAmount: 0, weatherExponent: 1, shapeAlteringBias: 0.35, coverageFilterWidth: 0.5 }
+  { altitude: 750, height: 650, densityScale: 0.2, shapeAmount: 1, detailAmount: 1, weatherExponent: 1, shapeAlteringBias: 0.35, coverageFilterWidth: 0.6, shadow: true },
+  { altitude: 1000, height: 1200, densityScale: 0.2, shapeAmount: 1, detailAmount: 1, weatherExponent: 1, shapeAlteringBias: 0.35, coverageFilterWidth: 0.6, shadow: true },
+  { altitude: 7500, height: 500, densityScale: 0.003, shapeAmount: 0.4, detailAmount: 0, weatherExponent: 1, shapeAlteringBias: 0.35, coverageFilterWidth: 0.5, shadow: false }
 ]
+
+/** Shadow maps: takram's default size; they reach as far as the clouds are marched. */
+const SHADOW_MAP_SIZE = 512
+const SHADOW_MAX_FAR = 80_000
 
 export interface CloudOptions {
   layers: CloudLayer[]
@@ -173,6 +201,13 @@ export interface Clouds {
    * only, so the same time always shows the same clouds.
    */
   setTime(seconds: number): void
+  /** Marches the cloud shadow maps; call each frame before the scene is drawn. */
+  updateShadows(renderer: WebGPURenderer): void
+  /**
+   * Transmittance of the clouds towards the sun at the shaded point, for a light's
+   * `shadow.shadowNode`: it dims the sunlight only.
+   */
+  sceneShadow: Node<'float'>
 }
 
 const SHAPE_REPEAT = 0.0003
@@ -248,18 +283,134 @@ export async function createClouds(
   const far = uniform(camera.far).onRenderUpdate(() => camera.far)
   const cameraPosition = uniform(camera.position)
 
+  // TYPE-BRIDGE: takram's uniforms are typed against @types/three 0.184.
+  const ctx = atmosphereContext as unknown as {
+    matrixWorldToECEF: Node
+    matrixECEFToWorld: Node
+    sunDirectionECEF: Node & { value: Vector3 }
+    altitudeCorrectionECEF: Node
+    correctAltitude: boolean
+    parametersNode: { worldToUnit: Node; bottomRadius: Node }
+  }
+  const sunDirectionECEF = asNode<'vec3'>(ctx.sunDirectionECEF)
+  const sunDirection = asNode<'mat4'>(ctx.matrixECEFToWorld).mul(vec4(sunDirectionECEF, 0)).xyz.normalize()
+  const weatherNode = texture(weather)
+  const shapeNode = texture3D(shapeVolume)
+  const detailNode = texture3D(detailVolume)
+
+  // Cloud shadow maps (beer shadow maps), from the layers that cast shadows.
+  const shadowLayers = layers.filter(l => l.shadow)
+  const shadowHeights = uniform(
+    new Vector2(Math.min(...shadowLayers.map(l => l.altitude)), Math.max(...shadowLayers.map(l => l.altitude + l.height)))
+  )
+  // (max iterations, min step, max step, optical depth tail scale): takram's shadow defaults.
+  const shadowMarch = uniform(new Vector4(50, 100, 1000, 2))
+  const shadows = new CloudShadows(camera, SHADOW_MAP_SIZE, SHADOW_MAX_FAR, ({ uv, cascade, inverseMatrices, previousMatrices }) =>
+    asNode<'mat2'>(
+      functions.cloudShadowMarch({
+        uv,
+        cascade,
+        inverse0: inverseMatrices[0],
+        inverse1: inverseMatrices[1],
+        inverse2: inverseMatrices[2],
+        previous0: previousMatrices[0],
+        previous1: previousMatrices[1],
+        previous2: previousMatrices[2],
+        sunDirection,
+        earthCenter,
+        earthRadius,
+        heights: shadowHeights,
+        minHeights,
+        maxHeights,
+        densityScales,
+        shapeAmounts,
+        detailAmounts,
+        weatherExponents,
+        shapeAlteringBiases,
+        coverageFilterWidths,
+        profileLinear,
+        profileConstant,
+        shape,
+        scatteringCoefficient: light.x,
+        march: shadowMarch,
+        weatherOffset,
+        shapeOffset,
+        detailOffset,
+        weatherTexture: weatherNode,
+        weatherSampler: sampler(weatherNode),
+        shapeTexture: shapeNode,
+        shapeSampler: sampler(shapeNode),
+        detailTexture: detailNode,
+        detailSampler: sampler(detailNode),
+        jitter: asNode<'float'>(stbn),
+        mapSize: float(SHADOW_MAP_SIZE)
+      })
+    ),
+    options.features.has('TEMPORAL_PASS')
+      ? ({ coord, current, depthVelocity, history }) =>
+          asNode<'vec4'>(
+            functions.cloudShadowResolve({
+              coord,
+              currentTexture: current,
+              depthVelocityTexture: depthVelocity,
+              historyTexture: history,
+              historySampler: sampler(history),
+              mapSize: int(SHADOW_MAP_SIZE),
+              cascadeCount: int(SHADOW_CASCADES),
+              // takram's ShadowResolveMaterial defaults.
+              varianceGamma: float(1),
+              temporalAlpha: float(0.01)
+            })
+          )
+      : null
+  )
+  const viewMatrix = uniform(camera.matrixWorldInverse)
+  // Optical depth towards the sun from the shadow maps, at a world position.
+  const shadowOpticalDepth = (
+    position: Node<'vec3'>,
+    distanceOffset: Node<'float'>,
+    radius: Node<'float'>,
+    tail: number,
+    jitter: Node<'float'>
+  ): Node<'float'> =>
+    asNode<'float'>(
+      functions.cloudShadowOpticalDepth({
+        position,
+        distanceOffset,
+        radius,
+        tail: float(tail),
+        jitter,
+        viewMatrix,
+        matrix0: shadows.matrices[0],
+        matrix1: shadows.matrices[1],
+        matrix2: shadows.matrices[2],
+        intervalsA: shadows.intervalsA,
+        intervalsB: shadows.intervalsB,
+        cascadeCount: int(SHADOW_CASCADES),
+        near,
+        far: shadows.far,
+        shadowTexture: shadows.textureNode,
+        shadowSampler: sampler(shadows.textureNode),
+        mapSize: shadows.mapSizeNode,
+        sunDirection,
+        earthCenter,
+        earthRadius,
+        topHeight: shadowHeights.y,
+        pixel: screenCoordinate.xy
+      })
+    )
+  // The scene: no tail, as takram's aerial perspective; a fixed filter radius in texels, where
+  // takram scales it by the shadow texel's size on screen.
+  const sceneShadow = shadowOpticalDepth(positionWorld, float(0), float(2), 0, asNode<'float'>(stbn))
+    .negate()
+    .exp()
+  const sunWorld = new Vector3()
+  const updateShadows = (renderer: WebGPURenderer): void => {
+    sunWorld.copy(ctx.sunDirectionECEF.value).transformDirection(frame.ecefToWorld)
+    shadows.update(renderer, sunWorld, earthCenterWorld)
+  }
+
   const stage: CompositeStage = (input, depth) => {
-    // TYPE-BRIDGE: takram's uniforms are typed against @types/three 0.184.
-    const ctx = atmosphereContext as unknown as {
-      matrixWorldToECEF: Node
-      matrixECEFToWorld: Node
-      sunDirectionECEF: Node
-      altitudeCorrectionECEF: Node
-      correctAltitude: boolean
-      parametersNode: { worldToUnit: Node; bottomRadius: Node }
-    }
-    const sunDirectionECEF = asNode<'vec3'>(ctx.sunDirectionECEF)
-    const sunDirection = asNode<'mat4'>(ctx.matrixECEFToWorld).mul(vec4(sunDirectionECEF, 0)).xyz.normalize()
     const worldToUnit = asNode<'float'>(ctx.parametersNode.worldToUnit)
     // A world position in the atmosphere's units, with its altitude correction.
     const toUnit = (point: Node<'vec3'>): Node<'vec3'> => {
@@ -280,10 +431,6 @@ export async function createClouds(
     const groundLight = illuminanceAt(cameraUnit)
     const bottomLight = illuminanceAt(up.mul(radiusUnit.add(worldToUnit.mul(bottom))))
     const topLight = illuminanceAt(up.mul(radiusUnit.add(worldToUnit.mul(top))))
-
-    const weatherNode = texture(weather)
-    const shapeNode = texture3D(shapeVolume)
-    const detailNode = texture3D(detailVolume)
 
     const marchPixel: CloudPassInputs['march'] = (pixel, uv, previousViewProjection) => {
       // Reversed Z (ADR 0015): the sky has depth 0.
@@ -329,7 +476,21 @@ export async function createClouds(
           detailTexture: detailNode,
           detailSampler: sampler(detailNode),
           // Blue noise per pixel and frame, as takram's getSTBN().
-          jitter: asNode<'float'>(stbn)
+          jitter: asNode<'float'>(stbn),
+          viewMatrix,
+          shadowMatrix0: shadows.matrices[0],
+          shadowMatrix1: shadows.matrices[1],
+          shadowMatrix2: shadows.matrices[2],
+          shadowIntervalsA: shadows.intervalsA,
+          shadowIntervalsB: shadows.intervalsB,
+          shadowCascadeCount: int(SHADOW_CASCADES),
+          cameraNear: near,
+          shadowFar: shadows.far,
+          shadowTexture: shadows.textureNode,
+          shadowSampler: sampler(shadows.textureNode),
+          shadowMapSize: shadows.mapSizeNode,
+          shadowTopHeight: shadowHeights.y,
+          pixel
         })
       ).toVar() as unknown as { element(index: number): Node<'vec4'> }
       const cloud = result.element(0)
@@ -404,5 +565,5 @@ export async function createClouds(
     )
   }
 
-  return { stage, coverage, setTime }
+  return { stage, coverage, setTime, updateShadows, sceneShadow }
 }

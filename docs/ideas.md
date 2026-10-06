@@ -146,14 +146,18 @@ Next stages, in the order agreed on 2026-10-05:
      60 fps (2026-10-06), so takram's method stays as it is.
    - C3. Aerial perspective on the clouds, haze below and between them, and sun and sky light
      by height. Done 2026-10-06; the GPU time is within the measurement noise (about 0.1 ms).
-   - C4. Cloud shadows; may move to the building-shadow work.
+   - C4. Cloud shadows. Done 2026-10-06 ahead of the building shadows, as the maintainer chose:
+     takram's cascaded shadow maps, used for the clouds' long-range self-shadowing and for
+     shadows on the terrain and buildings through the sun light's shadow node, where building
+     shadows can be combined later. About 0.7 ms of GPU at 1920 × 1080.
    - C5. Cloud density on the CPU for the path's cloud channel and the shake in clouds; on hold.
      The idea so far: the cloud shape data (weather map, layer settings) lives in files that
      both the GPU and the offline path tool read, so the path's cloud density channel matches
      what is drawn ([ADR 0008](adr/0008-precomputed-flight-path.md)).
 
    After the main steps and a check of the GPU cost, the takram features still missing are
-   added.
+   added. The ones on in takram's default come first: light shafts (`SHADOW_LENGTH`),
+   turbulence, ground bounce and accurate sun and sky light ([clouds-parity.md](clouds-parity.md)).
 2. **Rain** ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
    [ADR 0020](adr/0020-effects-by-view.md)).
 3. **JSBSim path** with manoeuvres, replacing the placeholder.

@@ -79,6 +79,7 @@ export function createTileBatcher(frame: LocalFrame, material: Material): TileBa
   let maxIndices = 4_000_000
   const mesh = new BatchedMesh(maxInstances, maxVertices, maxIndices, material)
   mesh.name = 'PLATEAU buildings (batched)'
+  mesh.receiveShadow = true // cloud shadows
   // Front-to-back order helps the early depth test; per-instance culling is on by default.
   mesh.sortObjects = true
 

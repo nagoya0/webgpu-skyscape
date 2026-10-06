@@ -35,5 +35,6 @@ export function createPlaceholderGround(): Mesh {
   const ground = new Mesh(new CircleGeometry(200_000, 256), material)
   // World axes: x north, y up, z east. The disc is created in the xy plane.
   ground.rotation.x = -Math.PI / 2
+  ground.receiveShadow = true // cloud shadows
   return ground
 }

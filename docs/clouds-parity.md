@@ -14,19 +14,24 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 ([ADR 0022](adr/0022-heavy-shaders-in-wgsl.md)) and lists it in `CLOUD_FEATURES` in
 `src/clouds/clouds.ts`. Switches are set with `?cloudfx=` (for example `?cloudfx=-POWDER`).
 
-| Switch | Ported | On by default |
-|---|---|---|
-| `SHAPE_DETAIL` | yes | yes |
-| `POWDER` | yes | yes |
-| `TURBULENCE` | no | |
-| `ACCURATE_PHASE_FUNCTION` | no | |
-| `ACCURATE_SUN_SKY_LIGHT` | no | |
-| `GROUND_BOUNCE` | no | |
-| `HAZE` | yes | yes |
-| `SHADOW_LENGTH` | no | |
-| `TEMPORAL_UPSCALE` | yes | yes |
-| `TEMPORAL_PASS`, `TEMPORAL_JITTER` (shadow maps) | no | |
-| `SHADOW` | no | |
+"takram's default" is takram's default quality preset (`qualityPresets.ts`, the same as its high
+preset). Until 2026-10-06 this table did not say that `TURBULENCE`, `ACCURATE_SUN_SKY_LIGHT`,
+`GROUND_BOUNCE` and `SHADOW_LENGTH` are on in takram's default; they are the switches still
+missing for the default look.
+
+| Switch | Ported | On by default here | takram's default |
+|---|---|---|---|
+| `SHAPE_DETAIL` | yes | yes | on |
+| `POWDER` | yes | yes | on |
+| `TURBULENCE` | no | | on |
+| `ACCURATE_PHASE_FUNCTION` | no | | off |
+| `ACCURATE_SUN_SKY_LIGHT` | no | | on |
+| `GROUND_BOUNCE` | no | | on |
+| `HAZE` | yes | yes | on |
+| `SHADOW_LENGTH` (light shafts) | no | | on |
+| `TEMPORAL_UPSCALE` | yes | yes | on |
+| `TEMPORAL_PASS`, `TEMPORAL_JITTER` (shadow maps) | yes | yes | on |
+| `SHADOW` | not needed | | Marks takram's shared shader code as built for the shadow pass; here the shadow march is its own WGSL function |
 
 ## Shape and density
 
@@ -37,7 +42,7 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 | Coverage, coverage filter width, weather exponent, shape-altering bias | done | |
 | Shape noise (`shape.bin`, 128³) | done | |
 | Shape detail noise (`shape_detail.bin`, 32³) | done | Always sampled; takram skips it by mip level |
-| Turbulence (`turbulence.png`) | on hold | The texture is in `public/clouds/` |
+| Turbulence (`turbulence.png`) | on hold | On in takram's default. The texture is in `public/clouds/` |
 | Density profile: linear and constant terms | done | |
 | Density profile: exponential term | on hold | takram's default does not use it |
 | Wind: weather, shape and detail velocities | partial | One wind vector, `?wind=E,N` in m/s, moves the weather map and the shape and detail noise together; takram has a velocity for each. Default 0, as takram. The offsets are computed from the time on the flight path, not accumulated per frame, so a given time always shows the same clouds |
@@ -52,12 +57,12 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 | Accurate phase function (Draine, `ACCURATE_PHASE_FUNCTION`) | on hold | Off in takram's default too |
 | Multiple-scattering approximation (8 octaves) | done | |
 | Optical depth to the sun, ray marched | done | 2 steps, as takram's high preset |
-| Optical depth to the sun from beer shadow maps (BSM, cascaded) | planned (C4) | Long-range self-shadowing |
+| Optical depth to the sun from beer shadow maps (BSM, cascaded) | done | Long-range self-shadowing beyond the marched sun ray, with takram's filter when the sun is low (8 samples, up to 6 texels) |
 | Sky light with the sky gradient | done | |
 | Powder effect (`POWDER`) | done | |
 | Sun and sky light per height (interpolated between layer bottom and top) | done | As takram's clouds.vert: at the bottom and top of all layers straight above the camera |
-| Accurate sun and sky light per sample (`ACCURATE_SUN_SKY_LIGHT`) | on hold | Costly; per-height interpolation first |
-| Ground bounce (`GROUND_BOUNCE`) | on hold | |
+| Accurate sun and sky light per sample (`ACCURATE_SUN_SKY_LIGHT`) | on hold | On in takram's default (off in its low and medium presets). Costly; per-height interpolation is in |
+| Ground bounce (`GROUND_BOUNCE`) | on hold | On in takram's default (3 steps towards the ground) |
 
 ## Marching
 
@@ -66,7 +71,7 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 | Perspective step scaling, longer steps in empty space and far away | done | |
 | Skipping between layers (`insideLayerIntervals`) | on hold | |
 | Mip-level based detail reduction | on hold | |
-| Maximum iterations | partial | 160; takram's high preset uses 500 |
+| Maximum iterations and distance | partial | 160 steps up to 80 km; takram's default is 500 steps up to 200 km |
 | Spatiotemporal blue noise (STBN) for the jitter | done | `stbn` from `@takram/three-geospatial/webgpu`, indexed like takram's `getSTBN()`: cloud buffer pixel and frame modulo 64 |
 
 ## Temporal and resolution
@@ -77,7 +82,7 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 | Front depth and velocity output | done | Velocity from last frame's view-projection in world space; takram reprojects the no-cloud case in view space for precision, which the local frame does not need |
 | Temporal resolve with reprojection and variance clipping (`cloudsResolve.frag`) | done | Four neighbours, bilinear history, as takram's defaults (varianceGamma 2, temporalAlpha 0.1). Added: values that are not finite are dropped, since one NaN in the history spread until the screen went black (found 2026-10-06 when flying into a cloud) |
 | Temporal upscaling from a lower resolution (`TEMPORAL_UPSCALE`) | done | Quarter resolution in each direction, filled in over 16 frames in takram's Bayer order. Off (`?cloudfx=-TEMPORAL_UPSCALE`), the clouds are marched at full resolution and blended into the history |
-| Shadow length in the resolve (`SHADOW_LENGTH`) | planned (after C4) | With the light shafts |
+| Shadow length in the resolve (`SHADOW_LENGTH`) | planned | With the light shafts |
 | Quality presets | on hold | One target machine ([ADR 0025](adr/0025-target-hardware.md)) |
 
 ## Atmosphere and scene
@@ -86,9 +91,10 @@ Where takram has a `#ifdef` switch for a feature, the port keeps it as a preproc
 |---|---|---|
 | Aerial perspective on the clouds | done | `getIndirectLuminanceToPoint` from `@takram/three-atmosphere/webgpu` (takram's `GetSkyRadianceToPoint`) up to the clouds' front, applied in TSL after the WGSL march; without the shadow length |
 | Haze below and between the clouds (`HAZE`) | done | takram's defaults; the shadow length is 0 until `SHADOW_LENGTH` is ported |
-| Light shafts (`SHADOW_LENGTH`, epipolar shadow length in the atmosphere) | planned (after C4) | Needs the cloud shadow maps |
-| Cloud shadows on the scene (terrain, buildings) | planned (C4) | May come with the building shadows |
-| Shadow pass temporal resolve (`shadowResolve.frag`) | planned (C4) | |
+| Light shafts (`SHADOW_LENGTH`, epipolar shadow length in the atmosphere) | planned | On in takram's default. Can be built now that the shadow maps exist |
+| Cascaded shadow maps (`CascadedShadowMaps`, `ShadowPass`, `shadow.frag`) | partial | `src/clouds/cascadedShadowMaps.ts`, `cloudShadows.ts`: takram's 3 cascades of 512 × 512, split lambda 0.6, structured volume sampling, 50 steps. Differences: the cascades sit side by side in one 32-bit texture instead of a half-float array texture; shadows reach 80 km (the clouds' march distance), where takram uses the camera's far plane, which is 10,000 km here and would spread the cascades too thin; no mip level per cascade |
+| Cloud shadows on the scene (terrain, buildings) | partial | Through the sun light's custom shadow node (`light.shadow.shadowNode`), so only direct sunlight is dimmed. As takram's aerial perspective: no optical depth tail, 8-sample filter; the filter radius is fixed at 2 texels where takram scales it by the shadow texel's size on screen |
+| Shadow pass temporal resolve (`shadowResolve.frag`) | done | Nine-sample variance clipping, takram's defaults (varianceGamma 1, temporalAlpha 0.01); non-finite values dropped |
 
 ## Not needed
 

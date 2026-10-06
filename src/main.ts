@@ -119,6 +119,14 @@ async function start(): Promise<void> {
         wind: params.wind
       })
     : null
+  if (clouds) {
+    // Cloud shadows dim the sunlight through the light's custom shadow node; no shadow map of
+    // the scene is rendered. Objects opt in with receiveShadow.
+    renderer.shadowMap.enabled = true
+    atmosphere.light.castShadow = true
+    // `shadowNode` is missing from the type declarations of LightShadow in 0.186.
+    ;(atmosphere.light.shadow as unknown as { shadowNode: unknown }).shadowNode = clouds.sceneShadow
+  }
   const pipeline = createPipeline(renderer, scene, camera, clouds ? [clouds.stage] : [], {
     lensFlare: params.flare
   })
@@ -231,6 +239,10 @@ async function start(): Promise<void> {
     debug.camera = camera.position.toArray().map(Math.round)
     debug.flightTime = Number(flightTime.toFixed(2))
     debug.loadFactor = Number(state.loadFactor.toFixed(2))
+    if (clouds) {
+      camera.updateMatrixWorld()
+      clouds.updateShadows(renderer)
+    }
     pipeline.render()
   }
 
