@@ -1,4 +1,4 @@
-﻿// The terrain tiles' material: physical, so that the specular intensity can differ between land
+// The terrain tiles' material: physical, so that the specular intensity can differ between land
 // and water (water.ts). three's direct light ignores that intensity at grazing angles: its
 // specular term uses a Fresnel reflectance of 1 there, whatever the intensity. Scaling the
 // direct specular by the material's grazing reflectance (specularF90, which is the intensity for

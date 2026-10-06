@@ -60,3 +60,5 @@ or bulk downloads are to be discussed with GSI first.
 - Seen on the mountains: ridges drawn as straight segments by the 33 × 33 grid; dark wedges where
   tiles of different levels meet on steep slopes, deeper than the 30 m skirts; and slopes facing
   away from the sun look flat, being lit evenly by the sky only. Open in [ideas](../ideas.md).
+- The land reflects light diffusely only; water keeps its specular reflection
+  ([ADR 0032](0032-land-reflects-diffusely.md)).

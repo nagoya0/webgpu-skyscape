@@ -48,6 +48,10 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     ones go flat. At 09:00 the same slopes are in direct sun and the terrain's relief shows
     through the demo's shading. The water mask (`?terraindebug=3`) is not involved.
     Summer-photographed forest needs its relief from the demo's own shading, also in the shade.
+    A second cause, found later the same day: the land reflected the sun specularly at grazing
+    angles, and the sheen lay over the photographs as a whitish film. The land now reflects
+    diffusely only ([ADR 0032](adr/0032-land-reflects-diffusely.md)), and at 15:00 the trees'
+    texture shows on those slopes.
   - Ridges are drawn as straight segments by the 33 × 33 grid, 75 to 150 m between vertices at
     3,000 m.
   - Dark wedges show where tiles of different levels meet on steep slopes, deeper than the 30 m

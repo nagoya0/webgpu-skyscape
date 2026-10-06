@@ -9,7 +9,6 @@ import {
   Group,
   LinearFilter,
   Mesh,
-  MeshStandardNodeMaterial,
   RedFormat,
   SRGBColorSpace,
   UnsignedByteType,
@@ -214,8 +213,8 @@ export function createTerrain(
         texture.colorSpace = SRGBColorSpace
         texture.flipY = false
         texture.anisotropy = 8
-        // Physical rather than standard, for the specular intensity: land reflects the sun with
-        // landSpecular (?landspecular=), water fully.
+        // Land reflects the sun with landSpecular (?landspecular=, diffusely only by default,
+        // ADR 0032), water fully.
         const material = new TerrainMaterial({
           map: texture,
           roughness: 1,
@@ -285,7 +284,7 @@ export function createTerrain(
     if (tile.mesh) {
       group.remove(tile.mesh)
       tile.mesh.geometry.dispose()
-      const material = tile.mesh.material as MeshStandardNodeMaterial
+      const material = tile.mesh.material as TerrainMaterial
       material.map?.dispose()
       ;(tile.mesh.userData.waterMask as DataTexture | null)?.dispose()
       material.dispose()
