@@ -5,8 +5,10 @@ Guidance for AI coding agents working in this repository.
 ## What this is
 
 A demo that tests how well sky, clouds and the ground can be rendered in the browser with
-WebGPU. The camera rides along a precomputed flight path; there is no piloting. See
-[README.md](README.md) and [ADR 0002](docs/adr/0002-a-rendering-quality-demo.md).
+WebGPU. The camera rides along a precomputed flight path over central Tokyo; there is no
+piloting. See [README.md](README.md) (including what is in so far) and
+[ADR 0002](docs/adr/0002-a-rendering-quality-demo.md). Keep the README's status section and
+parameter table up to date when features change.
 
 ## Language
 
@@ -44,7 +46,8 @@ section up to date. Mark every type cast that bridges takram's types to the inst
 `node scripts/check-page.mjs <url> <out.png>` opens a page in headless Chrome and reports its state
 and `window.__debug`; use it to check changes in a real browser. The main page takes its
 settings from URL query parameters, listed in `src/params.ts`. `pnpm test` runs the unit tests
-(Vitest), which cover the coordinate conversions, the flight path and the parameters.
+(Vitest), which cover the coordinate conversions, the tile maths, the flight path, the camera,
+the parameters and the shader preprocessor.
 
 Write heavy shader code in WGSL (`.wgsl` files, one function each, connected with `wgslFn`) and
 use TSL only to gather inputs and connect stages. In post-processing, pass the scene camera's

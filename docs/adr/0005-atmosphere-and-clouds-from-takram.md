@@ -31,3 +31,8 @@ to handle this.
 
 Licences of the bundled assets (precomputed tables, star data, noise textures) are to be checked
 when each asset is first used.
+
+Update 2026-10-06: the cloud noise textures and weather map are used and are under takram's MIT
+licence; they are copied to `public/clouds/` with the licence text. The WebGPU atmosphere
+computes its tables on the GPU at run time, so no table files are bundled. The star data is not
+used yet.

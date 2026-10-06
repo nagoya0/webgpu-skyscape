@@ -40,3 +40,9 @@ Taito, Sumida, Yokohama and Kawasaki):
   detail.
 - Textured LOD2 buildings are 100 to 900 MB per ward, so only the strip along the course is
   prepared in detail ([ADR 0018](0018-f16-at-cruise-speed.md)).
+
+Update 2026-10-06: the buildings are untextured with procedural facades
+([ADR 0024](0024-untextured-buildings-with-procedural-facades.md)), streamed from PLATEAU for
+eight wards (Shinjuku, Shibuya, Minato, Chiyoda, Chuo, Taito, Sumida, Koto). The maintainer kept
+the proposed course as the target and chose to load more wards rather than shrink it. Detail
+follows the camera through the tiles' levels of detail rather than a prepared strip.

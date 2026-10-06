@@ -1,6 +1,6 @@
 # 4. Three.js WebGPURenderer and TSL, built with Vite and TypeScript
 
-- Status: Accepted
+- Status: Accepted; the shader language is partly superseded by [0022](0022-heavy-shaders-in-wgsl.md)
 - Date: 2026-10-03
 
 ## Context
@@ -21,3 +21,11 @@ chosen for the atmosphere, the clouds and 3D Tiles
 
 The Three.js WebGPU and TSL APIs still change between releases. Version upgrades need to be done
 deliberately and checked against the release notes.
+
+## Update 2026-10-06
+
+- Heavy shader code is written in WGSL, and TSL only connects it
+  ([ADR 0022](0022-heavy-shaders-in-wgsl.md)).
+- 3DTilesRendererJS is used for the PLATEAU buildings only. Its terrain and image-draping
+  plugins work only with `WebGLRenderer`, so the terrain is our own
+  ([ADR 0026](0026-own-terrain-from-gsi-tiles.md)).

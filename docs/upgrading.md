@@ -4,7 +4,7 @@ What to do when upgrading `three`, `@types/three` or any `@takram/*` package. Th
 the current set-up are in [ADR 0014](adr/0014-pin-three-and-takram-versions.md),
 [ADR 0015](adr/0015-reversed-z-depth.md) and [ADR 0016](adr/0016-patch-takram-for-newer-three.md).
 
-## Current state (2026-10-04)
+## Current state (2026-10-06)
 
 | Package | Version | Notes |
 |---|---|---|
@@ -12,6 +12,7 @@ the current set-up are in [ADR 0014](adr/0014-pin-three-and-takram-versions.md),
 | `@types/three` | 0.186.0 | |
 | `@takram/three-atmosphere` | 0.19.1 | Patched |
 | `@takram/three-geospatial` | 0.9.1 | Patched. Must match the version `@takram/three-atmosphere` depends on |
+| `3d-tiles-renderer` | 0.5.3 | Loads the PLATEAU buildings. Check its `three` peer range when upgrading `three` |
 
 All are pinned without `^`. Upgrade `three` and the takram packages together.
 
@@ -92,7 +93,7 @@ In another shell (results print as `[state]`; screenshots go where you point the
 |---|---|---|
 | Atmosphere loads and renders | `WAIT=15000 node scripts/check-page.mjs "http://localhost:4312/experiments/atmosphere-smoke/" atm.png` | `debug.frames` above 0, no `[exception]`, and the screenshot shows a sky with the sun low in the west |
 | Unit tests | `pnpm test` | All pass |
-| Main page starts on WebGPU | `WAIT=10000 node scripts/check-page.mjs "http://localhost:4312/?time=15:00&t=5&paused" main.png` | `guidance` is `null`, `canvas` is `true`, no `[console.error]`, and the screenshot shows a level horizon over a hazy ground with a grid |
+| Main page starts on WebGPU | `WAIT=10000 node scripts/check-page.mjs "http://localhost:4312/?time=15:00&t=5&paused" main.png` | `guidance` is `null`, `canvas` is `true`, no `[console.error]`, and the screenshot shows a level horizon, aerial photographs, buildings and clouds |
 | Turn | `WAIT=10000 node scripts/check-page.mjs "http://localhost:4312/?time=15:00&t=45&paused" turn.png` | `debug.loadFactor` about 2.92; the horizon tilted steeply with the ground on the right |
 | Guidance screen | `INJECT="GPU.prototype.requestAdapter = async () => null" node scripts/check-page.mjs http://localhost:4312/ guidance.png` | `guidance` holds the no-adapter message |
 | Depth precision | `WAIT=6000 node scripts/check-page.mjs "http://localhost:4312/experiments/depth/?mode=reversed" depth.png` | Every square is green; no red inside the squares |

@@ -3,22 +3,69 @@
 A demo that tests how well sky, clouds and the ground can be rendered in a web browser with
 WebGPU. The camera flies along a precomputed path over central Tokyo, built from open data.
 
-Work in progress. A demo video, tested browsers and GPU guidance will be added here.
+Work in progress. A demo video and tested browsers will be added here.
+
+## Status
+
+In place:
+
+- Sky, sun and aerial perspective from `@takram/three-atmosphere`, for any date and time of day.
+- Terrain from GSI elevation tiles, covered with GSI aerial photographs, streamed in real time
+  ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md)).
+- PLATEAU LOD2 buildings for eight central wards (Shinjuku, Shibuya, Minato, Chiyoda, Chuo,
+  Taito, Sumida, Koto), streamed as 3D Tiles and shaded with procedural facades
+  ([ADR 0024](docs/adr/0024-untextured-buildings-with-procedural-facades.md)).
+- Volumetric clouds ported from `@takram/three-clouds` to WGSL, first step
+  ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md)). Which of takram's features are in is
+  listed in [docs/clouds-parity.md](docs/clouds-parity.md).
+- A placeholder flight path (a racetrack at 250 m/s and 450 m) and a first-person camera.
+- Temporal anti-aliasing, lens flare and AgX tone mapping.
+
+Planned: the rest of the clouds, rain, a flight path from JSBSim with manoeuvres, night scenes,
+vegetation, shadows, and a UI. The order and the open questions are in
+[docs/ideas.md](docs/ideas.md).
 
 ## Requirements
 
-A browser with WebGPU enabled. There is no WebGL fallback.
+A browser with WebGPU enabled. There is no WebGL fallback; other browsers get a page explaining
+what is missing ([ADR 0003](docs/adr/0003-webgpu-only.md)).
+
+The target is a mid-range gaming PC, such as a GeForce RTX 2060 or Radeon RX 6600 XT, at
+1920 × 1080 and 60 frames per second. Integrated GPUs are not targeted
+([ADR 0025](docs/adr/0025-target-hardware.md)).
 
 ## Development
 
 ```sh
 pnpm install
-pnpm dev
+pnpm dev            # development server
+pnpm test           # unit tests (Vitest)
+pnpm build          # type-check and build
 ```
+
+`node scripts/check-page.mjs <url> <out.png>` opens a page in headless Chrome, saves a
+screenshot and prints the page state. Further checks, and how to upgrade Three.js and the takram
+packages, are in [docs/upgrading.md](docs/upgrading.md).
+
+### URL parameters
+
+There is no on-screen UI yet ([ADR 0019](docs/adr/0019-no-ui-until-features-are-in.md)).
+Settings come from the URL query, for example `/?time=06:00&coverage=0.5`. The full list, with
+defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
+
+| Parameter | Meaning |
+|---|---|
+| `date=YYYY-MM-DD`, `time=HH:MM` | Date and time of day in JST |
+| `t=seconds`, `paused` | Start time on the flight path; hold the flight there |
+| `exposure`, `fov` | Exposure before tone mapping; vertical field of view |
+| `altitude`, `speed`, `bank`, `rollrate` | Placeholder flight path |
+| `buildings=0`, `terrain=0`, `clouds=0`, `flare=0` | Leave out a part of the scene |
+| `coverage=0..1`, `cloudfx=` | Cloud coverage; cloud feature switches, such as `cloudfx=-POWDER` |
+| `measure` | After loading, time 180 frames and report CPU and GPU times in `window.__debug` |
 
 ## Design
 
-Design decisions are recorded in [docs/adr/](docs/adr/). Open questions are in
+Design decisions are recorded in [docs/adr/](docs/adr/). Open questions and the plan are in
 [docs/ideas.md](docs/ideas.md).
 
 ## Licence and credits

@@ -14,12 +14,12 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   over. Both are tuned when the cockpit view is built.
   Shake, as the maintainer wants it: none in steady flight, even if that is less realistic; some
   in turns and more when passing through clouds. For now 0.04° per G above 1 and 0.3° at full
-  cloud density; the cloud figure is untested until clouds exist.
+  cloud density. The cloud figure is untested: the clouds are drawn, but the path has no cloud
+  density channel yet (cloud step C5 below).
 - **The course in central Tokyo** ([ADR 0023](adr/0023-area-central-tokyo.md)). Proposed: the
   Shinjuku towers, Shibuya, Roppongi and Tokyo Tower, Marunouchi, the Sumida river and Skytree,
   the bay (Toyosu, Odaiba), Tokyo Bay, and possibly Minato Mirai in Yokohama. About 30 km north
-  to south and 20 km east to west. Still to check: whether bulk download of GSI tiles is
-  allowed and how. The maintainer keeps this course as the target (2026-10-06): instead of
+  to south and 20 km east to west. The maintainer keeps this course as the target (2026-10-06): instead of
   shrinking the course, more wards are loaded. Now streamed from PLATEAU
   (`src/scene/plateauBuildings.ts`): Shinjuku, Shibuya, Minato, Chiyoda, Chuo, Taito, Sumida and
   Koto. The placeholder racetrack stays as it is; on its turns it leaves these wards (Bunkyo to
@@ -34,7 +34,11 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   | + terrain | 1.8 ms | 1.1 ms |
   | + terrain + buildings | 3.5 ms | 3.3 ms |
 
-  Within budget with room for the clouds. Still to look at: JavaScript time while flying (new
+  The clouds (step C1, full resolution) were measured the same day at the start of the path
+  (t = 0, paused): GPU 1.8 ms without them, 4.3 ms with them, 4.9 ms with them at 1,500 m
+  (`?altitude=1500`). So they add about 2.5 to 3 ms; together with the buildings this comes
+  close to the budget. Rendering them at half resolution (step C2) is meant to reduce it.
+  Still to look at: JavaScript time while flying (new
   tiles are parsed in the same frames, so frames vary), and updating the tile traversal less
   often than every frame if JavaScript becomes the limit. How to read `?measure`: GPU time from
   timestamp queries; JavaScript time from a run without them, since they slow it; the "total"
@@ -63,10 +67,12 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   bases are around 600 to 2,000 m.
 - **Static site host.** GitHub Pages or Cloudflare Pages
   ([ADR 0012](adr/0012-site-and-tile-data-hosted-apart.md)).
-- **A fork of three-geospatial.** Decided at the cloud stage, by how much of the library's
+- **A fork of three-geospatial.** Decided during the cloud stage, by how much of the library's
   internals the cloud port changes ([ADR 0016](adr/0016-patch-takram-for-newer-three.md)).
-- **Look of the image.** Tone mapping (AgX for now) and exposure (3 for now). There is too little
-  in the scene to judge post-processing yet; judge it by eye once clouds and terrain are in.
+  Step C1 needed no changes to the library: the cloud code is our own WGSL and uses only the
+  atmosphere's public functions.
+- **Look of the image.** Tone mapping (AgX for now) and exposure (3 for now). Terrain, buildings
+  and the first clouds are now in, so this can be judged by eye.
 
 ## Night
 
@@ -95,56 +101,57 @@ Placeholders that later stages replace. Remove each with the stage that replaces
   ([ADR 0026](adr/0026-own-terrain-from-gsi-tiles.md)) now covers the area; the disc, 37 m
   below it, only fills in beyond the terrain's root tiles and can go once the terrain reaches
   the horizon.
-- `src/flight/placeholderPath.ts`: a racetrack at 250 m/s and 1500 m, 70° bank turns, level
-  flight only, 120.5 s per lap. Replaced by the JSBSim path. Its output has the same form
-  (ECEF positions, body-to-NED attitudes), so the playback and the camera stay.
-- The origin over Tokyo Bay in `src/main.ts`. Replaced by the chosen area.
+- `src/flight/placeholderPath.ts`: a racetrack at 250 m/s, 70° bank turns, level flight only.
+  The main page flies it at 450 m (`?altitude=`). Replaced by the JSBSim path. Its output has the
+  same form (ECEF positions, body-to-NED attitudes), so the playback and the camera stay.
+- The origin in `src/main.ts` (139.757° E, 35.665° N, near Shiodome) is placed for the
+  placeholder racetrack and may move when the course is fixed.
+- `src/ui/loading.ts`: the temporary loading screen, redesigned with the UI.
 
 ## Plan
 
-1. Minimal Vite, TypeScript and Three.js `WebGPURenderer` set-up, with the WebGPU check and the
-   guidance screen.
-2. Test and choose the depth format (done: [ADR 0015](adr/0015-reversed-z-depth.md)).
-3. `@takram/three-atmosphere`: sky, sun and a time-of-day slider (done; the slider was later
-   replaced by `?time=`, [ADR 0019](adr/0019-no-ui-until-features-are-in.md)).
-4. A temporary flight and the first-person camera (done; checked by eye).
-5. Plan the next stages (done, below).
+Done:
 
-Next stages, proposed 2026-10-05:
+- Set-up with Vite, TypeScript and Three.js `WebGPURenderer`, the WebGPU check and the guidance
+  screen ([ADR 0003](adr/0003-webgpu-only.md)); reversed-Z depth
+  ([ADR 0015](adr/0015-reversed-z-depth.md)); the sky from `@takram/three-atmosphere`; a
+  temporary flight and the first-person camera.
+- Cloud trial in WGSL ([ADR 0022](adr/0022-heavy-shaders-in-wgsl.md)).
+- Area: central Tokyo ([ADR 0023](adr/0023-area-central-tokyo.md)).
+- Terrain and aerial photographs from GSI, streamed in real time
+  ([ADR 0026](adr/0026-own-terrain-from-gsi-tiles.md)). No tile storage of our own is needed.
+- Buildings from PLATEAU, untextured with procedural facades, drawn as one batch
+  ([ADR 0024](adr/0024-untextured-buildings-with-procedural-facades.md),
+  [ADR 0027](adr/0027-batched-building-tiles.md)).
+- Clouds, step C1 (below).
 
-1. **Cloud trial, one to two days** (done: [ADR 0022](adr/0022-heavy-shaders-in-wgsl.md)). A simple ray-marched cloud written in WGSL and connected
-   with `wgslFn`. Checks: does it fit the render pipeline; does it work with reversed-Z depth,
-   temporal anti-aliasing and the atmosphere tables; how mechanical is moving takram's GLSL to
-   WGSL. The result decides the shader-language policy for all later shaders (an ADR), and the
-   estimate for the cloud stage.
-2. **Area and terrain.** Choose the area from PLATEAU's coverage; build tiled terrain and aerial
-   photographs with levels of detail ([ADR 0006](adr/0006-fixed-area-tiled-detail.md)); decide
-   the tile storage and the site host. Check temporal anti-aliasing at 250 m/s and measure
-   against the target hardware ([ADR 0025](adr/0025-target-hardware.md)), leaving GPU time and
-   memory for the clouds.
-3. **Buildings.** PLATEAU 3D Tiles in the local frame, detailed along the path.
-4. **Clouds**, in this demo's scope ([ADR 0013](adr/0013-port-the-clouds-to-tsl.md)), started
-   2026-10-06 in these steps, agreed with the maintainer:
-   - C1. A separate cloud pass (colour, transmittance, front distance); the layer as a spherical
-     shell following the earth's curvature; takram's shape and detail noise textures and weather
-     map; sun and sky light from the atmosphere; the multiple-scattering approximation.
-     Done 2026-10-06 (`src/clouds/`), for now as a full-resolution stage after the aerial
-     perspective; the separate pass and front distance come with C2. takram's three default
-     layers (750–1400 m, 1000–2200 m, 7500–8000 m), coverage 0.3 (`?coverage=`). About 2.5 to
-     3 ms of GPU at 1902 × 984 on the development machine.
-   - C2. Temporal accumulation (port of `cloudsResolve.frag`), rendering at half resolution.
+Next stages, in the order agreed on 2026-10-05:
+
+1. **Clouds** ([ADR 0013](adr/0013-port-the-clouds-to-tsl.md); which takram features are in:
+   [clouds-parity.md](clouds-parity.md)). Steps agreed with the maintainer on 2026-10-06:
+   - C1. takram's layers as spherical shells following the earth's curvature; the shape and
+     detail noise textures and the weather map; sun and sky light from the atmosphere; the
+     multiple-scattering approximation. Done 2026-10-06 (`src/clouds/`), as a full-resolution
+     stage after the aerial perspective. takram's three default layers (750–1400 m,
+     1000–2200 m, 7500–8000 m), coverage 0.3 (`?coverage=`).
+   - C2. A separate cloud pass (colour, transmittance, front distance), temporal accumulation
+     (port of `cloudsResolve.frag`), rendering at half resolution. Next.
    - C3. Aerial perspective on the clouds.
    - C4. Cloud shadows; may move to the building-shadow work.
    - C5. Cloud density on the CPU for the path's cloud channel and the shake in clouds; on hold.
+     The idea so far: the cloud shape data (weather map, layer settings) lives in files that
+     both the GPU and the offline path tool read, so the path's cloud density channel matches
+     what is drawn ([ADR 0008](adr/0008-precomputed-flight-path.md)).
 
-   Earlier note: The cloud
-   shape data (weather map, layer settings) lives in files that both the GPU and the offline
-   path tool read, so the path's cloud density channel matches what is drawn
-   ([ADR 0008](adr/0008-precomputed-flight-path.md)).
-5. **Rain** ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
+   After the main steps and a check of the GPU cost, the takram features still missing are
+   added.
+2. **Rain** ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
    [ADR 0020](adr/0020-effects-by-view.md)).
-6. **JSBSim path** with manoeuvres, replacing the placeholder.
-7. **Night.** Stars, moon and adaptive exposure fit between any stages; city lights and street
-   lamp quads after the buildings.
+3. **JSBSim path** with manoeuvres, replacing the placeholder.
+4. **Night.** Stars, moon and adaptive exposure fit between any stages; city lights and street
+   lamp quads now that the buildings are in.
+
+Not yet placed in the order: vegetation ([ADR 0023](adr/0023-area-central-tokyo.md)), building
+shadows, tile prefetching along the path, and a check of temporal anti-aliasing at 250 m/s.
 
 Later: the cockpit view, quality presets, the UI, the README and video, publishing.

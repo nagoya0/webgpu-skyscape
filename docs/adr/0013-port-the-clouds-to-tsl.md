@@ -1,6 +1,7 @@
 # 13. Port the volumetric clouds to TSL ourselves
 
-- Status: Accepted
+- Status: Accepted; the port is to WGSL, not TSL ([0022](0022-heavy-shaders-in-wgsl.md)), and the
+  stages are replaced by steps C1 to C5 (update 2026-10-06 below)
 - Date: 2026-10-03
 - Supersedes the clouds part of [ADR 0005](0005-atmosphere-and-clouds-from-takram.md)
 
@@ -87,3 +88,14 @@ limit still describes the order of work.
 
 Which takram features are done, planned or on hold is tracked in
 [docs/clouds-parity.md](../clouds-parity.md), updated with every cloud change.
+
+## Update 2026-10-06: stages
+
+The four stages in the decision above were replaced by steps C1 to C5, agreed with the
+maintainer when the cloud stage started and listed in [ideas](../ideas.md): shape and detail
+noise and the weather map first (C1), then temporal accumulation and half resolution (C2). The
+reason given above for putting
+temporal reprojection second, speed on integrated GPUs, no longer applies: integrated GPUs are
+not targeted ([ADR 0025](0025-target-hardware.md)).
+
+This file keeps its name, which still says TSL, so that existing links keep working.

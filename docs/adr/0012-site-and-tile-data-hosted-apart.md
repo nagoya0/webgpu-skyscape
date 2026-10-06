@@ -1,6 +1,6 @@
 # 12. The site and the tile data are hosted apart
 
-- Status: Accepted
+- Status: Accepted; tile storage not needed so far, see the update below
 - Date: 2026-10-03
 
 ## Context
@@ -20,3 +20,10 @@ large and grows as detail is added ([ADR 0006](0006-fixed-area-tiled-detail.md))
 
 The site needs the tile data's base URL as a build setting, and the storage needs CORS settings
 that allow the site's origin.
+
+## Update 2026-10-06
+
+No tile data is hosted by the project so far. The terrain and photographs are loaded directly
+from GSI ([ADR 0026](0026-own-terrain-from-gsi-tiles.md)), and the buildings directly from
+PLATEAU's distribution server, so object storage and its CORS settings are not needed for now.
+The site host is still to be chosen ([ideas](../ideas.md)).
