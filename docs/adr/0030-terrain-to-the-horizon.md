@@ -20,13 +20,18 @@ saving it would bring is not needed. The maintainer agreed.
 
 ## Decision
 
-- In the Hakone area the terrain covers 2.5° around the origin, with root tiles at zoom 8
-  (`src/areas.ts`).
-- Beyond the terrain lies a cap of a sphere around the earth's centre, 60 m below sea level and
-  6° in radius, drawn as water ([ADR 0029](0029-water-from-gsi-data.md),
+Proposed to the maintainer and agreed:
+
+- The terrain reaches the horizon: in the Hakone area it covers 2.5° around the origin, with
+  root tiles at zoom 8 (`src/areas.ts`).
+- Beyond the terrain lies a sphere at sea level following the earth's curvature, a little below
+  the sea and drawn like the water ([ADR 0029](0029-water-from-gsi-data.md),
   `src/terrain/seaSphere.ts`). It replaces the flat disc in this area; the terrain covers it
   wherever terrain exists.
 - No fog is added to hide the terrain's end.
+
+Implementation details, not discussed: the sphere is a cap 6° in radius, 60 m below sea level,
+divided into 256 × 64 segments.
 
 ## Consequences
 

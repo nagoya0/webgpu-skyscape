@@ -18,16 +18,23 @@ area layer, `WA`, with the sea, lakes, rivers and ponds as polygons.
 
 ## Decision
 
+Proposed to the maintainer before each part was built, and agreed:
+
 - Each terrain tile gets a water mask (128 × 128), from the 10 m elevation model's missing data
-  (a missing tile counts as all water) and from the vector tiles' water areas
-  (`src/terrain/waterMask.ts`). The 5 m elevation model is not used for the mask: it has gaps on
-  land. The vector tiles are read by a small decoder of our own (`src/terrain/vectorTile.ts`).
+  and from the vector tiles' water areas (`src/terrain/waterMask.ts`). The 5 m elevation model
+  is not used for the mask: it has gaps on land. The vector tiles are read by a small decoder of
+  our own (`src/terrain/vectorTile.ts`), without adding a library.
 - Where the mask is set, the terrain is drawn as water (`src/terrain/water.ts`): a dark body
-  colour; small moving waves (WGSL) that flatten with distance while the roughness rises; the
+  colour; small moving waves that flatten with distance while the surface gets rougher; the
   atmosphere's sky luminance in the reflected direction, weighted by Fresnel; and the sun's glint
-  from the sun light's specular. Tiles without water keep the plain photograph material.
+  from the sun light's specular.
 - Rivers reflect the sky like the rest of the water. The maintainer finds that more real than
   toning them down.
+
+Implementation details, not discussed: an elevation tile that GSI does not serve counts as all
+water (found while fixing patches of sea drawn as photographs); tiles without water keep the
+plain photograph material; the wave model (six directional waves in WGSL) and the colour and
+roughness values.
 
 ## Consequences
 
