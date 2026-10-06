@@ -1,6 +1,6 @@
 # 18. The aircraft is an F-16-class fighter at cruise speed
 
-- Status: Accepted
+- Status: Accepted; area size and altitude changed by [0028](0028-area-sagami-bay-hakone-fuji.md)
 - Date: 2026-10-04
 
 ## Context

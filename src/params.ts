@@ -1,7 +1,8 @@
 // Settings from the URL query, the only way to change them until the UI is designed (ADR 0019).
 // Unknown or malformed values fall back to the defaults. Names and values are ASCII only.
 //
-//   area=NAME         tokyo (default) or hakone (a trial of flying higher over mountains)
+//   area=NAME         hakone (default; Sagami Bay, Hakone and Mount Fuji, ADR 0028) or tokyo
+//                     (central Tokyo with PLATEAU buildings, the earlier area)
 //   date=YYYY-MM-DD   date in JST (default: today in JST)
 //   time=HH:MM        time of day in JST (default 16:30)
 //   t=seconds         start time on the flight path (default 0)
@@ -16,8 +17,10 @@
 //                     (default 0)
 //   sinktime=seconds  time for the body to settle into a new load (default 0.15)
 //   speed=m/s         speed on the placeholder path (default 250)
-//   altitude=metres   height of the placeholder path above the ellipsoid (default 450)
-//   bank=degrees      bank angle in the placeholder path's turns (default 70)
+//   altitude=metres   height of the placeholder path above the ellipsoid (default by area:
+//                     Hakone 3000, Tokyo 450)
+//   bank=degrees      bank angle in the placeholder path's turns (default by area: Hakone 45,
+//                     Tokyo 70)
 //   rollrate=deg/s    roll rate of the placeholder path (default 90)
 //   buildings=0       leave out the PLATEAU buildings
 //   textures=1        use PLATEAU's textured buildings (heavy on GPU memory)
@@ -57,8 +60,9 @@ export interface Params {
   sink: number
   sinkTime: number
   speed: number
-  altitude: number
-  bank: number
+  /** null: the area's default (src/areas.ts). */
+  altitude: number | null
+  bank: number | null
   rollRate: number
   buildings: boolean
   textures: boolean
@@ -90,6 +94,11 @@ export function readParams(search: string, now = new Date()): Params {
     const value = Number(raw)
     return Number.isFinite(value) && value >= min && value <= max ? value : fallback
   }
+  // A number, or null when absent or malformed so that a default from elsewhere applies.
+  const optionalNumber = (name: string, min: number, max: number): number | null => {
+    const value = number(name, Number.NaN, min, max)
+    return Number.isNaN(value) ? null : value
+  }
 
   // The day in JST: from date=, or today.
   const todayJST = new Date(now.getTime() + JST_OFFSET_MS)
@@ -117,7 +126,7 @@ export function readParams(search: string, now = new Date()): Params {
   }
 
   return {
-    area: query.get('area') === 'hakone' ? 'hakone' : 'tokyo',
+    area: query.get('area') === 'tokyo' ? 'tokyo' : 'hakone',
     date,
     flightStart: number('t', 0, -1e6, 1e6),
     paused: query.has('paused'),
@@ -130,8 +139,8 @@ export function readParams(search: string, now = new Date()): Params {
     sink: number('sink', 0, 0, 1),
     sinkTime: number('sinktime', 0.15, 0.001, 10),
     speed: number('speed', 250, 1, 1000),
-    altitude: number('altitude', 450, 0, 20_000),
-    bank: number('bank', 70, 1, 85),
+    altitude: optionalNumber('altitude', 0, 20_000),
+    bank: optionalNumber('bank', 1, 85),
     rollRate: number('rollrate', 90, 1, 720),
     buildings: query.get('buildings') !== '0',
     textures: query.get('textures') === '1',

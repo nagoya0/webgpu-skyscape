@@ -1,6 +1,6 @@
 # 23. The area is central Tokyo
 
-- Status: Accepted
+- Status: Superseded by [0028](0028-area-sagami-bay-hakone-fuji.md)
 - Date: 2026-10-05
 
 ## Context

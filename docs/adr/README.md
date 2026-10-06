@@ -19,13 +19,14 @@
 | 0015 | [Reversed-Z depth buffer](0015-reversed-z-depth.md) | Accepted |
 | 0016 | [Patch the takram packages to run on Three.js 0.186](0016-patch-takram-for-newer-three.md) | Accepted |
 | 0017 | [The scene is in a local tangent-plane frame, not in ECEF](0017-local-world-frame.md) | Accepted |
-| 0018 | [The aircraft is an F-16-class fighter at cruise speed](0018-f16-at-cruise-speed.md) | Accepted |
+| 0018 | [The aircraft is an F-16-class fighter at cruise speed](0018-f16-at-cruise-speed.md) | Accepted; area size and altitude changed by 0028 |
 | 0019 | [No UI until the features are in; settings come from the URL](0019-no-ui-until-features-are-in.md) | Accepted |
 | 0020 | [Effects by view: the aircraft's in the first-person view, the pilot's in the cockpit view](0020-effects-by-view.md) | Accepted |
 | 0021 | [Keep Three.js and takram; choose by what works now, not long-term upkeep](0021-keep-threejs-and-takram.md) | Accepted |
 | 0022 | [Heavy shaders in WGSL, connected with TSL](0022-heavy-shaders-in-wgsl.md) | Accepted |
-| 0023 | [The area is central Tokyo](0023-area-central-tokyo.md) | Accepted |
-| 0024 | [Untextured PLATEAU buildings with procedural facades](0024-untextured-buildings-with-procedural-facades.md) | Accepted |
+| 0023 | [The area is central Tokyo](0023-area-central-tokyo.md) | Superseded by 0028 |
+| 0024 | [Untextured PLATEAU buildings with procedural facades](0024-untextured-buildings-with-procedural-facades.md) | Accepted; Tokyo area only (0028) |
 | 0025 | [Target hardware: a mid-range gaming PC, not integrated GPUs](0025-target-hardware.md) | Accepted |
 | 0026 | [Our own terrain from GSI tiles, streamed in real time](0026-own-terrain-from-gsi-tiles.md) | Accepted |
-| 0027 | [Building tiles are drawn as one BatchedMesh](0027-batched-building-tiles.md) | Accepted |
+| 0027 | [Building tiles are drawn as one BatchedMesh](0027-batched-building-tiles.md) | Accepted; Tokyo area only (0028) |
+| 0028 | [The area is Sagami Bay, Hakone and Mount Fuji, flown higher](0028-area-sagami-bay-hakone-fuji.md) | Accepted |

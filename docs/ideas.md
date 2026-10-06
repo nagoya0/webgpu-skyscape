@@ -16,14 +16,15 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   in turns and more when passing through clouds. For now 0.04° per G above 1 and 0.3° at full
   cloud density. The cloud figure is untested: the clouds are drawn, but the path has no cloud
   density channel yet (cloud step C5 below).
-- **The course in central Tokyo** ([ADR 0023](adr/0023-area-central-tokyo.md)). Proposed: the
-  Shinjuku towers, Shibuya, Roppongi and Tokyo Tower, Marunouchi, the Sumida river and Skytree,
-  the bay (Toyosu, Odaiba), Tokyo Bay, and possibly Minato Mirai in Yokohama. About 30 km north
-  to south and 20 km east to west. The maintainer keeps this course as the target (2026-10-06): instead of
-  shrinking the course, more wards are loaded. Now streamed from PLATEAU
-  (`src/scene/plateauBuildings.ts`): Shinjuku, Shibuya, Minato, Chiyoda, Chuo, Taito, Sumida and
-  Koto. The placeholder racetrack stays as it is; on its turns it leaves these wards (Bunkyo to
-  the north, Shinagawa to the south) and flies over empty ground for now.
+- **The course** ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)). For now the simple
+  out-and-back from Sagami Bay towards Mount Fuji at 3,000 m. Later, as the maintainer would
+  like: dropping below the cloud base and climbing back, and some fighter manoeuvres.
+- **Water and forests** ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)). Sagami Bay, Lake
+  Ashi and the wooded mountains fill much of the image. Proposed for forests, by altitude: from
+  about 1.5 km up, the photographs with shading from the elevation model only; lower, instanced
+  trees placed from land cover data or the photographs' green areas; close to the ground, 3D
+  trees near the course. Water: a surface that reflects the sky and the sun where the
+  photographs show sea or lake. Not decided.
 - **Frame time** ([ADR 0025](adr/0025-target-hardware.md): about 7 ms per frame on the
   development machine). After batching the buildings ([ADR 0027](adr/0027-batched-building-tiles.md)),
   measured 2026-10-06 with `?measure`, 1902 × 984, paused over the buildings at t = 5 s:
@@ -82,24 +83,14 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   haze removed 0.15, contrast 1.2, saturation 1.4, picked by the maintainer from four
   strengths. Still to look at: the uniform grey of the buildings, and at the end colour grading
   and the choice of tone mapping (AgX is muted by design).
-- **Area and altitude: a trial of Hakone and Mount Fuji** (`?area=hakone`, `src/areas.ts`). The
-  maintainer questioned central Tokyo (2026-10-06): without building textures, procedural
-  facades seen from low altitude look artificial, and buildings popping in and out along the
-  course stand out. Options discussed: stay in Tokyo and fix the streaming; the coast and
-  mountains (Sagami Bay, Hakone, Mount Fuji) flown higher; or the sea only. The maintainer
-  leans towards the coast and mountains, flown higher so that the ground needs less detail. Not
-  decided; a trial was agreed first. Trial set-up: origin north of Lake Ashi, terrain root tiles
-  at zoom 8 out to about 1.5° (towards the horizon), no buildings, flown at 3,000 m with 30°
-  bank (`?area=hakone&altitude=3000&bank=30`). First results (2026-10-06, 1600 × 900 and
-  1920 × 1080): Mount Fuji with its snow cap and the cumulus below read well with photographs
-  and terrain only; 164 to 180 terrain tiles and 229 to 252 MB of textures, the same as Tokyo,
-  since higher altitude needs less detail near the camera; GPU about 2.9 ms and JavaScript
-  about 1.4 ms. Still to look at: some photographs turn orange with the correction, a light
-  band along the horizon, the sea where photographs are missing.
+- **Seen in the Hakone trial, still to look at** (2026-10-06): some photographs turn orange
+  with the photograph correction (mosaics of different dates); a light band along the horizon;
+  the sea where photographs are missing.
 - **Priority after the clouds.** The maintainer finds the clouds good enough for now and the
   ground lagging behind (2026-10-06), so ground quality comes before the remaining cloud
-  features. Candidates: building shadows and ambient occlusion, water surfaces, the aerial
-  photographs' resolution, facade colours, vegetation. Order not decided yet.
+  features. With the area moved to Sagami Bay, Hakone and Mount Fuji
+  ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)), the candidates are water surfaces,
+  forests, the photographs (colour, resolution) and terrain shading. Order not decided yet.
 
 ## Night
 
@@ -128,11 +119,12 @@ Placeholders that later stages replace. Remove each with the stage that replaces
   ([ADR 0026](adr/0026-own-terrain-from-gsi-tiles.md)) now covers the area; the disc, 37 m
   below it, only fills in beyond the terrain's root tiles and can go once the terrain reaches
   the horizon.
-- `src/flight/placeholderPath.ts`: a racetrack at 250 m/s, 70° bank turns, level flight only.
-  The main page flies it at 450 m (`?altitude=`). Replaced by the JSBSim path. Its output has the
-  same form (ECEF positions, body-to-NED attitudes), so the playback and the camera stay.
-- The origin in `src/main.ts` (139.757° E, 35.665° N, near Shiodome) is placed for the
-  placeholder racetrack and may move when the course is fixed.
+- `src/flight/placeholderPath.ts`: a racetrack at 250 m/s, level flight only, set per area in
+  `src/areas.ts` (Hakone: heading 293°, 120 s straights, 45° bank, 3,000 m). Replaced by the
+  JSBSim path. Its output has the same form (ECEF positions, body-to-NED attitudes), so the
+  playback and the camera stay.
+- The origins in `src/areas.ts` (Hakone: 139.02° E, 35.23° N, north of Lake Ashi) are placed
+  for the placeholder racetrack and may move when the course is fixed.
 - `src/ui/loading.ts`: the temporary loading screen, redesigned with the UI.
 
 ## Plan
@@ -144,7 +136,8 @@ Done:
   ([ADR 0015](adr/0015-reversed-z-depth.md)); the sky from `@takram/three-atmosphere`; a
   temporary flight and the first-person camera.
 - Cloud trial in WGSL ([ADR 0022](adr/0022-heavy-shaders-in-wgsl.md)).
-- Area: central Tokyo ([ADR 0023](adr/0023-area-central-tokyo.md)).
+- Area: central Tokyo first ([ADR 0023](adr/0023-area-central-tokyo.md)), then Sagami Bay,
+  Hakone and Mount Fuji, flown higher ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)).
 - Terrain and aerial photographs from GSI, streamed in real time
   ([ADR 0026](adr/0026-own-terrain-from-gsi-tiles.md)). No tile storage of our own is needed.
 - Buildings from PLATEAU, untextured with procedural facades, drawn as one batch
@@ -190,10 +183,11 @@ Next stages, in the order agreed on 2026-10-05:
 2. **Rain** ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
    [ADR 0020](adr/0020-effects-by-view.md)).
 3. **JSBSim path** with manoeuvres, replacing the placeholder.
-4. **Night.** Stars, moon and adaptive exposure fit between any stages; city lights and street
-   lamp quads now that the buildings are in.
+4. **Night.** Stars, moon and adaptive exposure fit between any stages; town lights to be
+   reconsidered for the new area.
 
-Not yet placed in the order: vegetation ([ADR 0023](adr/0023-area-central-tokyo.md)), building
-shadows, tile prefetching along the path, and a check of temporal anti-aliasing at 250 m/s.
+Ground quality now comes before the remaining cloud features and the stages above (see
+"Priority after the clouds"): water, forests, the photographs and terrain shading. Also not
+yet placed: tile prefetching along the path, and a check of temporal anti-aliasing at 250 m/s.
 
 Later: the cockpit view, quality presets, the UI, the README and video, publishing.

@@ -5,7 +5,8 @@ Guidance for AI coding agents working in this repository.
 ## What this is
 
 A demo that tests how well sky, clouds and the ground can be rendered in the browser with
-WebGPU. The camera rides along a precomputed flight path over central Tokyo; there is no
+WebGPU. The camera rides along a precomputed flight path from Sagami Bay towards Mount Fuji
+([ADR 0028](docs/adr/0028-area-sagami-bay-hakone-fuji.md)); there is no
 piloting. See [README.md](README.md) (including what is in so far) and
 [ADR 0002](docs/adr/0002-a-rendering-quality-demo.md). Keep the README's status section and
 parameter table up to date when features change.

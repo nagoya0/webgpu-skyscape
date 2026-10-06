@@ -11,7 +11,7 @@ import {
 } from './clouds/clouds'
 import { createCockpitCamera } from './camera/cockpitCamera'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
-import { createPlaceholderPath, DEFAULT_RACETRACK } from './flight/placeholderPath'
+import { createPlaceholderPath } from './flight/placeholderPath'
 import { createLocalFrame } from './geo/localFrame'
 import { requestDevice } from './gpu/support'
 import { readParams } from './params'
@@ -136,10 +136,10 @@ async function start(): Promise<void> {
   pipeline.exposure.value = params.exposure
 
   const { path, seamGap } = createPlaceholderPath(frame, {
-    ...DEFAULT_RACETRACK,
+    ...area.course,
     speed: params.speed,
-    height: params.altitude,
-    bankDegrees: params.bank,
+    height: params.altitude ?? area.course.height,
+    bankDegrees: params.bank ?? area.course.bankDegrees,
     rollRateDegrees: params.rollRate
   })
   debug.date = params.date.toISOString()

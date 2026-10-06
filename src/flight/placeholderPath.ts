@@ -22,6 +22,8 @@ export interface RacetrackOptions {
   rollRateDegrees: number
   /** Seconds between output samples. */
   interval: number
+  /** Heading of the first straight leg, degrees clockwise from north. */
+  headingDegrees: number
 }
 
 export const DEFAULT_RACETRACK: RacetrackOptions = {
@@ -30,7 +32,8 @@ export const DEFAULT_RACETRACK: RacetrackOptions = {
   straightSeconds: 30,
   bankDegrees: 70,
   rollRateDegrees: 90,
-  interval: 0.1
+  interval: 0.1,
+  headingDegrees: 0
 }
 
 interface Phase {
@@ -136,7 +139,7 @@ export interface PlaceholderPathResult {
   seamGap: number
 }
 
-/** A racetrack centred on the frame's origin, first leg heading north. */
+/** A racetrack centred on the frame's origin, the first leg on `headingDegrees`. */
 export function createPlaceholderPath(
   frame: LocalFrame,
   options: RacetrackOptions = DEFAULT_RACETRACK
@@ -148,14 +151,15 @@ export function createPlaceholderPath(
     return geodetic
   }
   // Fly once from the origin, then shift the start so the course is centred on it.
-  const trial = fly(options, toStart(0, 0), 0)
+  const heading = (options.headingDegrees * Math.PI) / 180
+  const trial = fly(options, toStart(0, 0), heading)
   const centre = new Vector3()
   const world = new Vector3()
   for (let i = 0; i < trial.count; i++) {
     centre.add(ecefToWorld(frame, world.fromArray(trial.ecef, i * 3)))
   }
   centre.divideScalar(trial.count)
-  const path = fly(options, toStart(-centre.x, -centre.z), 0)
+  const path = fly(options, toStart(-centre.x, -centre.z), heading)
 
   const first = new Vector3().fromArray(path.ecef, 0)
   const last = new Vector3().fromArray(path.ecef, (path.count - 1) * 3)

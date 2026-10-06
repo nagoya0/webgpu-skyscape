@@ -59,6 +59,18 @@ describe('placeholder racetrack', () => {
     expect(a.distanceTo(b)).toBeCloseTo(DEFAULT_RACETRACK.speed, -1)
   })
 
+  it('starts on the set heading and stays centred on the origin', () => {
+    const turned = createPlaceholderPath(frame, { ...DEFAULT_RACETRACK, headingDegrees: 293 }).path
+    const state = samplePath(turned, 5, createAircraftState())
+    const heading = (((new Euler().setFromQuaternion(state.bodyToNED, 'ZYX').z * 180) / Math.PI) % 360 + 360) % 360
+    expect(heading).toBeCloseTo(293, 0)
+    const world = new Vector3()
+    const centre = new Vector3()
+    for (let i = 0; i < turned.count; i++) centre.add(ecefToWorld(frame, world.fromArray(turned.ecef, i * 3), world))
+    centre.divideScalar(turned.count)
+    expect(Math.hypot(centre.x, centre.z)).toBeLessThan(50)
+  })
+
   it('keeps attitude quaternions normalised', () => {
     const q = new Quaternion()
     for (let i = 0; i < path.count; i += 37) {

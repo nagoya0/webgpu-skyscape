@@ -1,7 +1,8 @@
 # webgpu-skyscape
 
 A demo that tests how well sky, clouds and the ground can be rendered in a web browser with
-WebGPU. The camera flies along a precomputed path over central Tokyo, built from open data.
+WebGPU. The camera flies along a precomputed path from Sagami Bay over Hakone towards Mount Fuji,
+built from open data.
 
 Work in progress. A demo video and tested browsers will be added here.
 
@@ -10,20 +11,24 @@ Work in progress. A demo video and tested browsers will be added here.
 In place:
 
 - Sky, sun and aerial perspective from `@takram/three-atmosphere`, for any date and time of day.
-- Terrain from GSI elevation tiles, covered with GSI aerial photographs, streamed in real time
+- Terrain from GSI elevation tiles, covered with GSI aerial photographs (corrected for the haze
+  they carry), streamed in real time out towards the horizon
   ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md)).
-- PLATEAU LOD2 buildings for eight central wards (Shinjuku, Shibuya, Minato, Chiyoda, Chuo,
-  Taito, Sumida, Koto), streamed as 3D Tiles and shaded with procedural facades
-  ([ADR 0024](docs/adr/0024-untextured-buildings-with-procedural-facades.md)).
+- The area: Sagami Bay, Hakone and Mount Fuji, flown at 3,000 m
+  ([ADR 0028](docs/adr/0028-area-sagami-bay-hakone-fuji.md)). The earlier area, central Tokyo
+  with PLATEAU LOD2 buildings for eight wards and procedural facades
+  ([ADR 0024](docs/adr/0024-untextured-buildings-with-procedural-facades.md)), stays selectable
+  with `?area=tokyo`.
 - Volumetric clouds ported from `@takram/three-clouds` to WGSL, with takram's temporal
   upscaling, aerial perspective, haze, cascaded cloud shadows on the clouds, terrain and
   buildings, and light shafts ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md)). Which of takram's features are in is
   listed in [docs/clouds-parity.md](docs/clouds-parity.md).
-- A placeholder flight path (a racetrack at 250 m/s and 450 m) and a first-person camera.
+- A placeholder flight path at 250 m/s, out from Sagami Bay towards Mount Fuji and back, and a
+  first-person camera.
 - Temporal anti-aliasing, lens flare and AgX tone mapping.
 
-Planned: the rest of the clouds, rain, a flight path from JSBSim with manoeuvres, night scenes,
-vegetation, shadows, and a UI. The order and the open questions are in
+Planned: water surfaces and forests, the rest of the clouds, rain, a flight path from JSBSim
+with manoeuvres, night scenes, and a UI. The order and the open questions are in
 [docs/ideas.md](docs/ideas.md).
 
 ## Requirements
@@ -56,7 +61,7 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 
 | Parameter | Meaning |
 |---|---|
-| `area=tokyo`, `area=hakone` | Demo area; Hakone and Mount Fuji are a trial (without buildings), best seen with `altitude=3000&bank=30` |
+| `area=hakone`, `area=tokyo` | Demo area: Sagami Bay, Hakone and Mount Fuji (default), or central Tokyo with buildings |
 | `date=YYYY-MM-DD`, `time=HH:MM` | Date and time of day in JST |
 | `t=seconds`, `paused` | Start time on the flight path; hold the flight there |
 | `exposure`, `fov` | Exposure before tone mapping; vertical field of view |

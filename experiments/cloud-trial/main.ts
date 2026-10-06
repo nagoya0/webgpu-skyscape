@@ -61,8 +61,8 @@ async function start(): Promise<void> {
   const { path } = createPlaceholderPath(frame, {
     ...DEFAULT_RACETRACK,
     speed: params.speed,
-    height: params.altitude,
-    bankDegrees: params.bank,
+    height: params.altitude ?? 450,
+    bankDegrees: params.bank ?? DEFAULT_RACETRACK.bankDegrees,
     rollRateDegrees: params.rollRate
   })
   const cockpit = createCockpitCamera(camera, frame, {

@@ -52,7 +52,7 @@ describe('readParams', () => {
     const params = readParams('?time=25:00&exposure=abc&bank=90&fov=', now)
     expect(params.date.toISOString()).toBe('2026-10-05T07:30:00.000Z')
     expect(params.exposure).toBe(3)
-    expect(params.bank).toBe(70)
+    expect(params.bank).toBeNull()
     expect(params.fov).toBe(70)
   })
 })
