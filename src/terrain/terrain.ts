@@ -32,7 +32,8 @@ import {
 } from './gsiSources'
 import { gradedPhoto } from './photoGrade'
 import { buildTileGeometry, GEOID_HEIGHT, type HeightSource } from './tileGeometry'
-import { terrainShading } from './water'
+import { TerrainMaterial } from './terrainMaterial'
+import { landSpecular, terrainShading } from './water'
 import { buildWaterMask, MASK_SIZE } from './waterMask'
 import {
   ancestorOf,
@@ -213,12 +214,15 @@ export function createTerrain(
         texture.colorSpace = SRGBColorSpace
         texture.flipY = false
         texture.anisotropy = 8
-        const material = new MeshStandardNodeMaterial({
+        // Physical rather than standard, for the specular intensity: land reflects the sun with
+        // landSpecular (?landspecular=), water fully.
+        const material = new TerrainMaterial({
           map: texture,
           roughness: 1,
           metalness: 0,
           side: DoubleSide
         })
+        material.specularIntensityNode = landSpecular
         // ?terraindebug=1: tint each tile by its zoom level, to see which level is drawn where.
         const land = options.debug === 'levels'
           ? mix(gradedPhoto(texture), vec3(...LEVEL_COLORS[tile.key.z % LEVEL_COLORS.length]), 0.6)

@@ -22,7 +22,7 @@ import { createPlaceholderGround } from './scene/placeholderGround'
 import { createSeaSphere } from './terrain/seaSphere'
 import { photoGrade } from './terrain/photoGrade'
 import { createTerrain } from './terrain/terrain'
-import { waterTime } from './terrain/water'
+import { landSpecular, waterTime } from './terrain/water'
 import { showAttribution } from './ui/attribution'
 import { showDebugText } from './ui/debugText'
 import { showGuidance } from './ui/guidance'
@@ -104,6 +104,7 @@ async function start(): Promise<void> {
   if (buildings) scene.add(buildings.group)
 
   photoGrade.value.set(params.photoDehaze, params.photoContrast, params.photoSaturation, 0)
+  landSpecular.value = params.landSpecular
   const terrain = params.terrain
     ? createTerrain(
         frame,

@@ -33,3 +33,4 @@
 | 0029 | [Water drawn where GSI's data shows sea, lakes and rivers](0029-water-from-gsi-data.md) | Accepted |
 | 0030 | [The terrain reaches the horizon; a sea-level sphere lies beyond it](0030-terrain-to-the-horizon.md) | Accepted |
 | 0031 | [Correct the sources first; grade the whole image at the end](0031-correct-the-sources-grade-at-the-end.md) | Accepted |
+| 0032 | [Land reflects light diffusely (Lambertian)](0032-land-reflects-diffusely.md) | Accepted |

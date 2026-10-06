@@ -29,6 +29,8 @@
 //   terrain=0         leave out the GSI terrain and aerial photographs
 //   terraintexel=px   refine terrain tiles while a photograph texel covers more than this many
 //                     pixels; smaller is sharper and loads more tiles (default 1.5)
+//   landspecular=0..1 specular intensity of land; 0 reflects diffusely only, 1 as a standard
+//                     material; water stays fully specular (default 0, ADR 0032)
 //   terraindebug=1    tint terrain tiles by zoom level: 8 red, 9 orange, 10 yellow, 11 green,
 //                     12 cyan, 13 blue, 14 purple, 15 white, 16 red
 //   terraindebug=2    show the aerial photographs as they are, without lighting or water
@@ -75,6 +77,7 @@ export interface Params {
   terrain: boolean
   terrainTexelPixels: number
   terrainDebug: 'levels' | 'unlit' | 'water' | null
+  landSpecular: number
   /** Aerial photograph correction: haze removed, contrast, saturation. */
   photoDehaze: number
   photoContrast: number
@@ -154,6 +157,7 @@ export function readParams(search: string, now = new Date()): Params {
     textures: query.get('textures') === '1',
     terrain: query.get('terrain') !== '0',
     terrainTexelPixels: number('terraintexel', 1.5, 0.25, 8),
+    landSpecular: number('landspecular', 0, 0, 1),
     terrainDebug: ({ '1': 'levels', '2': 'unlit', '3': 'water' } as const)[query.get('terraindebug') ?? ''] ?? null,
     photoDehaze: number('photodehaze', 0.15, 0, 0.9),
     photoContrast: number('photocontrast', 1.2, 0, 4),

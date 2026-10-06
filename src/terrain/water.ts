@@ -29,6 +29,12 @@ const waterNormalFn = wgslFn(waterNormalCode)
 /** Seconds; drives the waves. Set from the time on the flight path. */
 export const waterTime = uniform(0)
 
+/**
+ * Specular intensity of land, 0 to 1 (?landspecular=, ADR 0032). Fields and forests scatter
+ * light diffusely; a rough standard material still shows a sheen at grazing angles.
+ */
+export const landSpecular = uniform(0)
+
 /** Albedo of the water body under the surface: a dark blue green. */
 const WATER_COLOR = vec3(0.012, 0.03, 0.035)
 
@@ -37,6 +43,8 @@ export interface TerrainShading {
   roughnessNode: Node<'float'>
   normalNode: Node<'vec3'>
   emissiveNode: Node<'vec3'>
+  /** For a physical material; ignored by a standard one. */
+  specularIntensityNode: Node<'float'>
 }
 
 /**
@@ -92,6 +100,7 @@ export function terrainShading(
     roughnessNode: mix(float(1), roughness, water),
     // The material's normal is in view space.
     normalNode: transformDirection(mix(normalWorldGeometry, normal, water).normalize(), cameraViewMatrix),
-    emissiveNode: sky.mul(fresnel).mul(water)
+    emissiveNode: sky.mul(fresnel).mul(water),
+    specularIntensityNode: mix(landSpecular, float(1), water)
   }
 }
