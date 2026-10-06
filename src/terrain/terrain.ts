@@ -15,7 +15,7 @@ import {
   Vector3,
   type PerspectiveCamera
 } from 'three/webgpu'
-import { attribute, mix, texture as textureNode, vec3 } from 'three/tsl'
+import { attribute, mix, normalViewGeometry, normalWorld, texture as textureNode, vec3 } from 'three/tsl'
 
 import { Geodetic, radians } from '@takram/three-geospatial'
 
@@ -63,9 +63,10 @@ export interface TerrainOptions {
   /**
    * Debugging: 'levels' tints each tile by its zoom level; 'unlit' shows the photographs as they
    * are, without lighting or water; 'water' shows the water mask in red; 'skirts' shows the
-   * skirts in magenta.
+   * skirts in magenta; 'plain' draws the terrain plain grey, lit, without photographs or water;
+   * 'normals' shows the normal used for lighting as colour.
    */
-  debug?: 'levels' | 'unlit' | 'water' | 'skirts' | null
+  debug?: 'levels' | 'unlit' | 'water' | 'skirts' | 'plain' | 'normals' | null
 }
 
 // Zoom level colours for debugging, repeating every eight levels: zoom 8 red, 9 orange,
@@ -223,6 +224,10 @@ export function createTerrain(
           side: DoubleSide
         })
         material.specularIntensityNode = landSpecular
+        // The vertex normal as it is, also on back faces. three flips it there for double-sided
+        // materials; a skirt seen from behind through a gap between tiles then faces down, away
+        // from the sun and the sky, and shows as a black line. The water shading sets its own.
+        material.normalNode = normalViewGeometry
         // ?terraindebug=1: tint each tile by its zoom level, to see which level is drawn where.
         const land = options.debug === 'levels'
           ? mix(gradedPhoto(texture), vec3(...LEVEL_COLORS[tile.key.z % LEVEL_COLORS.length]), 0.6)
@@ -233,9 +238,18 @@ export function createTerrain(
           // ?terraindebug=2: the photograph as emission, without lighting, water or correction.
           material.colorNode = vec3(0)
           material.emissiveNode = textureNode(texture).rgb
+        } else if (options.debug === 'plain') {
+          // ?terraindebug=5: plain grey, lit, without the photographs or water, to see the shape.
+          material.colorNode = vec3(0.5)
+        } else if (options.debug === 'normals') {
+          // ?terraindebug=6: the normal used for lighting, in world space, as colour (x, y, z to
+          // red, green, blue, from −1..1 to 0..1), unlit. It includes three's flip on back faces.
+          material.colorNode = vec3(0)
+          material.emissiveNode = normalWorld.mul(0.5).add(0.5)
         } else if (options.debug === 'skirts') {
-          // ?terraindebug=4: the skirts in magenta, lit as the rest.
-          material.colorNode = mix(land, vec3(1, 0, 1), attribute<'float'>('skirt'))
+          // ?terraindebug=4: the skirts in bright magenta, unlit, so that they show even in shade.
+          material.colorNode = mix(land, vec3(0), attribute<'float'>('skirt'))
+          material.emissiveNode = vec3(1, 0, 1).mul(attribute<'float'>('skirt'))
         } else if (options.debug === 'water') {
           // ?terraindebug=3: the water mask in red over the photograph, without water shading.
           if (mask) {

@@ -58,11 +58,16 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     3,000 m.
   - Dark wedges showed where tiles of different levels meet on steep slopes, deeper than the
     30 m skirts. The skirts now hang as deep as their edge rises and falls plus 30 m, straight
-    down at the tile rather than along the frame's y. `?terraindebug=4` shows them in magenta;
-    at 15:00 and 17:00 from the course none shows, so no gaps are open there.
-  - Small bright triangles at 17:00 on the slopes are not gaps (they stay unchanged with the
-    skirts in magenta): they are faces of the ridges turned to the low sun, made angular by the
-    33 × 33 grid.
+    down at the tile rather than along the frame's y.
+  - The black lines along tile edges that remained (found by the maintainer at t=110, clearest
+    at `?altitude=1000&terraindebug=5`) were skirts seen from behind through the gaps: three
+    flips the normal on the back faces of a double-sided material, so they faced down, away
+    from the sun and the sky (`?terraindebug=6` showed them with downward normals). Land tiles
+    now use the vertex normal as it is on both sides, and the lines are gone. Debugging views
+    used: `?terraindebug=4` the skirts in glowing magenta, `5` the terrain plain grey, `6` the
+    normals as colour.
+  - Small bright triangles at 17:00 on the slopes seem to be faces of the ridges turned to the
+    low sun, made angular by the 33 × 33 grid; not checked with the views above.
   - On hold: normals from the elevation model at its full resolution, so sky light varies over
     a slope; ambient occlusion in the valleys; a 65 × 65 grid; the terrain's relief in the
     refinement test. Finer terrain (`?terraintexel=`) sharpens

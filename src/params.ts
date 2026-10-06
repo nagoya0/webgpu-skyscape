@@ -36,6 +36,9 @@
 //   terraindebug=2    show the aerial photographs as they are, without lighting or water
 //   terraindebug=3    show the water mask in red
 //   terraindebug=4    show the skirts below the tile edges in magenta
+//   terraindebug=5    draw the terrain plain grey, lit, without photographs or water
+//   terraindebug=6    show the normal used for lighting as colour: world x, y, z (north, up,
+//                     east) to red, green, blue
 //   photodehaze=0..0.9   remove this much flat haze from the aerial photographs (default 0.15)
 //   photocontrast=x   contrast of the aerial photographs, 1 unchanged (default 1.2)
 //   photosat=x        saturation of the aerial photographs, 1 unchanged (default 1.4)
@@ -77,7 +80,7 @@ export interface Params {
   textures: boolean
   terrain: boolean
   terrainTexelPixels: number
-  terrainDebug: 'levels' | 'unlit' | 'water' | 'skirts' | null
+  terrainDebug: 'levels' | 'unlit' | 'water' | 'skirts' | 'plain' | 'normals' | null
   landSpecular: number
   /** Aerial photograph correction: haze removed, contrast, saturation. */
   photoDehaze: number
@@ -159,7 +162,7 @@ export function readParams(search: string, now = new Date()): Params {
     terrain: query.get('terrain') !== '0',
     terrainTexelPixels: number('terraintexel', 1.5, 0.25, 8),
     landSpecular: number('landspecular', 0, 0, 1),
-    terrainDebug: ({ '1': 'levels', '2': 'unlit', '3': 'water', '4': 'skirts' } as const)[query.get('terraindebug') ?? ''] ?? null,
+    terrainDebug: ({ '1': 'levels', '2': 'unlit', '3': 'water', '4': 'skirts', '5': 'plain', '6': 'normals' } as const)[query.get('terraindebug') ?? ''] ?? null,
     photoDehaze: number('photodehaze', 0.15, 0, 0.9),
     photoContrast: number('photocontrast', 1.2, 0, 4),
     photoSaturation: number('photosat', 1.4, 0, 4),
