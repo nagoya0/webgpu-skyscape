@@ -32,7 +32,8 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   lakes) have heights in the elevation model, so the water areas of GSI's vector tiles
   (`optimal_bvmap-v1`, layer `WA`, zoom 4 to 16) are drawn into the mask as well, read by a small
   decoder of our own (`src/terrain/vectorTile.ts`); they include rivers and ponds. With water in
-  almost every tile the GPU time stayed about 2.7 ms. Clouds are not reflected.
+  almost every tile the GPU time stayed about 2.7 ms. Clouds are not reflected. Rivers keep
+  reflecting the sky: the maintainer finds that more real than toning them down (2026-10-06).
 - **The placeholder disc and the earth's curvature.** The flat disc lies on the origin's
   tangent plane, so beyond about 25 km it rises above the curving sea and hid it. It is left
   out in the Hakone area, where the terrain reaches towards the horizon.
