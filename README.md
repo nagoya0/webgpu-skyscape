@@ -38,9 +38,13 @@ In place:
   boresight cross and flight path marker, shaking with the airframe; fixed to the screen, the
   scene's time, the flight model and the municipality below ([ADR 0034](docs/adr/0034-hud.md)).
 - Temporal anti-aliasing, lens flare and AgX tone mapping.
+- A UI in Japanese, built with Preact ([ADR 0037](docs/adr/0037-ui.md)): a header with the
+  frame rate; a settings window with the scene's date and time, pausing and the position on
+  the course, the HUD and the clouds, and the data credits; a debug window with rendering
+  figures.
 
-Planned: night scenes, colour grading, and a UI;
-forests are still open. The order and the open questions are in [docs/ideas.md](docs/ideas.md).
+Planned: the rest of the UI (the loading screen and the screen for unsupported browsers), night
+scenes and colour grading; forests are still open. The order and the open questions are in [docs/ideas.md](docs/ideas.md).
 
 ## What this project adds
 
@@ -156,7 +160,7 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 | `coverage=0..1`, `cloudfx=` | Cloud coverage of all layers; cloud feature switches, such as `cloudfx=-POWDER` |
 | `wind=E,N` | Wind moving the clouds, in m/s towards the east and the north, such as `wind=10,-5` |
 | `measure` | After loading, time 180 frames and report CPU and GPU times in `window.__debug` |
-| `debug` | Show debug text: flight time, height, load factor, frame time |
+| `debug` | Open the debug window (flight time and rendering figures), as its switch in the settings window does |
 
 ## Design
 

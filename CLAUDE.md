@@ -49,7 +49,8 @@ and `window.__debug`; use it to check changes in a real browser. The main page t
 settings from URL query parameters, listed in `src/params.ts`. `pnpm test` runs the unit tests
 (Vitest), which cover the coordinate conversions, the tile maths, the flight path and its file
 format, the camera, the parameters, the shader preprocessor, the cascaded shadow maps, the vector
-tile decoder, the clouds' density on the CPU, the in-cloud factor and the HUD's scene time.
+tile decoder, filling the 5 m DEM's gaps, the clouds' density on the CPU, the in-cloud factor,
+the HUD's scene time and Current G, and the UI's settings and debug figures.
 The HUD's elements are in `src/hud/`, after the DCS F-16C guide ([ADR 0034](docs/adr/0034-hud.md));
 show the maintainer screenshots of overlapping symbols one at a time.
 The area's origin, terrain extent and default flight path are in `src/areas.ts`.
@@ -74,7 +75,7 @@ settings window with a settings tab and a credits tab. Its text is in Japanese; 
 repository stays in English. Settings shown there live in `src/ui/settings.ts`, start from the URL
 and all change while the demo runs; development settings stay as URL parameters only.
 URL parameter names and values are ASCII only; parse values strictly and fall back to the
-default on anything else. Text output for debugging is allowed (`?debug`, `src/ui/debugText.ts`).
+default on anything else. The debug window (`?debug`, `src/ui/DebugWindow.tsx`) measures its figures only while it is shown.
 
 ## Secrets and data
 

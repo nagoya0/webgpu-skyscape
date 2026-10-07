@@ -100,10 +100,21 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   3,000 m the ground moves across the view about seven times slower than at 450 m, so this is
   easier than in Tokyo. Prefetching along the precomputed path
   ([ADR 0018](adr/0018-f16-at-cruise-speed.md)) remains the planned answer if it shows.
-- **Loading screen.** Allowed by the maintainer as an exception to
-  [ADR 0019](adr/0019-no-ui-until-features-are-in.md), like the guidance screen, and to be
-  redesigned with the UI. A temporary one (`src/ui/loading.ts`) holds the flight at its start
-  until the tile queue has stayed empty for 1.5 s, or for 30 s at most.
+- **Loading screen.** A temporary one (`src/ui/loading.ts`) holds the flight at its start until
+  the tile queue has stayed empty for 1.5 s, or for 30 s at most; to be rebuilt with the UI
+  ([ADR 0037](adr/0037-ui.md)).
+- **Read from the debug window** (2026-10-08, headless Chrome on the development machine,
+  1262 × 600, t=110): frame 8.3 ms (the 120 Hz display's refresh), CPU (JS) about 2.5 ms, GPU
+  about 1.9 ms, GPU memory (est.) about 360 MB, of which about 270 MB terrain photographs;
+  145K triangles, 70 draw calls. At DPR 1.5 (2.25 times the pixels) GPU 2.8 ms and GPU memory
+  about 500 MB, the difference being render targets that grow with the resolution. To look at:
+  - The JavaScript takes longer than the GPU. Its parts are not measured; a profile first. A
+    known candidate: the HUD's aircraft layer is uploaded at full size every frame.
+  - Displays with a high pixel ratio (4K, DPR 2) multiply the GPU's work and memory; a cap on
+    the render resolution, or a quality preset, may be needed.
+  - Whether memory keeps growing over several laps of the course (a leak check before
+    publishing). The JS heap moved between about 180 and 240 MB, which looks like garbage
+    collection.
 - **Another area: mountains such as Okutama** (the maintainer, 2026-10-08). A mountain area
   needs no buildings and reuses the Hakone work (terrain, photographs, a lake, clouds, a JSBSim
   course); forests would matter even more there. An idea, not planned. The area structure in
@@ -138,7 +149,9 @@ mountains:
 Placeholders that later stages replace. Remove each with the stage that replaces it.
 
 - The Hakone origin in `src/areas.ts` (139.02° E, 35.23° N, north of Lake Ashi) was placed for
-  the placeholder racetrack, now removed; the course stays within about 30 km of it.- `src/ui/loading.ts`: the temporary loading screen, redesigned with the UI.
+  the placeholder racetrack, now removed; the course stays within about 30 km of it.
+- `src/ui/loading.ts` and `src/ui/guidance.ts`: the temporary loading screen and the screen for
+  unsupported browsers, to be rebuilt with Preact ([ADR 0037](adr/0037-ui.md)).
 
 ## Plan
 
@@ -206,8 +219,8 @@ as room for improvement, listed in the README; changes for performance are still
      and 250 m/s; climb at up to 15° to 1,400 m, level through a cumulus for about 5 s (`?debug`
      lists the path's stretches in cloud), then on up towards Lake Ashi to 2,900 m; a roll at
      180°/s after a pull-up to 8° of climb; on at 320 m/s to the south-east of Mount Fuji; a turn
-     to the right at 80° of bank (about 6.5 G, down to about 240 m/s); back at 320 m/s north of Hakone; down at up
-     to 8° to 500 m, slowing to 250 m/s; a turn to the right at 70° over the bay that ends on the
+     to the right at 80° of bank (about 6.5 G, down to about 240 m/s); back at 320 m/s north of
+     Hakone; down at up to 8° to 500 m, slowing to 250 m/s; a turn to the right at 70° over the bay that ends on the
      start's line about 8 km before the start. The lap closes within about 9 m and 4 m of height;
      the rest is spread over the last 10 s.
    - The F-16 model's speed brake hardly slows it (about 2.5 m/s² at idle with or without it) and
@@ -227,9 +240,14 @@ as room for improvement, listed in the README; changes for performance are still
    - The F-16 model's file says GPL; only computed paths are bundled, not the model or JSBSim.
      To check before publishing.
 3. **Night.** Stars, moon and adaptive exposure fit between any stages.
+4. **The UI** ([ADR 0037](adr/0037-ui.md)), started 2026-10-08 as the maintainer judged the
+   features complete enough to prepare for publishing; the Tokyo area was removed first
+   ([ADR 0036](adr/0036-remove-the-tokyo-area.md)). Done: the header, the settings window with
+   its settings and credits tabs, the debug window, Current G on the HUD. Left: the loading
+   screen, the screen for unsupported browsers, and removing development parameters that are
+   no longer used.
 
 Not yet placed: a check of temporal anti-aliasing at 250 to 320 m/s (tile prefetching is step 6
 of the JSBSim path).
 
-Later: the cockpit view, quality presets, colour grading, the UI, the README and video,
-publishing.
+Later: the cockpit view, quality presets, colour grading, the README and video, publishing.
