@@ -4,3 +4,4 @@ dist/
 !.env.example
 *.local
 .DS_Store
+tools/flightpath/.venv/
