@@ -174,7 +174,9 @@ Done:
   CPU and the GPU read the same values (the image did not change). A density channel in the
   precomputed path, for the offline path tool, is left for the JSBSim stage.
 - Water drops on the screen in the first-person view (2026-10-07, `src/effects/drops.ts`): drops
-  land in clouds, flow outwards faster with speed, merge, and evaporate after leaving the cloud
+  land only deeper in cloud than 0.5 (the maintainer), in sizes from a cubic distribution, with
+  outlines bent by random harmonics and stretched into an egg shape while moving, leaving small
+  drops behind (after Heartfelt and the Codrops rain experiments); they land in clouds, flow outwards faster with speed, merge, and evaporate after leaving the cloud
   (small ones in about 4 s, large ones in about 13 s); drawn after the anti-aliasing as a
   refracting height map. Simulated on the CPU, not in a compute shader as ADR 0011 says (a few
   hundred drops); to be confirmed with the maintainer. Cost in a cloud at 1920 × 1080 (medians
