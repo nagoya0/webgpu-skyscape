@@ -7,3 +7,6 @@ export const fps = signal<number | null>(null)
 
 /** Whether the settings window is open. */
 export const settingsOpen = signal(false)
+
+/** False while the demo starts, behind the loading screen; the settings button waits for it. */
+export const started = signal(false)

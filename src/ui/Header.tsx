@@ -1,7 +1,7 @@
 // The header above the 3D view (ADR 0037): the frame rate on the left, the title in the middle,
 // and on the right the settings button and the credit, whose GitHub icon alone links to the
 // repository.
-import { fps, settingsOpen } from './state'
+import { fps, settingsOpen, started } from './state'
 
 const REPOSITORY = 'https://github.com/nagoya0/webgpu-skyscape'
 
@@ -21,6 +21,8 @@ export function Header() {
           aria-label="設定"
           title="設定"
           aria-expanded={settingsOpen.value}
+          // Not while the demo starts (the maintainer).
+          disabled={!started.value}
           onClick={() => (settingsOpen.value = !settingsOpen.value)}
         >
           <SettingsIcon />

@@ -39,7 +39,7 @@ import { GEOID_HEIGHT } from './terrain/tileGeometry'
 import { landSpecular, waterTime } from './terrain/water'
 import { DebugWindow, debugStats } from './ui/DebugWindow'
 import { showGuidance } from './ui/guidance'
-import { showLoading } from './ui/loading'
+import { hideLoading, LoadingScreen, loadingMessage, setLoadingProgress } from './ui/LoadingScreen'
 import { Header } from './ui/Header'
 import { SettingsWindow } from './ui/SettingsWindow'
 import { fps, settingsOpen } from './ui/state'
@@ -56,7 +56,18 @@ initSettings(params)
 render(h(Header, null), document.getElementById('header')!)
 const overlay = document.createElement('div')
 document.getElementById('app')!.appendChild(overlay)
-render(h('div', null, h(DebugWindow, null), h(SettingsWindow, null)), overlay)
+render(h('div', null, h(LoadingScreen, null), h(DebugWindow, null), h(SettingsWindow, null)), overlay)
+
+// The loading screen's progress at the end of each stage of the start (ADR 0037). Provisional
+// shares, to be tuned so that the bar moves evenly.
+const LOADING = {
+  webgpu: 0.05,
+  clouds: 0.15,
+  hud: 0.2,
+  path: 0.25,
+  shaders: 0.4,
+  terrain: 0.9
+}
 
 const debug: Record<string, unknown> = {}
 ;(window as unknown as { __debug: unknown }).__debug = debug
@@ -79,6 +90,7 @@ async function start(): Promise<void> {
     trackTimestamp: params.measure && device.features.has('timestamp-query')
   })
   await renderer.init()
+  setLoadingProgress(LOADING.webgpu)
   const timestampsSupported = device.features.has('timestamp-query')
   // `trackTimestamp` is missing from the type declarations of the backend in 0.186. The backend
   // reads it each time it starts a pass, so it can be switched while the demo runs.
@@ -139,6 +151,7 @@ async function start(): Promise<void> {
     else cloudFeatures.delete(name as CloudFeature)
   }
   debug.cloudFeatures = [...cloudFeatures]
+  loadingMessage.value = 'Loading clouds...'
   const clouds = params.clouds
     ? await createClouds(atmosphere.context, camera, frame, {
         ...DEFAULT_CLOUDS,
@@ -158,8 +171,11 @@ async function start(): Promise<void> {
   }
   // Water drops on the screen in clouds (ADR 0011); they need the clouds' density.
   const drops = clouds ? createDrops() : null
+  setLoadingProgress(LOADING.clouds)
+  loadingMessage.value = 'Loading HUD...'
   await loadHudFont()
   const places = await loadPlaces()
+  setLoadingProgress(LOADING.hud)
   debug.hudFont = [...document.fonts].some(face => face.family.includes('Share Tech Mono') && face.status === 'loaded')
   const hud = createHud()
   const pipeline = createPipeline(renderer, scene, camera, clouds ? [clouds.stage] : [], {
@@ -182,7 +198,10 @@ async function start(): Promise<void> {
   })
 
   // The area's JSBSim path (ADR 0035), or another with ?path=NAME.
+  loadingMessage.value = 'Loading flight path...'
   const path = await loadPath(params.path ?? area.path)
+  setLoadingProgress(LOADING.path)
+  loadingMessage.value = 'Compiling shaders...'
   debug.pathSeconds = Number(pathDuration(path).toFixed(1))
   flightDuration.value = pathDuration(path)
   const cockpit = createCockpitCamera(camera, frame, {
@@ -201,14 +220,22 @@ async function start(): Promise<void> {
     renderer.setSize(container.clientWidth, container.clientHeight)
   })
 
-  // The flight holds at its start while the first tiles load, so the demo begins in place.
-  const loading = showLoading()
+  // The start's last stages run in the render loop, with the flight held at its start (ADR 0037):
+  // the shaders, compiled by the first frame; the terrain seen from the start; a few frames for the
+  // clouds' temporal upscaling and the anti-aliasing to settle. Then the demo is shown.
   let loaded = false
-  const LOADING_TIMEOUT = 30 // seconds; start anyway after this
+  let loadingStage: 'shaders' | 'compiling' | 'terrain' | 'warmup' = 'shaders'
   // Tile loading pauses briefly between levels of the tile tree, so the queue must stay empty
-  // for a while before loading counts as done.
+  // for a while before the terrain counts as loaded.
   const SETTLE_TIME = 1.5 // seconds
+  // GSI's server may stop answering; with no new tile for this long, the terrain counts as loaded
+  // and the coarser tiles already there stand in until the rest arrive.
+  const TERRAIN_STALL_TIME = 15 // seconds
+  const WARMUP_FRAMES = 30
   let settledSince: number | null = null
+  let terrainProgressSince = 0
+  let terrainReady = 0
+  let warmupFrames = 0
 
   const timer = new Timer()
   let flightTime = params.flightStart
@@ -230,14 +257,43 @@ async function start(): Promise<void> {
     const dt = Math.min(timer.getDelta(), 0.1)
     if (!loaded) {
       const elapsed = timer.getElapsed()
-      const ground = terrain?.stats()
-      const settled = !ground || (ground.ready > 0 && ground.loading === 0)
-      settledSince = settled ? (settledSince ?? elapsed) : null
-      if ((settledSince !== null && elapsed - settledSince > SETTLE_TIME) || elapsed > LOADING_TIMEOUT) {
-        loaded = true
-        loading.hide()
-      } else {
-        if (ground && ground.loading > 0) loading.setText(`Loading… terrain ${ground.loading} tiles to go`)
+      if (loadingStage === 'shaders') {
+        // This frame compiles them; the stage ends when the GPU has done the frame.
+        loadingStage = 'compiling'
+        void device.queue.onSubmittedWorkDone().then(() => {
+          setLoadingProgress(LOADING.shaders)
+          loadingMessage.value = 'Loading terrain...'
+          loadingStage = 'terrain'
+          terrainProgressSince = timer.getElapsed()
+        })
+      } else if (loadingStage === 'terrain') {
+        const ground = terrain?.stats()
+        const settled = !ground || (ground.ready > 0 && ground.loading === 0)
+        settledSince = settled ? (settledSince ?? elapsed) : null
+        if (ground) {
+          if (ground.ready > terrainReady) {
+            terrainReady = ground.ready
+            terrainProgressSince = elapsed
+          }
+          // How many tiles the start needs is not known in advance (about 150 at 1920 × 1080), and
+          // only a few load at a time, so the share approaches 1 as the ready tiles grow.
+          const share = 1 - Math.exp(-ground.ready / 60)
+          setLoadingProgress(LOADING.shaders + (LOADING.terrain - LOADING.shaders) * share)
+        }
+        const stalled = elapsed - terrainProgressSince > TERRAIN_STALL_TIME
+        if ((settledSince !== null && elapsed - settledSince > SETTLE_TIME) || stalled) {
+          debug.terrainStalled = stalled
+          setLoadingProgress(LOADING.terrain)
+          loadingMessage.value = 'Warming up...'
+          loadingStage = 'warmup'
+        }
+      } else if (loadingStage === 'warmup') {
+        warmupFrames++
+        setLoadingProgress(LOADING.terrain + (1 - LOADING.terrain) * (warmupFrames / WARMUP_FRAMES))
+        if (warmupFrames >= WARMUP_FRAMES) {
+          loaded = true
+          hideLoading()
+        }
       }
     }
     debug.loaded = loaded

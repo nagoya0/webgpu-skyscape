@@ -100,9 +100,6 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   3,000 m the ground moves across the view about seven times slower than at 450 m, so this is
   easier than in Tokyo. Prefetching along the precomputed path
   ([ADR 0018](adr/0018-f16-at-cruise-speed.md)) remains the planned answer if it shows.
-- **Loading screen.** A temporary one (`src/ui/loading.ts`) holds the flight at its start until
-  the tile queue has stayed empty for 1.5 s, or for 30 s at most; to be rebuilt with the UI
-  ([ADR 0037](adr/0037-ui.md)).
 - **Read from the debug window** (2026-10-08, headless Chrome on the development machine,
   1262 × 600, t=110): frame 8.3 ms (the 120 Hz display's refresh), CPU (JS) about 2.5 ms, GPU
   about 1.9 ms, GPU memory (est.) about 360 MB, of which about 270 MB terrain photographs;
@@ -150,8 +147,8 @@ Placeholders that later stages replace. Remove each with the stage that replaces
 
 - The Hakone origin in `src/areas.ts` (139.02° E, 35.23° N, north of Lake Ashi) was placed for
   the placeholder racetrack, now removed; the course stays within about 30 km of it.
-- `src/ui/loading.ts` and `src/ui/guidance.ts`: the temporary loading screen and the screen for
-  unsupported browsers, to be rebuilt with Preact ([ADR 0037](adr/0037-ui.md)).
+- `src/ui/guidance.ts`: the screen for unsupported browsers, to be rebuilt with Preact
+  ([ADR 0037](adr/0037-ui.md)).
 
 ## Plan
 
@@ -243,8 +240,8 @@ as room for improvement, listed in the README; changes for performance are still
 4. **The UI** ([ADR 0037](adr/0037-ui.md)), started 2026-10-08 as the maintainer judged the
    features complete enough to prepare for publishing; the Tokyo area was removed first
    ([ADR 0036](adr/0036-remove-the-tokyo-area.md)). Done: the header, the settings window with
-   its settings and credits tabs, the debug window, Current G on the HUD. Left: the loading
-   screen, the screen for unsupported browsers, and removing development parameters that are
+   its settings and credits tabs, the debug window, Current G on the HUD, the loading screen.
+   Left: the screen for unsupported browsers, and removing development parameters that are
    no longer used.
 
 Not yet placed: a check of temporal anti-aliasing at 250 to 320 m/s (tile prefetching is step 6

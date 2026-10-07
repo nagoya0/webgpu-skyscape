@@ -99,6 +99,12 @@ body {
   cursor: pointer;
 }
 
+.icon-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
 /* Buttons have a rounded outline; links do not. */
 .icon-button {
   box-sizing: border-box;
@@ -396,16 +402,40 @@ body {
   color: #8ab4ff;
 }
 
-/* Temporary loading screen (src/ui/loading.ts). */
+/* The loading screen (src/ui/LoadingScreen.tsx), over the 3D view only; the settings window
+   stays above it. */
 .loading {
-  position: fixed;
+  position: absolute;
   inset: 0;
+  z-index: 15;
   display: grid;
-  place-content: center;
-  background: #0b0d12;
-  color: #9aa3b5;
-  font-size: 0.95rem;
+  place-items: center;
+  background: var(--panel);
   transition: opacity 0.8s ease;
+}
+
+.loading-box {
+  width: min(320px, 70%);
+}
+
+.loading-message {
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.loading-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.1);
+  overflow: hidden;
+}
+
+.loading-fill {
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  transition: transform 0.3s ease;
 }
 
 .loading.done {
@@ -414,7 +444,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .loading {
+  .loading,
+  .loading-fill {
     transition: none;
   }
 }
