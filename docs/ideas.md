@@ -29,7 +29,10 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
 - **The HUD**, drawn after the post-processing, in two kinds (the maintainer, 2026-10-07):
   - Fixed to the screen: the time of day, a mini map (whether to show one is open). In place:
     the scene's time top left, "SCENE 2026-10-07 16:30 JST" in HUD green (the maintainer;
-    `src/hud/sceneTime.ts`); the `?debug` text moved to the top right.
+    `src/hud/sceneTime.ts`); the `?debug` text moved to the top right. Below it, where the
+    aircraft is: "FLYING OVER SUSONO, SHIZUOKA", or "FLYING OVER THE SEA" (the maintainer),
+    looked up twice a second in the National Land Numerical Information municipal boundaries
+    within 60 km of the origin, with a romaji table (`scripts/municipality-romaji.json`).
   - The aircraft's HUD, as in a fighter's real head-up display: heading, pitch, altitude, speed
     and the like. It moves with the airframe's vibration. Everything a real HUD would show goes
     on this layer (the maintainer); the screen layer is only for what is not part of the

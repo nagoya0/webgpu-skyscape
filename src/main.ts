@@ -22,7 +22,8 @@ import { drawAttitudeBars } from './hud/attitudeBars'
 import { drawBoresightCross, drawFlightPathMarker } from './hud/flightPathMarker'
 import { drawHeadingScale } from './hud/headingScale'
 import { drawRollIndicator } from './hud/rollIndicator'
-import { drawSceneTime } from './hud/sceneTime'
+import { drawScreenLines, sceneTimeText } from './hud/sceneTime'
+import { loadPlaces } from './hud/flyingOver'
 import { drawVelocityScale, KNOTS_PER_METRE_PER_SECOND } from './hud/velocityScale'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath } from './flight/placeholderPath'
@@ -162,6 +163,7 @@ async function start(): Promise<void> {
   // Water drops on the screen in clouds (ADR 0011); they need the clouds' density.
   const drops = clouds && params.drops ? createDrops() : null
   await loadHudFont()
+  const places = await loadPlaces()
   debug.hudFont = [...document.fonts].some(face => face.family.includes('Share Tech Mono') && face.status === 'loaded')
   const hud = createHud()
   const pipeline = createPipeline(renderer, scene, camera, clouds ? [clouds.stage] : [], {
@@ -265,6 +267,8 @@ async function start(): Promise<void> {
   // The HUD: both layers redrawn each frame, as their values change all the time.
   const aircraftGeodetic = new Geodetic()
   let screenDrawn = false
+  let placeLine: string | null = null
+  let lastPlaceLookup = -Infinity
   const nose = new Vector3()
   const ahead = createAircraftState()
   const aheadWorld = new Vector3()
@@ -275,11 +279,24 @@ async function start(): Promise<void> {
   function drawHud(): void {
     const resized = hud.update(renderer, cockpit.offsetQuaternion, camera.fov)
     const pixelsPerDegree = (hud.aircraft.canvas.height / 2 / Math.tan((camera.fov * Math.PI) / 360)) * (Math.PI / 180)
-    // The screen layer: the scene's time, drawn again only when the canvas is new.
+    // The screen layer: the scene's time and the place below, looked up twice a second and drawn
+    // again only when the line changes or the canvas is new.
+    const now = performance.now()
+    if (now - lastPlaceLookup > 500) {
+      lastPlaceLookup = now
+      aircraftGeodetic.setFromECEF(state.ecef)
+      const line = places.lineAt((aircraftGeodetic.longitude * 180) / Math.PI, (aircraftGeodetic.latitude * 180) / Math.PI)
+      if (line !== placeLine) {
+        placeLine = line
+        screenDrawn = false
+      }
+    }
     if ((resized || !screenDrawn) && !params.hudDebug) {
       const { canvas: screen, context: screenContext } = hud.screen
       screenContext.clearRect(0, 0, screen.width, screen.height)
-      drawSceneTime(screenContext, screen.height, pixelsPerDegree, params.date)
+      const lines = [sceneTimeText(params.date)]
+      if (placeLine) lines.push(placeLine)
+      drawScreenLines(screenContext, screen.height, pixelsPerDegree, lines)
       hud.screen.changed()
       screenDrawn = true
     }

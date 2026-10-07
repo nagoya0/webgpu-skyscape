@@ -149,6 +149,11 @@ The licence of this project's own code is not decided yet.
   water masks, by this project.
 - Buildings: [3D City Model (Project PLATEAU)](https://www.mlit.go.jp/plateau/), Ministry of
   Land, Infrastructure, Transport and Tourism (3D都市モデル（Project PLATEAU）国土交通省).
+- Municipal boundaries for the HUD's "FLYING OVER" line:
+  [National Land Numerical Information, Administrative Areas](https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2024.html)
+  (国土数値情報（行政区域データ）国土交通省, N03 2024, CC BY 4.0), cut to the course's
+  surroundings, thinned and named in romaji by this project (`scripts/build-municipalities.mjs`,
+  `public/places/municipalities.json`).
 
 ### Code and assets
 
