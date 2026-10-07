@@ -72,19 +72,63 @@ function decodeElevationPng(image: ImageBitmap): HeightGrid {
   return { heights, size }
 }
 
+/**
+ * Fills the missing values of a 5 m grid from the 10 m grid of its parent tile, interpolated;
+ * where the 10 m grid is missing too (the sea), the value stays missing. The 5 m DEM has no data
+ * over lakes and in patches on land: over Lake Ashi two thirds of a tile are missing, and read
+ * as sea level they dropped the lake's surface by 725 m.
+ * @param quarterX which half of the parent the fine tile is in, west 0 or east 1
+ * @param quarterY north 0 or south 1
+ */
+export function fillFromParent(fine: HeightGrid, parent: HeightGrid, quarterX: number, quarterY: number): HeightGrid {
+  const n = fine.size
+  const m = parent.size
+  const heights = fine.heights.slice()
+  const at = (x: number, y: number): number => parent.heights[Math.min(y, m - 1) * m + Math.min(x, m - 1)]
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
+      if (!Number.isNaN(heights[y * n + x])) continue
+      // The fine pixel's centre in the parent's pixels.
+      const fx = Math.max(((quarterX + (x + 0.5) / n) / 2) * m - 0.5, 0)
+      const fy = Math.max(((quarterY + (y + 0.5) / n) / 2) * m - 0.5, 0)
+      const x0 = Math.floor(fx)
+      const y0 = Math.floor(fy)
+      const tx = fx - x0
+      const ty = fy - y0
+      const top = at(x0, y0) * (1 - tx) + at(x0 + 1, y0) * tx
+      const bottom = at(x0, y0 + 1) * (1 - tx) + at(x0 + 1, y0 + 1) * tx
+      heights[y * n + x] = top * (1 - ty) + bottom * ty
+    }
+  }
+  return { heights, size: n }
+}
+
 const heightCache = new Map<string, Promise<HeightGrid | null>>()
 
-/**
- * Heights for a DEM tile: the 5 m DEM at zoom 15, else the 10 m DEM at zoom 14 for the same
- * place. Cached for the session; the area is fixed and small.
- */
-export function loadHeights(tile: TileKey, signal?: AbortSignal): Promise<HeightGrid | null> {
-  const key = `${tile.z}/${tile.x}/${tile.y}`
+function loadGrid(base: string, tile: TileKey, signal?: AbortSignal): Promise<HeightGrid | null> {
+  const key = `${base}/${tile.z}/${tile.x}/${tile.y}`
   let promise = heightCache.get(key)
   if (!promise) {
-    const base = tile.z === DEM5A_ZOOM ? DEM5A : DEM10
-    promise = fetchImage(`${base}/${key}.png`, signal).then(image =>
-      image ? decodeElevationPng(image) : null
+    promise = fetchImage(`${key}.png`, signal).then(image => (image ? decodeElevationPng(image) : null))
+    promise.catch(() => heightCache.delete(key))
+    heightCache.set(key, promise)
+  }
+  return promise
+}
+
+/**
+ * Heights for a DEM tile: the 5 m DEM at zoom 15, its gaps filled from the 10 m DEM of the
+ * parent tile; else the 10 m DEM at zoom 14 for the same place. Cached for the session; the area
+ * is fixed and small.
+ */
+export function loadHeights(tile: TileKey, signal?: AbortSignal): Promise<HeightGrid | null> {
+  if (tile.z !== DEM5A_ZOOM) return loadGrid(DEM10, tile, signal)
+  const key = `filled/${tile.z}/${tile.x}/${tile.y}`
+  let promise = heightCache.get(key)
+  if (!promise) {
+    const parent = { z: tile.z - 1, x: Math.floor(tile.x / 2), y: Math.floor(tile.y / 2) }
+    promise = Promise.all([loadGrid(DEM5A, tile, signal), loadGrid(DEM10, parent, signal)]).then(([fine, coarse]) =>
+      fine && coarse ? fillFromParent(fine, coarse, tile.x % 2, tile.y % 2) : fine
     )
     promise.catch(() => heightCache.delete(key))
     heightCache.set(key, promise)
