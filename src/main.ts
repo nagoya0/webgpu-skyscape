@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Scene, Timer, Vector3, WebGPURenderer, type Mesh } from 'three/webgpu'
+import { Euler, PerspectiveCamera, Scene, Timer, Vector3, WebGPURenderer, type Mesh } from 'three/webgpu'
 
 import { Geodetic } from '@takram/three-geospatial'
 
@@ -19,6 +19,7 @@ import { createHud, loadHudFont } from './hud/hud'
 import { drawHudDebug } from './hud/hudDebug'
 import { drawAltitudeScale, FEET_PER_METRE } from './hud/altitudeScale'
 import { drawHeadingScale } from './hud/headingScale'
+import { drawRollIndicator } from './hud/rollIndicator'
 import { drawVelocityScale, KNOTS_PER_METRE_PER_SECOND } from './hud/velocityScale'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath } from './flight/placeholderPath'
@@ -261,6 +262,7 @@ async function start(): Promise<void> {
   // The HUD: both layers redrawn each frame, as their values change all the time.
   const aircraftGeodetic = new Geodetic()
   const nose = new Vector3()
+  const attitude = new Euler()
   function drawHud(): void {
     hud.update(renderer, cockpit.offsetQuaternion, camera.fov)
     const { canvas, context } = hud.aircraft
@@ -280,6 +282,9 @@ async function start(): Promise<void> {
     nose.set(1, 0, 0).applyQuaternion(state.bodyToNED)
     const trueHeading = (Math.atan2(nose.y, nose.x) * 180) / Math.PI
     drawHeadingScale(context, canvas.width, canvas.height, pixelsPerDegree, trueHeading - area.magneticDeclination)
+    // Bank: the roll of the body axes from north-east-down, taken as yaw, pitch, then roll.
+    attitude.setFromQuaternion(state.bodyToNED, 'ZYX')
+    drawRollIndicator(context, canvas.width, canvas.height, pixelsPerDegree, (attitude.x * 180) / Math.PI)
     hud.aircraft.changed()
   }
 

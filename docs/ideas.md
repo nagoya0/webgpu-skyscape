@@ -44,7 +44,11 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     mirrored about the boresight, the altitude scale (feet above mean sea level,
     `src/hud/altitudeScale.ts`), and the heading scale (magnetic heading, the area's declination
     in `src/areas.ts`; `src/hud/headingScale.ts`), its lubber line's top level with the side
-    tapes' bottoms.
+    tapes' bottoms, and the roll indicator below it (`src/hud/rollIndicator.ts`), its caret
+    stopping at the 45° mark.
+  - To check with the JSBSim path's manoeuvres (the maintainer): the instruments must stay right
+    when the aircraft rolls through inverted. The bank comes from the attitude as yaw, pitch, roll,
+    so it is undefined with the nose straight up or down, where it may jump.
   - Text and lines in HUD green with a glow (the maintainer). The elements are added one at a
     time as the maintainer asks. Typeface: Share Tech Mono (the maintainer, from eight open
     typefaces), bundled in `public/fonts/`.
