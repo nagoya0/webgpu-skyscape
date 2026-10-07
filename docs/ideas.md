@@ -14,8 +14,8 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   over. Both are tuned when the cockpit view is built.
   Shake, as the maintainer wants it: none in steady flight, even if that is less realistic; some
   in turns and more when passing through clouds. For now 0.04° per G above 1 and 0.3° at full
-  cloud density. The cloud figure is untested: the path has no cloud density channel yet (cloud
-  step C5 below).
+  cloud density. The cloud figure is untested; the density at the camera is now known (cloud step C5
+  below) and is to drive it with the effects.
 - **The course** ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)). For now the simple
   out-and-back from Sagami Bay towards Mount Fuji at 3,000 m, above the low clouds. Later, as the
   maintainer would like: dropping below the cloud base and climbing back, and some fighter
@@ -152,20 +152,23 @@ Done:
 - Water ([ADR 0029](adr/0029-water-from-gsi-data.md)), the terrain out to the horizon
   ([ADR 0030](adr/0030-terrain-to-the-horizon.md)), and the photographs' correction
   ([ADR 0031](adr/0031-correct-the-sources-grade-at-the-end.md)).
+- Clouds, step C5 (2026-10-07): the clouds' density at the camera, computed on the CPU every
+  frame from the same textures and layer settings as the GPU march (`src/clouds/cloudDensity.ts`),
+  so it follows `?cloudamount=`, `?coverage=` and `?wind=`. About 1 to 15 µs per frame. Shown
+  with `?debug`. Checked against the image at 1,500 m with more clouds: 0 where the view was
+  clear, above 0 where it was inside a cloud. The weather map is now decoded with fast-png so the
+  CPU and the GPU read the same values (the image did not change). A density channel in the
+  precomputed path, for the offline path tool, is left for the JSBSim stage.
 
 Next, in this order (the maintainer put the ground's quality before the remaining cloud
 features on 2026-10-06, and on 2026-10-07 put the rest of the terrain and of the clouds on hold
 as room for improvement, listed in the README; changes for performance are still considered):
 
 1. **Forests**: on hold (2026-10-07).
-2. **Step C5 of the clouds** (cloud density on the CPU for the path's cloud channel and the
-   shake in clouds), next (2026-10-07); the idea so far is that the cloud shape data lives in files that
-   both the GPU and the offline path tool read
-   ([ADR 0008](adr/0008-precomputed-flight-path.md)).
-3. **Effects** in general, rain drops among them ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
+2. **Effects** in general, rain drops among them ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
    [ADR 0020](adr/0020-effects-by-view.md)).
-4. **JSBSim path** with manoeuvres, replacing the placeholder.
-5. **Night.** Stars, moon and adaptive exposure fit between any stages.
+3. **JSBSim path** with manoeuvres, replacing the placeholder.
+4. **Night.** Stars, moon and adaptive exposure fit between any stages.
 
 Not yet placed: tile prefetching along the path, and a check of temporal anti-aliasing at
 250 m/s.

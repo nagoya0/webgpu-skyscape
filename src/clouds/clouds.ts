@@ -7,6 +7,7 @@ import {
   type AtmosphereContext
 } from '@takram/three-atmosphere/webgpu'
 import { stbn } from '@takram/three-geospatial/webgpu'
+import { decode as decodePng } from 'fast-png'
 import {
   float,
   int,
@@ -35,7 +36,6 @@ import {
   NoColorSpace,
   RedFormat,
   RepeatWrapping,
-  TextureLoader,
   UnsignedByteType,
   Vector2,
   Vector3,
@@ -49,6 +49,7 @@ import {
 import { ecefToWorld, type LocalFrame } from '../geo/localFrame'
 import { asNode, type CompositeStage } from '../render/pipeline'
 import { preprocess } from '../shaders/preprocess'
+import { cloudDensityAt, type DensityInputs, type DensityOffsets, type WeatherMap } from './cloudDensity'
 import { CloudShadows, SHADOW_CASCADES } from './cloudShadows'
 import { CloudsNode, type CloudPassInputs } from './cloudsNode'
 import clipAABBCode from './wgsl/clipAABB.wgsl?raw'
@@ -137,14 +138,30 @@ async function loadVolume(url: string, size: number): Promise<Data3DTexture> {
   return volume
 }
 
-async function loadWeather(url: string): Promise<Texture> {
-  const weather = await new TextureLoader().loadAsync(url)
+/**
+ * The weather map, decoded on the CPU so that the GPU and the CPU density (cloudDensity.ts) read
+ * the same values: a browser decode would premultiply the alpha channel, which holds the fourth
+ * layer, and lose precision in the others. Rows are flipped so that v = 0 is the image's bottom
+ * row, as three's TextureLoader uploaded it.
+ */
+async function loadWeather(url: string): Promise<{ texture: Texture; map: WeatherMap }> {
+  const png = decodePng(new Uint8Array(await (await fetch(url)).arrayBuffer()))
+  if (png.channels !== 4 || png.depth !== 8 || png.width !== png.height) {
+    throw new Error(`Unexpected weather map: ${png.width}×${png.height}, ${png.channels} channels`)
+  }
+  const size = png.width
+  const source = png.data as Uint8Array
+  const data = new Uint8Array(size * size * 4)
+  const row = size * 4
+  for (let y = 0; y < size; y++) data.set(source.subarray((size - 1 - y) * row, (size - y) * row), y * row)
+  const weather = new DataTexture(data, size, size, RGBAFormat, UnsignedByteType)
   weather.colorSpace = NoColorSpace
   weather.wrapS = weather.wrapT = RepeatWrapping
   weather.minFilter = LinearMipmapLinearFilter
   weather.magFilter = LinearFilter
   weather.generateMipmaps = true
-  return weather
+  weather.needsUpdate = true
+  return { texture: weather, map: { data, size } }
 }
 
 /** Settings of one cloud layer, from takram's default layers. */
@@ -247,6 +264,11 @@ export interface Clouds {
    * perspective's light shafts.
    */
   shadowLength: Node<'vec2'>
+  /**
+   * Extinction per metre of the clouds at a world position, computed on the CPU as the GPU march
+   * does (cloud step C5); 0 outside the clouds. Uses the time last given to setTime.
+   */
+  densityAt(position: Vector3): number
 }
 
 const SHAPE_REPEAT = 0.0003
@@ -263,7 +285,7 @@ export async function createClouds(
   frame: LocalFrame,
   options: CloudOptions = DEFAULT_CLOUDS
 ): Promise<Clouds> {
-  const [shapeVolume, detailVolume, weather] = await Promise.all([
+  const [shapeVolume, detailVolume, { texture: weather, map: weatherMap }] = await Promise.all([
     loadVolume(`${ASSETS}shape.bin`, 128),
     loadVolume(`${ASSETS}shape_detail.bin`, 32),
     loadWeather(`${ASSETS}local_weather.png`)
@@ -628,5 +650,29 @@ export async function createClouds(
     )
   }
 
-  return { stage, coverage, setTime, updateShadows, sceneShadow, shadowLength }
+  // Cloud step C5: the density on the CPU, from the same textures and settings.
+  const densityInputs: DensityInputs = {
+    weather: weatherMap,
+    shape: { data: shapeVolume.image.data as Uint8Array, size: 128 },
+    detail: options.features.has('SHAPE_DETAIL')
+      ? { data: detailVolume.image.data as Uint8Array, size: 32 }
+      : null,
+    layers,
+    shapeRepeat: SHAPE_REPEAT,
+    detailRepeat: DETAIL_REPEAT,
+    weatherRepeat: 1 / options.weatherTileMetres,
+    profileLinear: profileLinear.value.x,
+    profileConstant: profileConstant.value.x,
+    earthCenter: earthCenterWorld,
+    earthRadius: earthCenterWorld.length()
+  }
+  const densityOffsets: DensityOffsets = {
+    weather: weatherOffset.value,
+    shape: shapeOffset.value,
+    detail: detailOffset.value
+  }
+  const densityAt = (position: Vector3): number =>
+    cloudDensityAt(densityInputs, position, densityOffsets, coverage.value)
+
+  return { stage, coverage, setTime, updateShadows, sceneShadow, shadowLength, densityAt }
 }

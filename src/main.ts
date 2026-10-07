@@ -226,12 +226,15 @@ async function start(): Promise<void> {
         // Height above the origin's tangent plane; close to the altitude over the demo area.
         `y      ${camera.position.y.toFixed(0)} m`,
         `load   ${state.loadFactor.toFixed(2)} G`,
+        `cloud  ${cloudDensity.toFixed(4)} /m (${densityMicroseconds.toFixed(0)} us)`,
         `frame  ${frameMs.toFixed(1)} ms`
       ])
     }
   })
 
   let lastBoundsTime = -Infinity
+  let cloudDensity = 0
+  let densityMicroseconds = 0
 
   // One frame: move the aircraft, update the tiles, draw.
   function step(flightDelta: number, elapsed: number): void {
@@ -241,6 +244,15 @@ async function start(): Promise<void> {
     waterTime.value = flightTime
     cockpit.update(state, first ? 0 : flightDelta, elapsed)
     first = false
+    // Cloud step C5: the clouds' density at the camera, for the effects in clouds. Timed, as it
+    // runs on the CPU every frame.
+    if (clouds) {
+      const start = performance.now()
+      cloudDensity = clouds.densityAt(camera.position)
+      densityMicroseconds += ((performance.now() - start) * 1000 - densityMicroseconds) * 0.05
+      debug.cloudDensity = Number(cloudDensity.toFixed(5))
+      debug.cloudDensityMicroseconds = Number(densityMicroseconds.toFixed(1))
+    }
     if (buildings) {
       buildings.update(container.clientWidth, container.clientHeight)
       debug.tiles = buildings.stats()
