@@ -17,7 +17,19 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   cloud density. In clouds the shake now follows how deep in cloud the aircraft is (`src/effects/inCloud.ts`):
   0 in clear air, 1 − exp(−extinction / 0.01 per metre), so about 0.63 at 100 m of visibility and
   0.96 at 0.033 per metre, followed over 0.2 s since the density jumps at a cloud's edge. The size
-  of the shake is still to be judged by eye in motion.
+  of the shake is still to be judged by eye in motion; in motion the maintainer found it fine
+  (2026-10-07).
+- **Attitudes: aircraft, airframe and camera.** The aircraft's attitude from the path carries no
+  shake; the camera adds the shake and the body effects on top (`src/camera/cockpitCamera.ts`).
+  For the HUD and the cockpit view this is to become three steps: the aircraft's attitude (for
+  the instruments' values), the airframe's with its vibration added (shake in turns and in
+  clouds; the cockpit model and the aircraft HUD move with it), and the camera's with the
+  pilot's head added (lag, sinking under load). In the first-person view the last two are the
+  same while the body effects are off. To be done when the HUD or the cockpit view is built.
+- **The HUD**, drawn after the post-processing, in two kinds (the maintainer, 2026-10-07):
+  - Fixed to the screen: the time of day, a mini map (whether to show one is open).
+  - The aircraft's HUD, as in a fighter's real head-up display: heading, pitch, altitude, speed
+    and the like. It moves with the airframe's vibration.
 - **The course** ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)). For now the simple
   out-and-back from Sagami Bay towards Mount Fuji at 3,000 m, above the low clouds. Later, as the
   maintainer would like: dropping below the cloud base and climbing back, and some fighter
