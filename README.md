@@ -98,6 +98,8 @@ Changes that make the demo faster are still welcome.
 - **Clouds**: the rest of takram's default features: turbulence, light bounced from the ground,
   and sun and sky light computed per sample. The full list is in
   [docs/clouds-parity.md](docs/clouds-parity.md).
+- **Flight**: fighter manoeuvres beyond the course's roll and hard turn, such as loops, with the
+  path sampled more often for fast rolls and the HUD checked through longer inverted flight.
 
 ## Requirements
 

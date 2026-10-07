@@ -28,21 +28,22 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   same while the body effects are off. The HUD already takes the airframe's attitude and the
   camera's offset from it (`aircraftQuaternion`, `offsetQuaternion`); the split of the offset
   into vibration and head is to be done with the cockpit view.
-- **The HUD** ([ADR 0034](adr/0034-hud.md)). Open: whether the screen layer gets a mini map; and
-  checking the instruments with the JSBSim path's manoeuvres, through inverted flight.
+- **The HUD** ([ADR 0034](adr/0034-hud.md)). Open: whether the screen layer gets a mini map.
+  Checking the instruments through longer inverted flight waits with the fighter manoeuvres.
 - **The course**: decided in [ADR 0035](adr/0035-the-course.md); the JSBSim path stage's notes
   below.
-- **Manoeuvres in the final route.** The maintainer wants more than level turns: full rolls and
-  more complex flying. The placeholder's roll rate (90°/s) looks fine. Things this will affect:
+- **Fighter manoeuvres**: on hold (the maintainer, 2026-10-07): the course's roll and hard turn
+  were judged enough for now; listed in the README as room for improvement. If taken up again:
   - Head lag: 0.12 s suits slow turns, but an F-16 can roll at over 200°/s, which would leave the
     view 20 to 30° behind. A real pilot's head turns with the aircraft, so roll may need less lag
-    than pitch and yaw.
-  - Sampling: at 10 Hz a fast roll turns 20 to 30° per sample. Raise the rate to 30 to 60 Hz, or
-    use squad instead of slerp (ADR 0008 allows both).
-  - JSBSim: altitude and heading holds cover straight flight and turns. Rolls and loops need
-    timed control inputs or a small Python controller that flies towards target attitudes.
+    than pitch and yaw. (The head lag is off by default.)
+  - Sampling: the path is sampled at 30 Hz, 6° per sample in the course's 180°/s roll. Raise the
+    rate to 60 Hz, or use squad instead of slerp (ADR 0008 allows both).
+  - JSBSim: the autopilot in `tools/flightpath/aircraft.py` flies holds, turns and a full roll;
+    loops need a controller that flies towards target attitudes through the vertical.
   - Altitude and G: a loop changes altitude by 1 to 2 km and pulls 4 to 7 G, which affects the
     altitude range, the cloud heights and the camera's sinking and shake.
+  - The HUD through longer inverted flight (the course's roll is inverted for about a second).
 - **Forests** ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)). The wooded mountains fill
   much of the image. Proposed, by altitude: from about 1.5 km up, the photographs with finer
   shading from the elevation model only; lower, instanced trees placed from land cover data or
@@ -202,12 +203,13 @@ as room for improvement, listed in the README; changes for performance are still
    higher sample rate, checking the HUD inverted and the head lag; (6) tile prefetching along the
    path. Steps 1 to 4 done (2026-10-07): `tools/flightpath/`; the course
    ([ADR 0035](adr/0035-the-course.md)) accepted by the maintainer on screen and made the default.
-   Next: step 5.
+   Step 5 on hold (the maintainer, 2026-10-07: the course's flying is enough for now; see
+   "Fighter manoeuvres" above). Left: step 6.
    - The course (`tools/flightpath/fly.py`): 374 s a lap. Start over the bay off Odawara at 500 m
      and 250 m/s; climb at up to 15° to 1,400 m, level through a cumulus for about 5 s (`?debug`
      lists the path's stretches in cloud), then on up towards Lake Ashi to 2,900 m; a roll at
-     180°/s after a pull-up to 8° of climb; on at 320 m/s to the south-east of Mount Fuji; a turn to the right at
-     80° of bank (about 6.5 G, down to about 240 m/s); back at 320 m/s north of Hakone; down at up
+     180°/s after a pull-up to 8° of climb; on at 320 m/s to the south-east of Mount Fuji; a turn
+     to the right at 80° of bank (about 6.5 G, down to about 240 m/s); back at 320 m/s north of Hakone; down at up
      to 8° to 500 m, slowing to 250 m/s; a turn to the right at 70° over the bay that ends on the
      start's line about 8 km before the start. The lap closes within about 9 m and 4 m of height;
      the rest is spread over the last 10 s.
@@ -229,8 +231,8 @@ as room for improvement, listed in the README; changes for performance are still
      To check before publishing.
 3. **Night.** Stars, moon and adaptive exposure fit between any stages.
 
-Not yet placed: tile prefetching along the path, and a check of temporal anti-aliasing at
-250 m/s.
+Not yet placed: a check of temporal anti-aliasing at 250 to 320 m/s (tile prefetching is step 6
+of the JSBSim path).
 
 Later: the cockpit view, quality presets, colour grading, the UI, the README and video,
 publishing.
