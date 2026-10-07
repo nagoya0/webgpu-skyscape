@@ -173,14 +173,17 @@ Done:
   clear, above 0 where it was inside a cloud. The weather map is now decoded with fast-png so the
   CPU and the GPU read the same values (the image did not change). A density channel in the
   precomputed path, for the offline path tool, is left for the JSBSim stage.
-- Water drops on the screen in the first-person view (2026-10-07, `src/effects/drops.ts`): drops
-  land only deeper in cloud than 0.5 (the maintainer), in sizes from a cubic distribution, with
-  outlines bent by random harmonics and stretched into an egg shape while moving, leaving small
-  drops behind (after Heartfelt and the Codrops rain experiments); they land in clouds, flow outwards faster with speed, merge, and evaporate after leaving the cloud
-  (small ones in about 4 s, large ones in about 13 s); drawn after the anti-aliasing as a
-  refracting height map. Simulated on the CPU, not in a compute shader as ADR 0011 says (a few
-  hundred drops); to be confirmed with the maintainer. Cost in a cloud at 1920 × 1080 (medians
-  of three): about 0.2 ms of GPU and 0.3 ms of JavaScript, the latter mostly the drops' merging.
+- Water drops on the screen in the first-person view (2026-10-07, `src/effects/drops.ts`), tuned
+  with the maintainer by eye. Drops land only deeper in cloud than 0.5, up to 210 a second, small
+  (cubic distribution) with about 1.5 % large; the smallest cling, larger ones flow outwards
+  faster with the aircraft's speed and their size, pulled down a little by gravity, meandering
+  mildly along a fixed grime pattern on the glass; a moving drop is drawn out behind into one
+  streak as long as it travels in 0.08 s; drops that touch merge; outlines are bent by random
+  harmonics. They evaporate out of the cloud (small ones in about 1.3 s, the largest in about
+  10 s) and at half that rate in it. Drawn after the anti-aliasing as a refracting height map.
+  After Heartfelt (Martijn Steinrucken) and the Codrops rain experiments (Lucas Bebber).
+  Simulated on the CPU, drawn on the GPU ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
+  agreed after measuring: about 400 drops deep in cloud, 0.33 ms of CPU, `window.__debug.dropsMs`).
 
 Next, in this order (the maintainer put the ground's quality before the remaining cloud
 features on 2026-10-06, and on 2026-10-07 put the rest of the terrain and of the clouds on hold

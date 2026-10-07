@@ -2,14 +2,16 @@
 // for drops on the canopy. Deep in a cloud (more than half way, see inCloud.ts), drops land at a
 // rate that grows with the depth; the relative wind pushes them outwards from the direction of
 // travel, faster the faster the aircraft flies, with a little gravity; drops that touch merge.
-// Out of the cloud no more land, and the ones left shrink and disappear, as if they evaporate.
+// Out of the cloud no more land, and the ones left shrink and disappear, as if they evaporate;
+// in the cloud they evaporate at half the rate. Drops land small, now and then a large one; the
+// smallest cling, and the others meander a little along the glass's grime.
 //
 // After two rain-on-glass effects: Heartfelt (Martijn Steinrucken, ShaderToy, 2017) and the
 // Codrops rain experiments (Lucas Bebber, 2015). From them: sizes drawn from a cubic
-// distribution, so small drops outnumber large ones; moving drops stretch along their path into
-// an egg shape and relax when they stop; moving drops leave small drops behind them; merging
-// keeps the water's area. Added here: each drop's outline is bent a little by its own random
-// harmonics, so no two look the same.
+// distribution, so small drops outnumber large ones (a few land large); moving drops are drawn
+// out behind into one continuous streak, as long as they travel in a short time, and round up
+// again when they stop; merging keeps the water's area. Added here: each drop's outline is bent
+// a little by its own random harmonics, so no two look the same.
 //
 // The drops are simulated on the CPU (a few hundred) and drawn as instanced quads into a
 // half-resolution height map, the higher drop winning where they overlap. The last pass of the
@@ -56,29 +58,43 @@ import {
   type WebGPURenderer
 } from 'three/webgpu'
 
-const MAX_DROPS = 600
+const MAX_DROPS = 1500
 /** Drops landing per second at the deepest in a cloud. */
-const LANDING_RATE = 70
+const LANDING_RATE = 210
 /** Drops land only deeper in cloud than this (0 to 1). */
 const LANDING_THRESHOLD = 0.5
-/** Radii of new drops, in screen heights (the screen spans 2 vertically). */
+/**
+ * Radii in screen heights (the screen spans 2 vertically): drops land small, between MIN_RADIUS
+ * and LANDING_MAX_RADIUS, a few large (LARGE_*); merging grows them up to MAX_RADIUS.
+ */
 const MIN_RADIUS = 0.008
-const MAX_RADIUS = 0.06
-/** Drops this small or smaller cling; larger ones start to flow. */
-const CLING_RADIUS = 0.025
+const LANDING_MAX_RADIUS = 0.02
+const MAX_RADIUS = 0.09
+/** Drops this small or smaller cling; larger ones flow, at full speed from FULL_FLOW_RADIUS. */
+const CLING_RADIUS = 0.009
+const FULL_FLOW_RADIUS = 0.03
 /** Flow speed in screen heights per second at 250 m/s, for a large drop at the screen's edge. */
-const FLOW_SPEED = 1.2
-const GRAVITY = 0.08
-/** Radius lost per second out of the cloud. */
-const EVAPORATION = 0.003
+const FLOW_SPEED = 4
+/** Gravity's pull on a flowing drop, in screen heights per second, down the screen as it is tilted. */
+const GRAVITY = 0.6
+/** Largest turn off the outward path from the glass's grime, in radians (about 7°). */
+const GRIME_TURN = 0.13
+/** How much the grime slows a drop at most (0 to 1). */
+const GRIME_HOLD = 0.2
+/** Each drop's own wander: random-walk strength in radians per √second, and its memory. */
+const WANDER_RATE = 0.15
+const WANDER_SECONDS = 1.5
+/** Radius lost per second out of the cloud; half as much in it. */
+const EVAPORATION = 0.006
 const REFERENCE_SPEED = 250
-/** A moving drop leaves a small drop behind every this many of its radii of travel. */
-const TRAIL_SPACING = 2.5
-/** Speed in screen heights per second at which a drop is fully stretched. */
-const FULL_STRETCH_SPEED = 0.6
-/** How much longer a fully stretched drop is behind its centre, and in front. */
-const STRETCH_BACK = 0.9
-const STRETCH_FRONT = 0.15
+/** A few drops land large, between LARGE_MIN_RADIUS and LARGE_MAX_RADIUS. */
+const LARGE_SHARE = 0.015
+const LARGE_MIN_RADIUS = 0.025
+const LARGE_MAX_RADIUS = 0.045
+/** A moving drop draws a streak behind it as long as it travels in this many seconds. */
+const TAIL_SECONDS = 0.08
+/** Longest streak, in the drop's radii. */
+const MAX_TAIL = 40
 
 interface Drop {
   x: number
@@ -87,11 +103,11 @@ interface Drop {
   /** Random numbers for the outline. */
   seedA: number
   seedB: number
-  /** 0 round, 1 fully stretched along `angle`. */
-  stretch: number
+  /** Length of the streak behind the drop along `angle`, in its radii; 0 when still. */
+  tail: number
   angle: number
-  /** Distance travelled since the last trail drop. */
-  travelled: number
+  /** The drop's own turn off its path in radians, drifting slowly. */
+  wander: number
 }
 
 export interface Drops {
@@ -113,7 +129,18 @@ export interface Drops {
 }
 
 function newDrop(x: number, y: number, radius: number): Drop {
-  return { x, y, radius, seedA: Math.random(), seedB: Math.random(), stretch: 0, angle: 0, travelled: 0 }
+  return { x, y, radius, seedA: Math.random(), seedB: Math.random(), tail: 0, angle: 0, wander: 0 }
+}
+
+/**
+ * The glass's grime: a smooth pattern fixed to the screen, about −1 to 1, made of a few sines at
+ * unrelated frequencies. It turns the drops' paths and holds them back in places.
+ */
+function grime(x: number, y: number): number {
+  return (
+    0.6 * Math.sin(x * 3.7 + 1.1) * Math.sin(y * 3.1 + 0.4) +
+    0.4 * Math.sin(x * 6.9 - y * 5.6 + 2.3)
+  )
 }
 
 export function createDrops(): Drops {
@@ -123,14 +150,15 @@ export function createDrops(): Drops {
   const camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1)
   camera.position.z = 0.5
 
-  // Per drop: (radius, seed A, seed B, stretch). The quad's x axis runs along the drop's motion.
+  // Per drop: (radius, seed A, seed B, tail). The quad's x axis runs along the drop's motion.
   const dropData = new InstancedBufferAttribute(new Float32Array(MAX_DROPS * 4), 4)
   const data = instancedBufferAttribute(dropData) as unknown as Node<'vec4'>
 
   // A dome per drop: height = radius × sqrt(1 − d²), in screen heights, so a drop's slope does not
   // depend on its size and larger drops stand higher and win where they overlap. d is the distance
-  // from the centre in the drop's own radii, through an egg shape when stretched and an outline
-  // bent by two random harmonics.
+  // from the centre in the drop's own radii: behind a moving drop the dome is drawn out into a
+  // streak (tail radii long, narrower the longer it is); the outline is bent by two random
+  // harmonics.
   const material = new MeshBasicNodeMaterial({ side: DoubleSide, transparent: true, depthTest: false, depthWrite: false })
   material.blending = CustomBlending
   material.blendEquation = MaxEquation
@@ -138,12 +166,14 @@ export function createDrops(): Drops {
   material.blendDst = OneFactor
   material.colorNode = Fn(() => {
     const radius = data.x
-    const stretch = data.w
-    // The quad spans (1 + STRETCH_BACK × stretch) radii on each side along x, 1 radius along y.
-    const halfLength = float(1).add(stretch.mul(STRETCH_BACK))
+    const tail = data.w
+    // The quad spans (1 + tail) radii on each side along x, 1 radius along y.
+    const halfLength = float(1).add(tail)
     const p = uv().mul(2).sub(1).mul(vec2(halfLength, 1))
-    const along = p.x.div(select(p.x.lessThan(0), halfLength, stretch.mul(STRETCH_FRONT).add(1)))
-    const across = p.y.mul(float(1).add(stretch.mul(0.15)))
+    const along = p.x.div(select(p.x.lessThan(0), halfLength, float(1).add(tail.min(1).mul(0.15))))
+    // Thinner towards the end of the streak: its half width falls to a third.
+    const behind = p.x.negate().div(halfLength).max(0)
+    const across = p.y.div(float(1).sub(behind.mul(tail.min(1)).mul(0.65)))
     const theta = atan(p.y, p.x)
     const wobble = float(1)
       .add(sin(theta.mul(2).add(data.y.mul(6.283))).mul(0.09))
@@ -186,31 +216,43 @@ export function createDrops(): Drops {
       texelUv.value.set(1 / width, 1 / height)
 
       if (dt > 0) {
-        // Land, only deep enough in the cloud; sizes from a cubic distribution.
+        // Land, only deep enough in the cloud; mostly small, from a cubic distribution, and a few
+        // large.
         const depth = Math.min(Math.max((inCloud - LANDING_THRESHOLD) / (1 - LANDING_THRESHOLD), 0), 1)
         landingDebt += LANDING_RATE * depth * dt
         while (landingDebt >= 1) {
           landingDebt -= 1
           if (drops.length >= MAX_DROPS) continue
-          const radius = MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.random() ** 3
+          const radius =
+            Math.random() < LARGE_SHARE
+              ? LARGE_MIN_RADIUS + (LARGE_MAX_RADIUS - LARGE_MIN_RADIUS) * Math.random()
+              : MIN_RADIUS + (LANDING_MAX_RADIUS - MIN_RADIUS) * Math.random() ** 3
           drops.push(newDrop((Math.random() * 2 - 1) * aspect, Math.random() * 2 - 1, radius))
         }
 
         // Flow outwards from the centre, the direction of travel, plus a little gravity. Moving
-        // drops stretch along their path and leave small drops behind; still ones relax.
+        // drops draw a streak behind them, as long as they travel in TAIL_SECONDS.
         down.set(0, -1, 0).applyQuaternion(cameraQuaternion.clone().invert())
         const flow = FLOW_SPEED * (speed / REFERENCE_SPEED)
-        const evaporating = depth <= 0
-        const trail: Drop[] = []
+        // Drops evaporate at full rate where none land, out of the cloud or near its edge, and at
+        // half the rate while they land.
+        const evaporation = EVAPORATION * (depth <= 0 ? 1 : 0.5)
         for (const drop of drops) {
-          const mobility = Math.min(Math.max((drop.radius - CLING_RADIUS) / (MAX_RADIUS - CLING_RADIUS), 0), 1)
+          const mobility = Math.min(Math.max((drop.radius - CLING_RADIUS) / (FULL_FLOW_RADIUS - CLING_RADIUS), 0), 1)
           let vx = 0
           let vy = 0
           if (mobility > 0) {
             const r = Math.hypot(drop.x, drop.y)
-            const nx = r > 1e-4 ? drop.x / r : 0
-            const ny = r > 1e-4 ? drop.y / r : 0
-            const v = flow * mobility * Math.min(r, 1)
+            // Outwards, turned by the glass's grime and the drop's own wander, so drops meander
+            // and follow the same channels; slower where the grime holds them.
+            drop.wander += (Math.random() - 0.5) * WANDER_RATE * Math.sqrt(dt)
+            drop.wander *= Math.exp(-dt / WANDER_SECONDS)
+            const turn = grime(drop.x, drop.y) * GRIME_TURN + drop.wander
+            const outward = r > 1e-4 ? Math.atan2(drop.y, drop.x) : drop.angle
+            const nx = Math.cos(outward + turn)
+            const ny = Math.sin(outward + turn)
+            const hold = 1 - GRIME_HOLD * (0.5 + 0.5 * grime(drop.y * 1.7 + 3.1, drop.x * 1.3 - 1.7))
+            const v = flow * mobility * Math.min(r, 1) * hold
             vx = nx * v + down.x * GRAVITY * mobility
             vy = ny * v + down.y * GRAVITY * mobility
             drop.x += vx * dt
@@ -218,26 +260,17 @@ export function createDrops(): Drops {
           }
           const moving = Math.hypot(vx, vy)
           if (moving > 1e-4) drop.angle = Math.atan2(vy, vx)
-          const targetStretch = Math.min(moving / FULL_STRETCH_SPEED, 1)
-          // Stretch quickly, relax slowly.
-          const rate = targetStretch > drop.stretch ? 8 : 1.5
-          drop.stretch += (targetStretch - drop.stretch) * (1 - Math.exp(-rate * dt))
-
-          drop.travelled += moving * dt
-          if (drop.travelled > TRAIL_SPACING * drop.radius && drops.length + trail.length < MAX_DROPS) {
-            drop.travelled = 0
-            const small = drop.radius * (0.2 + 0.2 * Math.random())
-            const back = drop.radius * (1 + STRETCH_BACK * drop.stretch) * 0.9
-            trail.push(newDrop(drop.x - Math.cos(drop.angle) * back, drop.y - Math.sin(drop.angle) * back, small))
-            drop.radius = Math.sqrt(Math.max(drop.radius ** 2 - small ** 2, 0))
-          }
-          if (evaporating) drop.radius -= EVAPORATION * dt
+          const targetTail = Math.min((moving * TAIL_SECONDS) / Math.max(drop.radius, 1e-4), MAX_TAIL)
+          // Grow quickly, shrink back more slowly when the drop stops.
+          const rate = targetTail > drop.tail ? 12 : 3
+          drop.tail += (targetTail - drop.tail) * (1 - Math.exp(-rate * dt))
+          drop.radius -= evaporation * dt
         }
-        drops.push(...trail)
 
         // Merge drops that touch: the larger takes the other's water, keeping the area. Only
-        // drops in the same or neighbouring grid cells are compared.
-        const cell = MAX_RADIUS * 2
+        // drops in the same or neighbouring grid cells are compared, so a cell is at least as wide
+        // as the largest touching distance.
+        const cell = MAX_RADIUS * 2 * 0.8 + 1e-3
         grid.clear()
         const key = (cx: number, cy: number): number => (cx + 1000) * 4000 + (cy + 1000)
         for (const drop of drops) {
@@ -256,7 +289,7 @@ export function createDrops(): Drops {
                 if (b === a || b.radius <= 0 || a.radius <= 0) continue
                 if (Math.hypot(a.x - b.x, a.y - b.y) < (a.radius + b.radius) * 0.8) {
                   const [big, small] = a.radius >= b.radius ? [a, b] : [b, a]
-                  big.radius = Math.min(Math.hypot(big.radius, small.radius), MAX_RADIUS * 1.5)
+                  big.radius = Math.min(Math.hypot(big.radius, small.radius), MAX_RADIUS)
                   small.radius = 0
                 }
               }
@@ -275,13 +308,13 @@ export function createDrops(): Drops {
 
       mesh.count = drops.length
       drops.forEach((drop, i) => {
-        const halfLength = 1 + STRETCH_BACK * drop.stretch
+        const halfLength = 1 + drop.tail
         dummy.position.set(drop.x, drop.y, 0)
         dummy.rotation.set(0, 0, drop.angle)
         dummy.scale.set(drop.radius * 2 * halfLength, drop.radius * 2, 1)
         dummy.updateMatrix()
         mesh.setMatrixAt(i, dummy.matrix)
-        dropData.setXYZW(i, drop.radius, drop.seedA, drop.seedB, drop.stretch)
+        dropData.setXYZW(i, drop.radius, drop.seedA, drop.seedB, drop.tail)
       })
       mesh.instanceMatrix.needsUpdate = true
       dropData.needsUpdate = true

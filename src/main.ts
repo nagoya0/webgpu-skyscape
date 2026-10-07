@@ -243,6 +243,8 @@ async function start(): Promise<void> {
   let densityMicroseconds = 0
   const inCloud = createInCloud()
   const aircraftWorld = new Vector3()
+  // CPU time of the drops' update (simulation and encoding their draw), averaged.
+  let dropsMilliseconds = 0
 
   // One frame: move the aircraft, update the tiles, draw.
   function step(flightDelta: number, elapsed: number): void {
@@ -287,8 +289,11 @@ async function start(): Promise<void> {
       clouds.updateShadows(renderer)
     }
     if (drops) {
+      const start = performance.now()
       drops.update(renderer, first ? 0 : flightDelta, state.cloudDensity, params.speed, camera.quaternion)
+      dropsMilliseconds += (performance.now() - start - dropsMilliseconds) * 0.05
       debug.drops = drops.count
+      debug.dropsMs = Number(dropsMilliseconds.toFixed(3))
     }
     pipeline.render()
   }
