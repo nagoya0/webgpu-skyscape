@@ -29,7 +29,9 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
 - **The HUD**, drawn after the post-processing, in two kinds (the maintainer, 2026-10-07):
   - Fixed to the screen: the time of day, a mini map (whether to show one is open).
   - The aircraft's HUD, as in a fighter's real head-up display: heading, pitch, altitude, speed
-    and the like. It moves with the airframe's vibration.
+    and the like. It moves with the airframe's vibration. Everything a real HUD would show goes
+    on this layer (the maintainer); the screen layer is only for what is not part of the
+    aircraft, such as the time of day.
   - Text and lines in HUD green with a glow (the maintainer). The elements are added one at a
     time as the maintainer asks. Typeface: Share Tech Mono (the maintainer, from eight open
     typefaces), bundled in `public/fonts/`.
