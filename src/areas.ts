@@ -12,7 +12,12 @@ export interface Area {
   terrain: TerrainOptions
   /** Whether PLATEAU buildings exist for the area in this demo. */
   buildings: boolean
-  /** The placeholder course, centred on the origin. */
+  /**
+   * The flight path flown by default: a JSBSim path in public/paths/ (ADR 0035), or null for the
+   * placeholder racetrack below.
+   */
+  path: string | null
+  /** The placeholder racetrack, centred on the origin; also flown with ?path=racetrack. */
   course: RacetrackOptions
   /**
    * What lies beyond the terrain: the flat placeholder disc, which lies on the origin's tangent
@@ -32,6 +37,7 @@ export const AREAS: Record<AreaName, Area> = {
     origin: { longitude: 139.757, latitude: 35.665, height: 0 },
     terrain: DEFAULT_TERRAIN,
     buildings: true,
+    path: null,
     course: { ...DEFAULT_RACETRACK, height: 450 },
     beyondTerrain: 'disc',
     magneticDeclination: -7.6
@@ -50,8 +56,11 @@ export const AREAS: Record<AreaName, Area> = {
       maxTiles: 1000
     },
     buildings: false,
-    // From Sagami Bay off Odawara towards Mount Fuji (heading 293°), turn short of it, fly back
-    // and repeat; simple on purpose for looking into rendering problems (ADR 0028).
+    // The demo's course (ADR 0035), computed with JSBSim by tools/flightpath/fly.py.
+    path: 'course',
+    // The earlier placeholder, kept for ?path=racetrack: from Sagami Bay off Odawara towards Mount
+    // Fuji (heading 293°), turn short of it, fly back and repeat; simple on purpose for looking
+    // into rendering problems (ADR 0028).
     course: { ...DEFAULT_RACETRACK, height: 3000, headingDegrees: 293, straightSeconds: 120, bankDegrees: 45 },
     beyondTerrain: 'sea',
     magneticDeclination: -7.5

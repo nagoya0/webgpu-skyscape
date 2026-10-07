@@ -29,11 +29,11 @@ In place:
 - More clouds than takram's defaults, to fly among, with a choice of amount
   ([ADR 0033](docs/adr/0033-more-clouds-to-fly-among.md)), and the clouds' density at the aircraft
   computed on the CPU each frame from the same data as the GPU's clouds.
-- A placeholder flight path at 250 m/s, out from Sagami Bay towards Mount Fuji and back, and a
-  first-person camera that shakes in turns and in clouds. The demo's own course, a loop of about
-  six minutes flown by JSBSim's F-16 under a small autopilot, below and through the clouds and past
-  Mount Fuji, can be flown with `?path=course` ([ADR 0035](docs/adr/0035-the-course.md)); it is
-  not yet the default.
+- The demo's course: a loop of about six minutes flown by JSBSim's F-16 under a small autopilot,
+  from below the clouds over Sagami Bay, through a cumulus, past Mount Fuji in a hard turn and
+  back, speeding up and slowing down ([ADR 0035](docs/adr/0035-the-course.md),
+  [ADR 0008](docs/adr/0008-precomputed-flight-path.md)); and a first-person camera that shakes in
+  turns and in clouds.
 - Water drops on the screen in clouds: they land deep in a cloud, are blown outwards in streaks,
   merge, and evaporate after it ([ADR 0011](docs/adr/0011-rain-driven-by-relative-wind.md)).
 - A HUD after the F-16C's: velocity, altitude and heading scales, roll indicator, attitude bars,
@@ -41,7 +41,7 @@ In place:
   scene's time and the municipality below ([ADR 0034](docs/adr/0034-hud.md)).
 - Temporal anti-aliasing, lens flare and AgX tone mapping.
 
-Planned: the JSBSim course as the default, night scenes, colour grading, and a UI;
+Planned: night scenes, colour grading, and a UI;
 forests are still open. The order and the open questions are in [docs/ideas.md](docs/ideas.md).
 
 ## What this project adds
@@ -145,8 +145,8 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 | `date=YYYY-MM-DD`, `time=HH:MM` | Date and time of day in JST |
 | `t=seconds`, `paused` | Start time on the flight path; hold the flight there |
 | `exposure`, `fov` | Exposure before tone mapping; vertical field of view |
-| `path=NAME` | Fly a path computed with JSBSim (`public/paths/NAME.json`), e.g. `path=course` (the course of [ADR 0035](docs/adr/0035-the-course.md)); without it, the placeholder |
-| `altitude`, `speed`, `bank`, `rollrate` | Placeholder flight path |
+| `path=NAME` | Fly another path computed with JSBSim (`public/paths/NAME.json`), or `path=racetrack` for the earlier placeholder; by default the course of [ADR 0035](docs/adr/0035-the-course.md) (the Tokyo area flies the placeholder) |
+| `altitude`, `speed`, `bank`, `rollrate` | Placeholder racetrack |
 | `buildings=0`, `terrain=0`, `clouds=0`, `flare=0`, `drops=0` | Leave out a part of the scene (`drops`: the water drops on the screen in clouds) |
 | `dropsdebug` | Debugging: show the drops' height map in red |
 | `hud=0` | Leave out the aircraft's HUD |

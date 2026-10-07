@@ -135,14 +135,12 @@ Placeholders that later stages replace. Remove each with the stage that replaces
   the Tokyo area only. The Hakone area has a sea-level sphere instead
   ([ADR 0030](adr/0030-terrain-to-the-horizon.md)).
 - `src/flight/placeholderPath.ts`: a racetrack at 250 m/s, level flight only, set per area in
-  `src/areas.ts` (Hakone: heading 293°, 120 s straights, 45° bank, 3,000 m). Replaced by the
-  JSBSim path. Its output has the same form (ECEF positions, body-to-NED attitudes), so the
-  playback and the camera stay. Known fault, left until the JSBSim path (the maintainer,
-  2026-10-07): the lap does not close by about 55 m (`window.__debug.seamGapMetres`), so the
-  camera jumps once a lap at the loop's seam, and the flight path marker is bent within 0.1 s
-  of it.
-- The origins in `src/areas.ts` (Hakone: 139.02° E, 35.23° N, north of Lake Ashi) are placed
-  for the placeholder racetrack and may move when the course is fixed.
+  `src/areas.ts`. Replaced in the Hakone area by the JSBSim course (ADR 0035); still flown in
+  the Tokyo area, which has no course, and with `?path=racetrack`. Known fault: the lap does not
+  close by about 55 m (`window.__debug.seamGapMetres`), so the camera jumps once a lap at the
+  loop's seam, and the flight path marker is bent within 0.1 s of it.
+- The Hakone origin in `src/areas.ts` (139.02° E, 35.23° N, north of Lake Ashi) was placed for
+  the placeholder racetrack; the course stays within about 30 km of it.
 - `src/ui/loading.ts`: the temporary loading screen, redesigned with the UI.
 
 ## Plan
@@ -202,13 +200,13 @@ as room for improvement, listed in the README; changes for performance are still
    (3) a simple controller in Python for holds and turns, with the load factor; (4) choose the
    course with the maintainer, with the demo's length and whether it loops; (5) manoeuvres, at a
    higher sample rate, checking the HUD inverted and the head lag; (6) tile prefetching along the
-   path. Steps 1 to 3 done (2026-10-07): `tools/flightpath/`. Step 4: the course decided
-   ([ADR 0035](adr/0035-the-course.md)); a first version flies it, `?path=course`, to be checked
-   on screen with the maintainer. It is not yet the default.
-   - The first version (`tools/flightpath/fly.py`): 374 s a lap. Start over the bay off Odawara at
-     500 m and 250 m/s; climb at up to 15° to 1,400 m, level through a cumulus for about 5 s
-     (`?debug` lists the path's stretches in cloud), then on up towards Lake Ashi to 2,900 m; a roll at 180°/s after a
-     pull-up to 8° of climb; on at 320 m/s to the south-east of Mount Fuji; a turn to the right at
+   path. Steps 1 to 4 done (2026-10-07): `tools/flightpath/`; the course
+   ([ADR 0035](adr/0035-the-course.md)) accepted by the maintainer on screen and made the default.
+   Next: step 5.
+   - The course (`tools/flightpath/fly.py`): 374 s a lap. Start over the bay off Odawara at 500 m
+     and 250 m/s; climb at up to 15° to 1,400 m, level through a cumulus for about 5 s (`?debug`
+     lists the path's stretches in cloud), then on up towards Lake Ashi to 2,900 m; a roll at
+     180°/s after a pull-up to 8° of climb; on at 320 m/s to the south-east of Mount Fuji; a turn to the right at
      80° of bank (about 6.5 G, down to about 240 m/s); back at 320 m/s north of Hakone; down at up
      to 8° to 500 m, slowing to 250 m/s; a turn to the right at 70° over the bay that ends on the
      start's line about 8 km before the start. The lap closes within about 9 m and 4 m of height;

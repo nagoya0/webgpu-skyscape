@@ -32,9 +32,25 @@ about 1,400 m. From Sagami Bay off Odawara to Mount Fuji is about 46 km, about t
 
 ## Consequences
 
-- The placeholder racetrack and its known seam fault (`docs/ideas.md`) go when this path
-  replaces it as the default.
+- The maintainer accepted the first version on screen (2026-10-07), and it is the default path
+  of the Hakone area.
 - A computed path does not end exactly where it starts; the difference has to be closed so the
   loop does not jump.
 - The course leaves the placeholder's strip, so tiles along the whole lap have to load in time;
   prefetching along the path becomes more useful.
+- The cloud the climb goes through was found with the default cloud settings; with other cloud
+  settings (`?cloudamount=`, `?coverage=`) the climb may miss it.
+
+### Implementation details, not discussed
+
+- The lap is 374 s: 500 m over the bay; up to 1,400 m and level through the cumulus for about
+  5 s; on up to 2,900 m; a roll at 180°/s after a pull-up; 320 m/s towards Mount Fuji; a turn
+  at 80° of bank (about 6.5 G) south-east of the summit; 320 m/s back north of Hakone; down to
+  500 m, slowing to 250 m/s; a turn at 70° over the bay onto the start's line. The waypoints
+  and targets are in `tools/flightpath/fly.py`.
+- The lap's end misses its start by about 9 m and 4 m of height; the difference is spread over
+  the last 10 s.
+- The F-16 model's speed brake is not used: it hardly slows the aircraft and gives an angle of
+  attack of -5° in level flight. The aircraft slows at idle and in hard turns.
+- The placeholder racetrack stays for the Tokyo area, which has no course, and as
+  `?path=racetrack`; its seam fault stays with it.

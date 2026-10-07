@@ -52,7 +52,8 @@ format, the camera, the parameters, the shader preprocessor, the cascaded shadow
 tile decoder, the clouds' density on the CPU, the in-cloud factor and the HUD's scene time.
 The HUD's elements are in `src/hud/`, after the DCS F-16C guide ([ADR 0034](docs/adr/0034-hud.md));
 show the maintainer screenshots of overlapping symbols one at a time.
-Each area's origin, terrain extent and placeholder course are in `src/areas.ts`.
+Each area's origin, terrain extent, default flight path and placeholder racetrack are in
+`src/areas.ts`.
 Flight paths from JSBSim are written by `tools/flightpath/fly.py` (Python, its own venv in
 `tools/flightpath/.venv`) into `public/paths/` and read with `?path=NAME`. The sea's waves are
 baked by `tools/water/bake_ocean.py` (numpy, venv in `tools/water/.venv`) into

@@ -7,8 +7,9 @@
 //   time=HH:MM        time of day in JST (default 16:30)
 //   t=seconds         start time on the flight path (default 0)
 //   paused            hold the flight at that time
-//   path=NAME         fly a path computed with JSBSim, public/paths/NAME.json (tools/flightpath);
-//                     without it, the placeholder racetrack
+//   path=NAME         fly a path computed with JSBSim, public/paths/NAME.json (tools/flightpath),
+//                     or path=racetrack for the placeholder racetrack (default by area: Hakone
+//                     the course of ADR 0035, Tokyo the racetrack)
 //   exposure=number   exposure before tone mapping (default 3)
 //   fov=degrees       vertical field of view (default 70)
 //   lag=seconds       head lag in pitch, for the cockpit view; 0 is none (default 0)

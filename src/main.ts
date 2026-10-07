@@ -176,16 +176,19 @@ async function start(): Promise<void> {
   })
   pipeline.exposure.value = params.exposure
 
-  // ?path=NAME: a path computed with JSBSim; otherwise the placeholder racetrack.
-  const { path, seamGap } = params.path
-    ? { path: await loadPath(params.path), seamGap: 0 }
-    : createPlaceholderPath(frame, {
-        ...area.course,
-        speed: params.speed,
-        height: params.altitude ?? area.course.height,
-        bankDegrees: params.bank ?? area.course.bankDegrees,
-        rollRateDegrees: params.rollRate
-      })
+  // The area's JSBSim path, or another with ?path=NAME; the placeholder racetrack where the area
+  // has no path or with ?path=racetrack.
+  const pathName = params.path ?? area.path
+  const { path, seamGap } =
+    pathName && pathName !== 'racetrack'
+      ? { path: await loadPath(pathName), seamGap: 0 }
+      : createPlaceholderPath(frame, {
+          ...area.course,
+          speed: params.speed,
+          height: params.altitude ?? area.course.height,
+          bankDegrees: params.bank ?? area.course.bankDegrees,
+          rollRateDegrees: params.rollRate
+        })
   debug.date = params.date.toISOString()
   debug.pathSeconds = Number(pathDuration(path).toFixed(1))
   debug.seamGapMetres = Number(seamGap.toFixed(3))
