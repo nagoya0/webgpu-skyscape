@@ -17,7 +17,7 @@ const debug: Record<string, unknown> = {}
 async function main(): Promise<void> {
   const support = await requestDevice()
   if (!support.ok) {
-    debug.error = support.reason
+    debug.error = [support.kind, ...support.details].join(': ')
     return
   }
   const renderer = new WebGPURenderer({ device: support.device, reversedDepthBuffer: true })

@@ -38,7 +38,7 @@ import { createTerrain } from './terrain/terrain'
 import { GEOID_HEIGHT } from './terrain/tileGeometry'
 import { landSpecular, waterTime } from './terrain/water'
 import { DebugWindow, debugStats } from './ui/DebugWindow'
-import { showGuidance } from './ui/guidance'
+import { GuidanceScreen, showGuidance } from './ui/GuidanceScreen'
 import { hideLoading, LoadingScreen, loadingMessage, setLoadingProgress } from './ui/LoadingScreen'
 import { Header } from './ui/Header'
 import { SettingsWindow } from './ui/SettingsWindow'
@@ -56,7 +56,7 @@ initSettings(params)
 render(h(Header, null), document.getElementById('header')!)
 const overlay = document.createElement('div')
 document.getElementById('app')!.appendChild(overlay)
-render(h('div', null, h(LoadingScreen, null), h(DebugWindow, null), h(SettingsWindow, null)), overlay)
+render(h('div', null, h(LoadingScreen, null), h(DebugWindow, null), h(SettingsWindow, null), h(GuidanceScreen, null)), overlay)
 
 // The loading screen's progress at the end of each stage of the start (ADR 0037). Provisional
 // shares, to be tuned so that the bar moves evenly.
@@ -75,7 +75,7 @@ const debug: Record<string, unknown> = {}
 async function start(): Promise<void> {
   const support = await requestDevice()
   if (!support.ok) {
-    showGuidance(support.reason, support.details)
+    showGuidance(support.kind, support.details)
     return
   }
   const { device } = support
@@ -98,13 +98,14 @@ async function start(): Promise<void> {
   // Passing a device should rule out the WebGL 2 fallback; check anyway.
   if (!(renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend) {
     renderer.dispose()
-    showGuidance('The renderer could not start on WebGPU.')
+    showGuidance('renderer-failed')
     return
   }
 
   device.lost.then(info => {
     if (info.reason !== 'destroyed') {
-      showGuidance('The GPU device was lost. Reload the page to try again.', [info.message])
+      renderer.setAnimationLoop(null)
+      showGuidance('device-lost', [info.message])
     }
   })
 
@@ -579,5 +580,5 @@ async function start(): Promise<void> {
 
 start().catch((error: unknown) => {
   console.error(error)
-  showGuidance('The demo failed to start.', [String(error)])
+  showGuidance('start-failed', [String(error)])
 })

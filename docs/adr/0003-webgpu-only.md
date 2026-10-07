@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-10-03
+- Amended: 2026-10-08 (the screen rebuilt with the UI, [ADR 0037](0037-ui.md))
 
 ## Context
 
@@ -21,6 +22,10 @@ The demo runs on WebGPU only. At start-up it checks:
 
 If any check fails, the page shows a guidance screen instead of a black canvas. The screen says
 what is missing and points to the README, which lists the tested browsers and the demo video.
+Since 2026-10-08 ([ADR 0037](0037-ui.md)) it says in Japanese what is wrong and what to do,
+with technical details in English, and offers a reload where that may help; it no longer links
+to the README, as the header links to the repository. It also covers a failed start and a lost
+GPU device.
 
 ## Consequences
 

@@ -147,8 +147,6 @@ Placeholders that later stages replace. Remove each with the stage that replaces
 
 - The Hakone origin in `src/areas.ts` (139.02° E, 35.23° N, north of Lake Ashi) was placed for
   the placeholder racetrack, now removed; the course stays within about 30 km of it.
-- `src/ui/guidance.ts`: the screen for unsupported browsers, to be rebuilt with Preact
-  ([ADR 0037](adr/0037-ui.md)).
 
 ## Plan
 
@@ -240,9 +238,9 @@ as room for improvement, listed in the README; changes for performance are still
 4. **The UI** ([ADR 0037](adr/0037-ui.md)), started 2026-10-08 as the maintainer judged the
    features complete enough to prepare for publishing; the Tokyo area was removed first
    ([ADR 0036](adr/0036-remove-the-tokyo-area.md)). Done: the header, the settings window with
-   its settings and credits tabs, the debug window, Current G on the HUD, the loading screen.
-   Left: the screen for unsupported browsers, and removing development parameters that are
-   no longer used.
+   its settings and credits tabs, the debug window, Current G on the HUD, the loading screen, the
+   screen for when the demo cannot run. Left: removing development parameters that are no longer
+   used.
 
 Not yet placed: a check of temporal anti-aliasing at 250 to 320 m/s (tile prefetching is step 6
 of the JSBSim path).

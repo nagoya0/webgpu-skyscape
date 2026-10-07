@@ -41,9 +41,10 @@ In place:
 - A UI in Japanese, built with Preact ([ADR 0037](docs/adr/0037-ui.md)): a header with the
   frame rate; a settings window with the scene's date and time, pausing and the position on
   the course, the HUD and the clouds, and the data credits; a debug window with rendering
-  figures; a loading screen with one progress bar for the whole start.
+  figures; a loading screen with one progress bar for the whole start; a screen saying what to do
+  when the demo cannot run.
 
-Planned: the rest of the UI (the screen for unsupported browsers), night
+Planned: night
 scenes and colour grading; forests are still open. The order and the open questions are in [docs/ideas.md](docs/ideas.md).
 
 ## What this project adds

@@ -33,7 +33,7 @@ const FAR = 1e6
 async function main(): Promise<void> {
   const support = await requestDevice()
   if (!support.ok) {
-    debug.error = support.reason
+    debug.error = [support.kind, ...support.details].join(': ')
     return
   }
   debug.adapter = `${support.adapterInfo.vendor} ${support.adapterInfo.architecture} ${support.adapterInfo.description}`

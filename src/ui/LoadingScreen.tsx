@@ -27,6 +27,11 @@ export function hideLoading(): void {
   setTimeout(() => (phase.value = 'gone'), 900)
 }
 
+/** Removes the screen at once, without starting the demo, for the screen of a failed start. */
+export function removeLoading(): void {
+  phase.value = 'gone'
+}
+
 export function LoadingScreen() {
   if (phase.value === 'gone') return null
   return (
