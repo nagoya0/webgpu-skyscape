@@ -272,6 +272,8 @@ async function start(): Promise<void> {
   const attitude = new Euler()
   function drawHud(): void {
     hud.update(renderer, cockpit.offsetQuaternion, camera.fov)
+    // ?hud=0: the aircraft's HUD left out. Its canvas stays clear, so nothing more is uploaded.
+    if (!params.hud && !params.hudDebug) return
     const { canvas, context } = hud.aircraft
     if (params.hudDebug) {
       drawHudDebug(hud.screen, hud.aircraft, cockpit.aircraftQuaternion, camera.fov)

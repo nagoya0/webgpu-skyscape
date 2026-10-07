@@ -35,6 +35,9 @@ export async function loadHudFont(): Promise<void> {
 /** How opaque the HUD is laid over the image, for both layers (0 to 1). */
 export const HUD_OPACITY = 0.8
 
+/** Width of every HUD line, in degrees on the HUD (the maintainer, 2026-10-07). */
+export const HUD_LINE = 0.1
+
 /** HUD green, as the maintainer wants the text and lines (2026-10-07). */
 export const HUD_GREEN = 'rgb(115, 255, 150)'
 

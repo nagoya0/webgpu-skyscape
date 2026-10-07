@@ -51,7 +51,8 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     maintainer); the boresight cross (open in the middle) and the flight path marker
     (`src/hud/flightPathMarker.ts`), where the velocity points. On the placeholder path the marker
     sits on the cross, except within 0.1 s of the loop's seam, where the course's 55 m closing
-    gap bends the velocity.
+    gap bends the velocity. The aircraft's HUD is complete for now (the maintainer, 2026-10-07);
+    `?hud=0` leaves it out, and all its lines share one width, `HUD_LINE` (0.1°).
   - To check with the JSBSim path's manoeuvres (the maintainer): the instruments must stay right
     when the aircraft rolls through inverted. The bank comes from the attitude as yaw, pitch, roll,
     so it is undefined with the nose straight up or down, where it may jump.

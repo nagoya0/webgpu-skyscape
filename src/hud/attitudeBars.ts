@@ -1,9 +1,9 @@
 // The HUD's Attitude Bars (pitch ladder), after the DCS: F-16C Viper guide (HUD symbology, item
 // 10): bars every 5° of pitch (every 10° beyond 60°) and the Horizon Line at 0°; bars above the
 // horizon solid, below it dashed; all canted by half their angle into a caret pointing at the
-// horizon (the maintainer, from the real aircraft); each bar with a short line at its inner end pointing towards the
-// horizon, and its angle standing on its outer end. Only the five or so bars nearest the nose's
-// pitch are drawn (the maintainer), as the real HUD's 25° field shows few.
+// horizon (the maintainer, from the real aircraft); each bar with a short line at its inner end
+// pointing towards the horizon, and its angle standing on its outer end. Only the five or so bars
+// nearest the nose's pitch are drawn (the maintainer), as the real HUD's 25° field shows few.
 //
 // The bars mark the scene, so they sit at true angles: each is the direction at its elevation on
 // the aircraft's heading, projected through the airframe's attitude, and turns with the bank. The
@@ -13,7 +13,7 @@
 // and altitude tapes).
 import { Quaternion, Vector3 } from 'three/webgpu'
 
-import { hudStyle, HUD_FONT_FAMILY } from './hud'
+import { HUD_FONT_FAMILY, HUD_LINE, hudStyle } from './hud'
 
 /** In degrees on the HUD: half the gap in the middle, and each half bar's length. */
 const HALF_GAP = 5.1
@@ -32,7 +32,6 @@ const DASHES = 4
 const DASH = BAR / (DASHES + (DASHES - 1) * 0.6)
 const DASH_GAP = DASH * 0.6
 const TEXT = 1.5
-const LINE = 0.15
 /** Only the bars this close to the nose's pitch are drawn: five at 5° spacing (the maintainer). */
 const WINDOW = 12.5
 
@@ -72,7 +71,7 @@ export function drawAttitudeBars(
 
   context.save()
   hudStyle(context, height)
-  context.lineWidth = Math.max(1, LINE * d)
+  context.lineWidth = Math.max(1, HUD_LINE * d)
   const textPx = Math.max(10, Math.round(TEXT * d))
   context.font = `${textPx}px ${HUD_FONT_FAMILY}`
   context.textBaseline = 'middle'

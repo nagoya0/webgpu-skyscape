@@ -9,7 +9,7 @@
 // maintainer wants them symmetric: the same size, three times the guide's; the box's point 20°
 // right of the boresight; the same length of tape on screen (1,500 ft either side of the current
 // value); the current value's line as long as the velocity scale's, which runs past its G.
-import { hudStyle, HUD_FONT_FAMILY } from './hud'
+import { HUD_FONT_FAMILY, HUD_LINE, hudStyle } from './hud'
 
 export const FEET_PER_METRE = 1 / 0.3048
 
@@ -28,9 +28,8 @@ const MAJOR_EXTRA = 0.375
 const LABEL_IN = 0.3
 /** Beyond the ticks the line runs as far as past the velocity scale's G: gap, G, gap. */
 const LETTER_GAP = 0.3
-/** Text height and line width. */
+/** Text height. */
 const TEXT = 1.5
-const LINE = 0.15
 
 /**
  * Draws digits with a comma that takes no room of its own, as in the guide's HUD: the comma sits
@@ -77,7 +76,7 @@ export function drawAltitudeScale(
 
   context.save()
   hudStyle(context, height)
-  context.lineWidth = Math.max(1, LINE * d)
+  context.lineWidth = Math.max(1, HUD_LINE * d)
   context.font = `${textPx}px ${HUD_FONT_FAMILY}`
   context.textBaseline = 'middle'
 

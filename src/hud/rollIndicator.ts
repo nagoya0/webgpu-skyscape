@@ -8,7 +8,7 @@
 //
 // Placed below the heading scale as in the guide's picture, three times its size (docs/ideas.md):
 // the circle's centre 17.5° below the boresight, its radius 8.7°.
-import { hudStyle } from './hud'
+import { HUD_LINE, hudStyle } from './hud'
 
 /** The circle, in degrees: centre below the boresight, and radius to the marks' inner ends. */
 const CENTRE_DOWN = 17.5
@@ -20,7 +20,6 @@ const SHORT_MARK = 0.7
 const CARET_GAP = 0.2
 const CARET_HEIGHT = 1.15
 const CARET_HALF_BASE = 0.55
-const LINE = 0.15
 
 /** The last mark; the caret goes no further. */
 const MAX_BANK = 45
@@ -56,7 +55,7 @@ export function drawRollIndicator(
 
   context.save()
   hudStyle(context, height)
-  context.lineWidth = Math.max(1, LINE * d)
+  context.lineWidth = Math.max(1, HUD_LINE * d)
 
   context.beginPath()
   for (const [angle, long] of MARKS) {

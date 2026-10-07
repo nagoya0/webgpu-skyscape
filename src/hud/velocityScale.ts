@@ -12,7 +12,7 @@
 // Only the ground speed is shown, with its letter G (the maintainer): the simplest value, as the
 // flight path has no wind. The real HUD can also show calibrated (C) and true (T) airspeed, which
 // need the atmosphere.
-import { hudStyle, HUD_FONT_FAMILY } from './hud'
+import { HUD_FONT_FAMILY, HUD_LINE, hudStyle } from './hud'
 
 export const KNOTS_PER_METRE_PER_SECOND = 3600 / 1852
 
@@ -30,9 +30,8 @@ const MAJOR_EXTRA = 0.375
 /** Gap between a label and its tick's left end; between the ticks and the letter. */
 const LABEL_GAP = 0.45
 const LETTER_GAP = 0.3
-/** Text height and line width. */
+/** Text height. */
 const TEXT = 1.5
-const LINE = 0.15
 
 /**
  * Draws the velocity scale on the aircraft layer.
@@ -54,7 +53,7 @@ export function drawVelocityScale(
 
   context.save()
   hudStyle(context, height)
-  context.lineWidth = Math.max(1, LINE * d)
+  context.lineWidth = Math.max(1, HUD_LINE * d)
   context.font = `${textPx}px ${HUD_FONT_FAMILY}`
   context.textBaseline = 'middle'
 

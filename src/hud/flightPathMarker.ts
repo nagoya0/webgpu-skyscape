@@ -8,7 +8,7 @@
 // cross; the JSBSim path's angle of attack and sideslip will move it.
 import type { Vector3 } from 'three/webgpu'
 
-import { hudStyle } from './hud'
+import { HUD_LINE, hudStyle } from './hud'
 
 /**
  * In degrees on the HUD: the cross's arms reach out to CROSS_ARM from an open centre of half-width
@@ -19,7 +19,6 @@ const CROSS_GAP = 0.35
 const RADIUS = 0.8
 const WING = 2.0
 const FIN = 1.2
-const LINE = 0.15
 
 /** Draws the boresight cross at the image's centre, straight ahead of the airframe, open in the middle. */
 export function drawBoresightCross(
@@ -33,7 +32,7 @@ export function drawBoresightCross(
   const cy = height / 2
   context.save()
   hudStyle(context, height)
-  context.lineWidth = Math.max(1, LINE * d)
+  context.lineWidth = Math.max(1, HUD_LINE * d)
   context.beginPath()
   for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
     context.moveTo(cx + dx * CROSS_GAP * d, cy + dy * CROSS_GAP * d)
@@ -62,7 +61,7 @@ export function drawFlightPathMarker(
   const r = RADIUS * d
   context.save()
   hudStyle(context, height)
-  context.lineWidth = Math.max(1, LINE * d)
+  context.lineWidth = Math.max(1, HUD_LINE * d)
   context.beginPath()
   context.arc(x, y, r, 0, Math.PI * 2)
   context.moveTo(x - r, y)

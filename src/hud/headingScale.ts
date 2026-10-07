@@ -5,7 +5,7 @@
 //
 // The tape is compressed as in the guide's picture (a degree of heading about 0.19° on the HUD)
 // and, like the velocity scale, drawn three times the guide's size (docs/ideas.md).
-import { hudStyle, HUD_FONT_FAMILY } from './hud'
+import { HUD_FONT_FAMILY, HUD_LINE, hudStyle } from './hud'
 
 /**
  * Where the tape's line is, in degrees below the boresight: the lubber line's top level with the
@@ -23,9 +23,8 @@ const LUBBER = 2.3
 const LUBBER_GAP = 0.2
 /** Gap between the ticks and the labels' row. */
 const LABEL_GAP = 0.3
-/** Text height and line width. */
+/** Text height. */
 const TEXT = 1.5
-const LINE = 0.15
 
 /**
  * Draws the heading scale on the aircraft layer.
@@ -47,7 +46,7 @@ export function drawHeadingScale(
 
   context.save()
   hudStyle(context, height)
-  context.lineWidth = Math.max(1, LINE * d)
+  context.lineWidth = Math.max(1, HUD_LINE * d)
   context.font = `${textPx}px ${HUD_FONT_FAMILY}`
   context.textBaseline = 'middle'
   context.textAlign = 'center'
