@@ -2,6 +2,7 @@
 
 - Status: Accepted; tile storage not needed so far, see the update below
 - Date: 2026-10-03
+- Amended: 2026-10-08 (no buildings from PLATEAU any more: the Tokyo area removed, [ADR 0036](0036-remove-the-tokyo-area.md))
 
 ## Context
 

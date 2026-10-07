@@ -1,7 +1,7 @@
 // A sea-level surface beyond the terrain: a cap of a sphere around the earth's centre, drawn as
 // water, so that anything past the terrain's edge reads as sea rather than a gap. It lies a
-// little below sea level, so the terrain wins wherever it exists. Replaces the flat placeholder
-// disc, which rose above the curving sea beyond about 25 km.
+// little below sea level, so the terrain wins wherever it exists. A flat disc, used before, rose
+// above the curving sea beyond about 25 km (ADR 0030).
 import { vec3 } from 'three/tsl'
 import {
   DataTexture,

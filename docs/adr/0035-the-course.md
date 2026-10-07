@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-10-07
+- Amended: 2026-10-08 (the placeholder racetrack removed with the Tokyo area, [ADR 0036](0036-remove-the-tokyo-area.md))
 - Replaces the placeholder course of [ADR 0028](0028-area-sagami-bay-hakone-fuji.md)
 
 ## Context

@@ -2,6 +2,7 @@
 
 - Status: Accepted; the shader language is partly superseded by [0022](0022-heavy-shaders-in-wgsl.md)
 - Date: 2026-10-03
+- Amended: 2026-10-08 (3DTilesRendererJS removed with the PLATEAU buildings, [ADR 0036](0036-remove-the-tokyo-area.md))
 
 ## Context
 

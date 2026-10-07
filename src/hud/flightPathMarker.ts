@@ -4,8 +4,8 @@
 // actually going, its velocity. Both mark the scene, so they sit at true angles; their sizes are
 // three times the guide's (docs/ideas.md).
 //
-// On the placeholder path the nose always points along the velocity, so the marker sits on the
-// cross; the JSBSim path's angle of attack and sideslip will move it.
+// The JSBSim path's angle of attack and sideslip move the marker off the cross: about 0.2° below
+// it in straight flight at 250 m/s, about 10° in the course's hardest turn.
 import type { Vector3 } from 'three/webgpu'
 
 import { HUD_LINE, hudStyle } from './hud'

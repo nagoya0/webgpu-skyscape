@@ -14,7 +14,8 @@ export const SEGMENTS = 32
 /**
  * Geoid height over central Tokyo, from GSI's geoid calculator (2026-10-06): 36.69 m at
  * 35.665 N 139.757 E, 37.07 m at Shinjuku, 36.83 m at Oshiage. GSI heights are above the
- * geoid; PLATEAU and the atmosphere use the ellipsoid. A constant is within 0.4 m here.
+ * geoid; the atmosphere uses the ellipsoid. A constant is within 0.4 m there. Measured for the
+ * Tokyo area, since removed; still to be checked for Hakone (docs/ideas.md).
  */
 export const GEOID_HEIGHT = 36.8
 

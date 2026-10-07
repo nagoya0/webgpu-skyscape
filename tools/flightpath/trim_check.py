@@ -11,8 +11,7 @@ SECONDS = 60
 
 
 def main() -> None:
-    # The Hakone origin (src/areas.ts) at 3,000 m and 250 m/s (ADR 0018), on the placeholder
-    # course's first heading.
+    # The Hakone origin (src/areas.ts) at 3,000 m and 250 m/s (ADR 0018), on heading 293.
     fdm = create_fdm(35.23, 139.02, 3000.0, 250.0, 293.0, RATE)
 
     def report(label: str) -> None:

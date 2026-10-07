@@ -4,6 +4,7 @@
   [0028](0028-area-sagami-bay-hakone-fuji.md); tiles from the sources by
   [0026](0026-own-terrain-from-gsi-tiles.md) (updates below)
 - Date: 2026-10-03
+- Amended: 2026-10-08 (the Tokyo area and the PLATEAU buildings removed, [ADR 0036](0036-remove-the-tokyo-area.md))
 
 ## Context
 

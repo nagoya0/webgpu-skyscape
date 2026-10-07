@@ -74,11 +74,8 @@ const LEVEL_COLORS: [number, number, number][] = [
   [1, 0, 0], [1, 0.5, 0], [1, 1, 0], [0, 1, 0], [0, 1, 1], [0, 0.3, 1], [0.7, 0, 1], [1, 1, 1]
 ]
 
-export const DEFAULT_TERRAIN: TerrainOptions = {
-  longitude: 139.757,
-  latitude: 35.665,
-  extentDegrees: 0.6,
-  rootZoom: 10,
+/** Defaults for the options that do not depend on the area; an area sets where and how wide. */
+export const DEFAULT_TERRAIN: Omit<TerrainOptions, 'longitude' | 'latitude' | 'extentDegrees' | 'rootZoom'> = {
   maxZoom: 17,
   photoLevels: 1,
   texelPixels: 1.5,
@@ -119,7 +116,7 @@ export interface Terrain {
 
 export function createTerrain(
   frame: LocalFrame,
-  options: TerrainOptions = DEFAULT_TERRAIN,
+  options: TerrainOptions,
   /** For the sky reflected on water; without it, water is drawn as the photograph. */
   atmosphereContext: AtmosphereContext | null = null
 ): Terrain {
