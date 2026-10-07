@@ -27,7 +27,9 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   pilot's head added (lag, sinking under load). In the first-person view the last two are the
   same while the body effects are off. To be done when the HUD or the cockpit view is built.
 - **The HUD**, drawn after the post-processing, in two kinds (the maintainer, 2026-10-07):
-  - Fixed to the screen: the time of day, a mini map (whether to show one is open).
+  - Fixed to the screen: the time of day, a mini map (whether to show one is open). In place:
+    the scene's time top left, "SCENE 2026-10-07 16:30 JST" in HUD green (the maintainer;
+    `src/hud/sceneTime.ts`); the `?debug` text moved to the top right.
   - The aircraft's HUD, as in a fighter's real head-up display: heading, pitch, altitude, speed
     and the like. It moves with the airframe's vibration. Everything a real HUD would show goes
     on this layer (the maintainer); the screen layer is only for what is not part of the

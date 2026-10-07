@@ -22,6 +22,7 @@ import { drawAttitudeBars } from './hud/attitudeBars'
 import { drawBoresightCross, drawFlightPathMarker } from './hud/flightPathMarker'
 import { drawHeadingScale } from './hud/headingScale'
 import { drawRollIndicator } from './hud/rollIndicator'
+import { drawSceneTime } from './hud/sceneTime'
 import { drawVelocityScale, KNOTS_PER_METRE_PER_SECOND } from './hud/velocityScale'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath } from './flight/placeholderPath'
@@ -263,6 +264,7 @@ async function start(): Promise<void> {
 
   // The HUD: both layers redrawn each frame, as their values change all the time.
   const aircraftGeodetic = new Geodetic()
+  let screenDrawn = false
   const nose = new Vector3()
   const ahead = createAircraftState()
   const aheadWorld = new Vector3()
@@ -271,7 +273,16 @@ async function start(): Promise<void> {
   const bodyToWorld = new Quaternion()
   const attitude = new Euler()
   function drawHud(): void {
-    hud.update(renderer, cockpit.offsetQuaternion, camera.fov)
+    const resized = hud.update(renderer, cockpit.offsetQuaternion, camera.fov)
+    const pixelsPerDegree = (hud.aircraft.canvas.height / 2 / Math.tan((camera.fov * Math.PI) / 360)) * (Math.PI / 180)
+    // The screen layer: the scene's time, drawn again only when the canvas is new.
+    if ((resized || !screenDrawn) && !params.hudDebug) {
+      const { canvas: screen, context: screenContext } = hud.screen
+      screenContext.clearRect(0, 0, screen.width, screen.height)
+      drawSceneTime(screenContext, screen.height, pixelsPerDegree, params.date)
+      hud.screen.changed()
+      screenDrawn = true
+    }
     // ?hud=0: the aircraft's HUD left out. Its canvas stays clear, so nothing more is uploaded.
     if (!params.hud && !params.hudDebug) return
     const { canvas, context } = hud.aircraft
@@ -280,7 +291,6 @@ async function start(): Promise<void> {
     } else {
       context.clearRect(0, 0, canvas.width, canvas.height)
     }
-    const pixelsPerDegree = (canvas.height / 2 / Math.tan((camera.fov * Math.PI) / 360)) * (Math.PI / 180)
     // Ground speed: the path's speed, as it has no wind.
     drawVelocityScale(context, canvas.width, canvas.height, pixelsPerDegree, params.speed * KNOTS_PER_METRE_PER_SECOND)
     // Height above mean sea level: GSI heights are above the geoid (ADR 0026).

@@ -1,4 +1,4 @@
-// Debug text in the top left corner, shown with ?debug. The maintainer allows temporary text
+// Debug text in the top right corner (the top left holds the scene's time), shown with ?debug. The maintainer allows temporary text
 // output for debugging before the UI is designed (ADR 0019). Plain text only, no controls.
 
 export interface DebugText {
@@ -10,7 +10,7 @@ export function showDebugText(): DebugText {
   Object.assign(element.style, {
     position: 'fixed',
     top: '8px',
-    left: '8px',
+    right: '8px',
     margin: '0',
     padding: '4px 6px',
     font: '12px/1.4 ui-monospace, monospace',
