@@ -54,6 +54,16 @@ export interface CockpitCamera {
   options: CockpitCameraOptions
   /** Moves the camera to the aircraft. Pass dt = 0 to jump without lag. */
   update(state: AircraftState, dt: number, time: number): void
+  /**
+   * The camera's attitude before the shake and the body effects: the airframe's, looking forward.
+   * The aircraft's HUD is drawn in this frame.
+   */
+  readonly aircraftQuaternion: Quaternion
+  /**
+   * The camera's turn off the airframe's attitude (head lag, then shake; camera axes), so that
+   * camera = aircraftQuaternion × offsetQuaternion.
+   */
+  readonly offsetQuaternion: Quaternion
 }
 
 export function createCockpitCamera(
@@ -67,6 +77,7 @@ export function createCockpitCamera(
   const delta = new Quaternion()
   const lag = new Quaternion()
   const shake = new Quaternion()
+  const offset = new Quaternion()
   const shakeEuler = new Euler()
   const up = new Vector3()
   let pitchOffset = 0
@@ -75,6 +86,8 @@ export function createCockpitCamera(
 
   return {
     options,
+    aircraftQuaternion: target,
+    offsetQuaternion: offset,
     update(state, dt, time) {
       ecefToWorld(frame, state.ecef, camera.position)
       nedToWorldRotation(frame, state.ecef, nedToWorld)
@@ -115,7 +128,8 @@ export function createCockpitCamera(
       )
       shake.setFromEuler(shakeEuler)
       lag.setFromAxisAngle(CAMERA_RIGHT, pitchOffset)
-      camera.quaternion.copy(target).multiply(lag).multiply(shake)
+      offset.copy(lag).multiply(shake)
+      camera.quaternion.copy(target).multiply(offset)
 
       // Pressed into the seat above 1 G, lifted below it.
       up.set(0, 1, 0).applyQuaternion(target)

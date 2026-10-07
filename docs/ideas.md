@@ -30,6 +30,12 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   - Fixed to the screen: the time of day, a mini map (whether to show one is open).
   - The aircraft's HUD, as in a fighter's real head-up display: heading, pitch, altitude, speed
     and the like. It moves with the airframe's vibration.
+  - Text and lines in HUD green with a glow (the maintainer). The elements are added one at a
+    time as the maintainer asks; the typeface is still to be chosen.
+  - In place (2026-10-07, `src/hud/`): both layers drawn with Canvas 2D and laid over the image
+    after the water drops; the aircraft layer is drawn in the airframe's frame and turned by the
+    camera's shake, so it shakes with the scene and stays on it. `?huddebug` draws a test
+    pattern, with a horizon from the airframe's attitude that stays on the real one.
 - **The course** ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)). For now the simple
   out-and-back from Sagami Bay towards Mount Fuji at 3,000 m, above the low clouds. Later, as the
   maintainer would like: dropping below the cloud base and climbing back, and some fighter

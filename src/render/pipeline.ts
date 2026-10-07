@@ -1,6 +1,6 @@
 // Post-processing (ADR 0010): aerial perspective, then whatever composites over it (clouds),
 // lens flare, tone mapping, temporal anti-aliasing, and the water drops on the screen last, as
-// they sit on the screen and must not be smeared by the anti-aliasing's history.
+// they sit on the screen and must not be smeared by the anti-aliasing's history, then the HUD.
 import { aerialPerspective } from '@takram/three-atmosphere/webgpu'
 import {
   dithering,
@@ -10,6 +10,7 @@ import {
 } from '@takram/three-geospatial/webgpu'
 import { convertToTexture, mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import { dropsComposite, type Drops } from '../effects/drops'
+import { hudComposite, type createHud } from '../hud/hud'
 import {
   AgXToneMapping,
   RenderPipeline,
@@ -47,6 +48,8 @@ export function createPipeline(
     drops?: Drops
     /** Show the drops' height map in red (?dropsdebug). */
     dropsDebug?: boolean
+    /** The HUD, laid over everything else. */
+    hud?: ReturnType<typeof createHud>
   } = {}
 ): Pipeline {
   const passNode = pass(scene, camera, { samples: 0 }).setMRT(
@@ -63,9 +66,10 @@ export function createPipeline(
   const exposure = uniform(3)
   const toneMapped = toneMapping(AgXToneMapping, exposure, flare ? asNode(flare) : composited)
   const taa = temporalAntialias(toneMapped, depth, velocity, camera)
-  const final = options.drops
+  const withDrops = options.drops
     ? dropsComposite(convertToTexture(asNode<'vec4'>(taa)), options.drops, options.dropsDebug)
     : asNode<'vec4'>(taa)
+  const final = options.hud ? hudComposite(withDrops, options.hud) : withDrops
 
   // Dithering is a vec3; adding it to the vec4 output leaves alpha as it is, as upstream does.
   const renderPipeline = new RenderPipeline(renderer, final.add(asNode<'vec4'>(dithering)))

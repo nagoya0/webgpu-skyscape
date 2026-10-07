@@ -13,6 +13,8 @@ import {
 import { createCockpitCamera } from './camera/cockpitCamera'
 import { createDrops } from './effects/drops'
 import { createInCloud } from './effects/inCloud'
+import { createHud } from './hud/hud'
+import { drawHudDebug } from './hud/hudDebug'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath } from './flight/placeholderPath'
 import { createLocalFrame, ecefToWorld } from './geo/localFrame'
@@ -149,10 +151,12 @@ async function start(): Promise<void> {
   }
   // Water drops on the screen in clouds (ADR 0011); they need the clouds' density.
   const drops = clouds && params.drops ? createDrops() : null
+  const hud = createHud()
   const pipeline = createPipeline(renderer, scene, camera, clouds ? [clouds.stage] : [], {
     lensFlare: params.flare,
     shadowLength: clouds?.shadowLength,
     drops: drops ?? undefined,
+    hud,
     dropsDebug: params.dropsDebug
   })
   pipeline.exposure.value = params.exposure
@@ -295,6 +299,9 @@ async function start(): Promise<void> {
       debug.drops = drops.count
       debug.dropsMs = Number(dropsMilliseconds.toFixed(3))
     }
+    hud.update(renderer, cockpit.offsetQuaternion, camera.fov)
+    if (params.hudDebug) drawHudDebug(hud.screen, hud.aircraft, cockpit.aircraftQuaternion, camera.fov)
+    hud.upload()
     pipeline.render()
   }
 

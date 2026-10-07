@@ -55,6 +55,7 @@
 //   flare=0           leave out the lens flare
 //   drops=0           leave out the water drops on the screen in clouds
 //   dropsdebug        show the drops' height map in red
+//   huddebug          draw a test pattern on both HUD layers
 //   measure           after loading, time 180 frames and report them in window.__debug
 //   debug             show debug text: flight time, height, load factor, frame time
 
@@ -96,6 +97,7 @@ export interface Params {
   flare: boolean
   drops: boolean
   dropsDebug: boolean
+  hudDebug: boolean
   clouds: boolean
   groundShadow: boolean
   cloudAmount: 'few' | 'normal' | 'many'
@@ -179,6 +181,7 @@ export function readParams(search: string, now = new Date()): Params {
     flare: query.get('flare') !== '0',
     drops: query.get('drops') !== '0',
     dropsDebug: query.has('dropsdebug'),
+    hudDebug: query.has('huddebug'),
     clouds: query.get('clouds') !== '0',
     groundShadow: query.get('groundshadow') !== '0',
     cloudAmount: (['few', 'normal', 'many'] as const).find(a => a === query.get('cloudamount')) ?? 'normal',
