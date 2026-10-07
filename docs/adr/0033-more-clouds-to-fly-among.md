@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-10-07
+- Amended: 2026-10-08 (the amount changes while the demo runs; named in the UI, [ADR 0037](0037-ui.md))
 
 ## Context
 
@@ -28,6 +29,8 @@ three runs): takram's layers 3.34 ms at t=110; the chosen layers within the runs
 - **Amount** (`?cloudamount=`): the weather map is raised to a power in the low and middle
   layers, which thins them out. `few` cubes it, `normal` (the default, chosen by the maintainer)
   squares it, `many` leaves it as takram's. `?coverage=` still changes all layers together.
+  Since 2026-10-08 both can change while the demo runs, in the settings window: the amount as
+  雲の大きさ (small, normal, large), the coverage as 雲の量 ([ADR 0037](0037-ui.md)).
 - **The haze** keeps its top at 2,200 m, the top of takram's low layers, as agreed on 2026-10-06
   ([clouds-parity.md](../clouds-parity.md)); it no longer follows the top of the shadow-casting
   layers.
