@@ -36,6 +36,11 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     Guide (Eagle Dynamics), the F-16C Block 50 (the maintainer, 2026-10-07; ADR 0018 sets an
     F-16-class aircraft). Not all of it: elements are added one at a time as the maintainer
     chooses, drawn by this project from the guide's layout and meaning.
+  - Size: the real HUD spans 25°, small in the demo's 70° view, so elements that do not mark
+    the scene are drawn three times the guide's angular size, as the velocity scale is (the
+    maintainer, 2026-10-07); elements that mark the scene (horizon, pitch ladder, flight path
+    marker) stay at true angles. The HUD is laid over the image at 75 % opacity.
+  - Elements so far: the velocity scale (ground speed in knots, `src/hud/velocityScale.ts`).
   - Text and lines in HUD green with a glow (the maintainer). The elements are added one at a
     time as the maintainer asks. Typeface: Share Tech Mono (the maintainer, from eight open
     typefaces), bundled in `public/fonts/`.

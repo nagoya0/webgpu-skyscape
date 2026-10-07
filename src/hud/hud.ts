@@ -32,8 +32,11 @@ export async function loadHudFont(): Promise<void> {
   document.fonts.add(await face.load())
 }
 
+/** How opaque the HUD is laid over the image, for both layers (0 to 1). */
+export const HUD_OPACITY = 0.8
+
 /** HUD green, as the maintainer wants the text and lines (2026-10-07). */
-export const HUD_GREEN = 'rgb(90, 255, 130)'
+export const HUD_GREEN = 'rgb(115, 255, 150)'
 
 /**
  * Sets a context to draw in HUD green with a glow around every stroke and letter. The glow is
@@ -165,7 +168,7 @@ export function hudComposite(image: Node<'vec4'>, hud: ReturnType<typeof createH
     const aircraftUv = vec2(projected.x.add(1).mul(0.5), projected.y.negate().add(1).mul(0.5))
     const aircraft = texture(hud.aircraftLayer.texture).sample(aircraftUv)
     const screen = texture(hud.screenLayer.texture).sample(screenUV)
-    const withAircraft = mix(image.rgb, aircraft.rgb, aircraft.a)
-    return vec4(mix(withAircraft, screen.rgb, screen.a), image.a)
+    const withAircraft = mix(image.rgb, aircraft.rgb, aircraft.a.mul(HUD_OPACITY))
+    return vec4(mix(withAircraft, screen.rgb, screen.a.mul(HUD_OPACITY)), image.a)
   })() as Node<'vec4'>
 }

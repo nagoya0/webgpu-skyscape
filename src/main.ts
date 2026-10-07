@@ -15,6 +15,7 @@ import { createDrops } from './effects/drops'
 import { createInCloud } from './effects/inCloud'
 import { createHud, loadHudFont } from './hud/hud'
 import { drawHudDebug } from './hud/hudDebug'
+import { drawVelocityScale, KNOTS_PER_METRE_PER_SECOND } from './hud/velocityScale'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath } from './flight/placeholderPath'
 import { createLocalFrame, ecefToWorld } from './geo/localFrame'
@@ -252,6 +253,21 @@ async function start(): Promise<void> {
   // CPU time of the drops' update (simulation and encoding their draw), averaged.
   let dropsMilliseconds = 0
 
+  // The HUD: both layers redrawn each frame, as their values change all the time.
+  function drawHud(): void {
+    hud.update(renderer, cockpit.offsetQuaternion, camera.fov)
+    const { canvas, context } = hud.aircraft
+    if (params.hudDebug) {
+      drawHudDebug(hud.screen, hud.aircraft, cockpit.aircraftQuaternion, camera.fov)
+    } else {
+      context.clearRect(0, 0, canvas.width, canvas.height)
+    }
+    const pixelsPerDegree = (canvas.height / 2 / Math.tan((camera.fov * Math.PI) / 360)) * (Math.PI / 180)
+    // Ground speed: the path's speed, as it has no wind.
+    drawVelocityScale(context, canvas.width, canvas.height, pixelsPerDegree, params.speed * KNOTS_PER_METRE_PER_SECOND)
+    hud.aircraft.changed()
+  }
+
   // One frame: move the aircraft, update the tiles, draw.
   function step(flightDelta: number, elapsed: number): void {
     flightTime += flightDelta
@@ -301,8 +317,7 @@ async function start(): Promise<void> {
       debug.drops = drops.count
       debug.dropsMs = Number(dropsMilliseconds.toFixed(3))
     }
-    hud.update(renderer, cockpit.offsetQuaternion, camera.fov)
-    if (params.hudDebug) drawHudDebug(hud.screen, hud.aircraft, cockpit.aircraftQuaternion, camera.fov)
+    drawHud()
     hud.upload()
     pipeline.render()
   }
