@@ -33,10 +33,9 @@ import { requestDevice } from './gpu/support'
 import { readParams } from './params'
 import { createPipeline } from './render/pipeline'
 import { createSeaSphere } from './terrain/seaSphere'
-import { photoGrade } from './terrain/photoGrade'
 import { createTerrain } from './terrain/terrain'
 import { GEOID_HEIGHT } from './terrain/tileGeometry'
-import { landSpecular, waterTime } from './terrain/water'
+import { waterTime } from './terrain/water'
 import { DebugWindow, debugStats } from './ui/DebugWindow'
 import { GuidanceScreen, showGuidance } from './ui/GuidanceScreen'
 import { hideLoading, LoadingScreen, loadingMessage, setLoadingProgress } from './ui/LoadingScreen'
@@ -68,6 +67,9 @@ const LOADING = {
   shaders: 0.4,
   terrain: 0.9
 }
+
+/** Vertical field of view. */
+const FIELD_OF_VIEW_DEGREES = 70
 
 const debug: Record<string, unknown> = {}
 ;(window as unknown as { __debug: unknown }).__debug = debug
@@ -118,7 +120,7 @@ async function start(): Promise<void> {
   const { origin } = area
   const frame = createLocalFrame(origin.longitude, origin.latitude, origin.height)
   const camera = new PerspectiveCamera(
-    params.fov,
+    FIELD_OF_VIEW_DEGREES,
     container.clientWidth / container.clientHeight,
     0.1,
     1e7
@@ -131,14 +133,8 @@ async function start(): Promise<void> {
   // Beyond the terrain, a sea-level sphere drawn as water (ADR 0030).
   scene.add(createSeaSphere(atmosphere.context, ecefToWorld(frame, new Vector3(0, 0, 0))))
 
-  photoGrade.value.set(params.photoDehaze, params.photoContrast, params.photoSaturation, 0)
-  landSpecular.value = params.landSpecular
   const terrain = params.terrain
-    ? createTerrain(
-        frame,
-        { ...area.terrain, texelPixels: params.terrainTexelPixels, debug: params.terrainDebug },
-        atmosphere.context
-      )
+    ? createTerrain(frame, { ...area.terrain, debug: params.terrainDebug }, atmosphere.context)
     : null
   if (terrain) scene.add(terrain.group)
 
@@ -190,7 +186,6 @@ async function start(): Promise<void> {
     atmosphere.setDate(live.date.value)
     debug.date = live.date.value.toISOString()
   })
-  pipeline.exposure.value = params.exposure
   effect(() => {
     if (clouds) clouds.coverage.value = live.coverage.value
   })
@@ -205,14 +200,7 @@ async function start(): Promise<void> {
   loadingMessage.value = 'Compiling shaders...'
   debug.pathSeconds = Number(pathDuration(path).toFixed(1))
   flightDuration.value = pathDuration(path)
-  const cockpit = createCockpitCamera(camera, frame, {
-    lagSeconds: params.lag,
-    shakeDegrees: params.shake,
-    shakePerG: params.shakePerG,
-    shakeInCloud: params.shakeInCloud,
-    sinkPerG: params.sink,
-    sinkSeconds: params.sinkTime
-  })
+  const cockpit = createCockpitCamera(camera, frame)
   const state = createAircraftState()
 
   window.addEventListener('resize', () => {

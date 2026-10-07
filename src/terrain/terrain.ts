@@ -211,8 +211,7 @@ export function createTerrain(
         texture.colorSpace = SRGBColorSpace
         texture.flipY = false
         texture.anisotropy = 8
-        // Land reflects the sun with landSpecular (?landspecular=, diffusely only by default,
-        // ADR 0032), water fully.
+        // Land reflects the sun with landSpecular (diffusely only, ADR 0032), water fully.
         const material = new TerrainMaterial({
           map: texture,
           roughness: 1,

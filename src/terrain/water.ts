@@ -72,7 +72,7 @@ const oceanSlopesNode = texture3D(oceanSlopes)
 export const waterTime = uniform(0)
 
 /**
- * Specular intensity of land, 0 to 1 (?landspecular=, ADR 0032). Fields and forests scatter
+ * Specular intensity of land, 0 to 1: 0, diffuse only (ADR 0032). Fields and forests scatter
  * light diffusely; a rough standard material still shows a sheen at grazing angles.
  */
 export const landSpecular = uniform(0)

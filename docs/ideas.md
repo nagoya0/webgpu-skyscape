@@ -9,7 +9,7 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   (`src/camera/cockpitCamera.ts`) uses a 70° field of view. No cockpit or aircraft is drawn yet.
   Head lag (pitch only) and the eye moving under load are effects on the pilot's body, so they
   belong to the cockpit view ([ADR 0020](adr/0020-effects-by-view.md)) and are off by default
-  (`?lag=` and `?sink=` turn them on; first guesses 0.12 s and 1.5 cm per G). What the cockpit
+  (`DEFAULT_COCKPIT_CAMERA` turns them on; first guesses 0.12 s and 1.5 cm per G). What the cockpit
   view should show is the body pressed into the seat when pulling up and lifting when pushing
   over. Both are tuned when the cockpit view is built.
   Shake, as the maintainer wants it: none in steady flight, even if that is less realistic; some
@@ -84,7 +84,7 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     low sun, made angular by the 33 × 33 grid; not checked with the views above.
   - On hold: normals from the elevation model at its full resolution, so sky light varies over
     a slope; ambient occlusion in the valleys; a 65 × 65 grid; the terrain's relief in the
-    refinement test. Finer terrain (`?terraintexel=`) sharpens
+    refinement test. Finer terrain (`texelPixels` in `DEFAULT_TERRAIN`) sharpens
     the sunlit slopes a little: 1.5 (default) 184 tiles and 257 MB of textures, 1.0 296 and
     414 MB, 0.75 416 and 582 MB.
 - **Frame time** ([ADR 0025](adr/0025-target-hardware.md): about 7 ms per frame on the
@@ -239,8 +239,7 @@ as room for improvement, listed in the README; changes for performance are still
    features complete enough to prepare for publishing; the Tokyo area was removed first
    ([ADR 0036](adr/0036-remove-the-tokyo-area.md)). Done: the header, the settings window with
    its settings and credits tabs, the debug window, Current G on the HUD, the loading screen, the
-   screen for when the demo cannot run. Left: removing development parameters that are no longer
-   used.
+   screen for when the demo cannot run, and removing development parameters no longer used.
 
 Not yet placed: a check of temporal anti-aliasing at 250 to 320 m/s (tile prefetching is step 6
 of the JSBSim path).

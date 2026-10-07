@@ -8,7 +8,6 @@ describe('readParams', () => {
   it('defaults to 14:30 JST today', () => {
     const params = readParams('', now)
     expect(params.date.toISOString()).toBe('2026-10-05T05:30:00.000Z')
-    expect(params.exposure).toBe(3)
     expect(params.paused).toBe(false)
   })
 
@@ -23,11 +22,10 @@ describe('readParams', () => {
   })
 
   it('reads numbers and flags', () => {
-    const params = readParams('?t=45&paused&exposure=5&lag=0.3', now)
+    const params = readParams('?t=45&paused&coverage=0.5', now)
     expect(params.flightStart).toBe(45)
     expect(params.paused).toBe(true)
-    expect(params.exposure).toBe(5)
-    expect(params.lag).toBe(0.3)
+    expect(params.coverage).toBe(0.5)
   })
 
   it('reads cloud feature switches', () => {
@@ -55,9 +53,9 @@ describe('readParams', () => {
   })
 
   it('falls back on malformed or out-of-range values', () => {
-    const params = readParams('?time=25:00&exposure=abc&fov=', now)
+    const params = readParams('?time=25:00&coverage=abc&t=', now)
     expect(params.date.toISOString()).toBe('2026-10-05T05:30:00.000Z')
-    expect(params.exposure).toBe(3)
-    expect(params.fov).toBe(70)
+    expect(params.coverage).toBe(0.3)
+    expect(params.flightStart).toBe(0)
   })
 })

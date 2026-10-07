@@ -8,20 +8,7 @@
 //   paused            hold the flight at that time
 //   path=NAME         fly a path computed with JSBSim, public/paths/NAME.json (tools/flightpath)
 //                     (default: course, the course of ADR 0035)
-//   exposure=number   exposure before tone mapping (default 3)
-//   fov=degrees       vertical field of view (default 70)
-//   lag=seconds       head lag in pitch, for the cockpit view; 0 is none (default 0)
-//   shake=degrees     camera shake in steady flight (default 0)
-//   shakeg=degrees    extra shake per G above 1 (default 0.04)
-//   shakecloud=deg    extra shake at full cloud density (default 0.3)
-//   sink=metres       eye moves down per G above 1, up per G below 1, for the cockpit view
-//                     (default 0)
-//   sinktime=seconds  time for the body to settle into a new load (default 0.15)
 //   terrain=0         leave out the GSI terrain and aerial photographs
-//   terraintexel=px   refine terrain tiles while a photograph texel covers more than this many
-//                     pixels; smaller is sharper and loads more tiles (default 1.5)
-//   landspecular=0..1 specular intensity of land; 0 reflects diffusely only, 1 as a standard
-//                     material; water stays fully specular (default 0, ADR 0032)
 //   terraindebug=1    tint terrain tiles by zoom level: 8 red, 9 orange, 10 yellow, 11 green,
 //                     12 cyan, 13 blue, 14 purple, 15 white, 16 red
 //   terraindebug=2    show the aerial photographs as they are, without lighting or water
@@ -29,10 +16,6 @@
 //   terraindebug=4    draw the terrain plain grey, lit, without photographs or water
 //   terraindebug=5    show the normal used for lighting as colour: world x, y, z (north, up,
 //                     east) to red, green, blue
-//   photodehaze=0..0.9   remove this much flat haze from the aerial photographs (default 0.15)
-//   photocontrast=x   contrast of the aerial photographs, 1 unchanged (default 1.2)
-//   photosat=x        saturation of the aerial photographs, 1 unchanged (default 1.4)
-//                     (defaults chosen by the maintainer from a comparison, 2026-10-06)
 //   clouds=0          leave out the clouds
 //   groundshadow=0    leave out the cloud shadows on the terrain
 //   cloudamount=NAME  how much cloud: few, normal (default) or many (as takram's default layers)
@@ -59,22 +42,8 @@ export interface Params {
   paused: boolean
   /** A JSBSim path in public/paths/, or null for the area's (src/areas.ts). */
   path: string | null
-  exposure: number
-  fov: number
-  lag: number
-  shake: number
-  shakePerG: number
-  shakeInCloud: number
-  sink: number
-  sinkTime: number
   terrain: boolean
-  terrainTexelPixels: number
   terrainDebug: 'levels' | 'unlit' | 'water' | 'plain' | 'normals' | null
-  landSpecular: number
-  /** Aerial photograph correction: haze removed, contrast, saturation. */
-  photoDehaze: number
-  photoContrast: number
-  photoSaturation: number
   measure: boolean
   debugText: boolean
   raymarch: boolean
@@ -130,21 +99,8 @@ export function readParams(search: string, now = new Date()): Params {
     flightStart: number('t', 0, -1e6, 1e6),
     paused: query.has('paused'),
     path: /^[a-z0-9-]+$/.test(query.get('path') ?? '') ? query.get('path') : null,
-    exposure: number('exposure', 3, 0, 1e6),
-    fov: number('fov', 70, 10, 150),
-    lag: number('lag', 0, 0, 10),
-    shake: number('shake', 0, 0, 10),
-    shakePerG: number('shakeg', 0.04, 0, 10),
-    shakeInCloud: number('shakecloud', 0.3, 0, 10),
-    sink: number('sink', 0, 0, 1),
-    sinkTime: number('sinktime', 0.15, 0.001, 10),
     terrain: query.get('terrain') !== '0',
-    terrainTexelPixels: number('terraintexel', 1.5, 0.25, 8),
-    landSpecular: number('landspecular', 0, 0, 1),
     terrainDebug: ({ '1': 'levels', '2': 'unlit', '3': 'water', '4': 'plain', '5': 'normals' } as const)[query.get('terraindebug') ?? ''] ?? null,
-    photoDehaze: number('photodehaze', 0.15, 0, 0.9),
-    photoContrast: number('photocontrast', 1.2, 0, 4),
-    photoSaturation: number('photosat', 1.4, 0, 4),
     measure: query.has('measure'),
     debugText: query.has('debug'),
     raymarch: query.get('raymarch') !== '0',

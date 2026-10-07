@@ -24,8 +24,9 @@ light keeps a specular reflectance of 1 at grazing angles whatever the intensity
 - Land reflects light diffusely only (Lambertian). The maintainer compared 17:00 and 15:00 with
   and without and judged the diffuse land clearly more real.
 - Water keeps its specular reflection: the sun's glint and the sky (ADR 0029).
-- The specular intensity of land can be changed with `?landspecular=0..1` (default 0); 1 is the
-  standard material's reflection as before.
+- The specular intensity of land could be changed with `?landspecular=0..1` (default 0; 1 is the
+  standard material's reflection as before) until 2026-10-08; it is now fixed at 0 in
+  `src/terrain/water.ts` ([ADR 0037](0037-ui.md)).
 
 ## Consequences
 

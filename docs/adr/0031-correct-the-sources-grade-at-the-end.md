@@ -19,8 +19,9 @@ the ground together, and has to be redone whenever one of them changes.
 - Each source is corrected first; the whole image is graded at the end, once the scene is
   complete, together with the choice of tone mapping (AgX for now, which is muted by design).
 - The aerial photographs are corrected (`src/terrain/wgsl/photoGrade.wgsl`): haze removed 0.15,
-  contrast 1.2 and saturation 1.4, picked by the maintainer from four strengths. The values can be
-  changed with `?photodehaze=`, `?photocontrast=` and `?photosat=`.
+  contrast 1.2 and saturation 1.4, picked by the maintainer from four strengths. The values could be
+  changed with `?photodehaze=`, `?photocontrast=` and `?photosat=` until 2026-10-08; they are
+  now fixed in `src/terrain/photoGrade.ts` ([ADR 0037](0037-ui.md)).
 - Colour differences between the photographs, which are mosaics of different dates and seasons
   (such as an orange strip east of Mount Fuji, already there before the correction), are left
   as they are. The maintainer judged that forcing them to match is not worth it.
