@@ -12,12 +12,12 @@ import { tileXToLongitude, tileYToLatitude, type TileKey } from './webMercator'
 export const SEGMENTS = 32
 
 /**
- * Geoid height over central Tokyo, from GSI's geoid calculator (2026-10-06): 36.69 m at
- * 35.665 N 139.757 E, 37.07 m at Shinjuku, 36.83 m at Oshiage. GSI heights are above the
- * geoid; the atmosphere uses the ellipsoid. A constant is within 0.4 m there. Measured for the
- * Tokyo area, since removed; still to be checked for Hakone (docs/ideas.md).
+ * Geoid height at the Hakone origin, from GSI's geoid calculator (2026-10-08): 40.88 m at
+ * 35.23 N 139.02 E. GSI heights are above the geoid; the atmosphere and the flight path use the
+ * ellipsoid. Along the course it ranges from 38.5 m over the bay to 42.5 m on Mount Fuji, so a
+ * constant is within about 2.5 m. (36.8 m before, measured for the Tokyo area.)
  */
-export const GEOID_HEIGHT = 36.8
+export const GEOID_HEIGHT = 40.9
 
 export interface HeightSource {
   grid: HeightGrid | null

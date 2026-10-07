@@ -30,7 +30,8 @@ or bulk downloads are to be discussed with GSI first.
   (`dem_png`, up to zoom 14); missing values, mostly sea, are taken as 0 m. GSI heights are above
   the geoid, while PLATEAU and the atmosphere use the ellipsoid, so a constant geoid height of
   36.8 m is added: GSI's geoid calculator gives 36.69 m at the origin, 37.07 m at Shinjuku and
-  36.83 m at Oshiage, so a constant is within 0.4 m over the area.
+  36.83 m at Oshiage, so a constant is within 0.4 m over the area. (Since 2026-10-08, for the
+  Hakone area: 40.9 m, GSI's value at its origin; 38.5 to 42.5 m along the course.)
 - The surface colour is GSI's seamless aerial photograph (`seamlessphoto`), one zoom level deeper
   than the tile, stitched into a 512 × 512 texture per tile.
 - Tiles are loaded from GSI in real time, at most six requests at a time. Nothing is

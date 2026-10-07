@@ -138,10 +138,7 @@ mountains:
 Placeholders that later stages replace. Remove each with the stage that replaces it.
 
 - The Hakone origin in `src/areas.ts` (139.02° E, 35.23° N, north of Lake Ashi) was placed for
-  the placeholder racetrack, now removed; the course stays within about 30 km of it.
-- `GEOID_HEIGHT` in `src/terrain/tileGeometry.ts` (36.8 m) was measured over central Tokyo and is
-  used for Hakone too; to be checked against GSI's geoid there.
-- `src/ui/loading.ts`: the temporary loading screen, redesigned with the UI.
+  the placeholder racetrack, now removed; the course stays within about 30 km of it.- `src/ui/loading.ts`: the temporary loading screen, redesigned with the UI.
 
 ## Plan
 
