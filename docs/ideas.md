@@ -44,8 +44,10 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     mirrored about the boresight, the altitude scale (feet above mean sea level,
     `src/hud/altitudeScale.ts`), and the heading scale (magnetic heading, the area's declination
     in `src/areas.ts`; `src/hud/headingScale.ts`), its lubber line's top level with the side
-    tapes' bottoms, and the roll indicator below it (`src/hud/rollIndicator.ts`), its caret
-    stopping at the 45° mark.
+    tapes' bottoms, the roll indicator below it (`src/hud/rollIndicator.ts`), its caret
+    stopping at the 45° mark, and the attitude bars (`src/hud/attitudeBars.ts`): at true angles,
+    only the five nearest the nose's pitch, canted by half their angle into a caret pointing at
+    the horizon.
   - To check with the JSBSim path's manoeuvres (the maintainer): the instruments must stay right
     when the aircraft rolls through inverted. The bank comes from the attitude as yaw, pitch, roll,
     so it is undefined with the nose straight up or down, where it may jump.

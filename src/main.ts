@@ -18,6 +18,7 @@ import { createInCloud } from './effects/inCloud'
 import { createHud, loadHudFont } from './hud/hud'
 import { drawHudDebug } from './hud/hudDebug'
 import { drawAltitudeScale, FEET_PER_METRE } from './hud/altitudeScale'
+import { drawAttitudeBars } from './hud/attitudeBars'
 import { drawHeadingScale } from './hud/headingScale'
 import { drawRollIndicator } from './hud/rollIndicator'
 import { drawVelocityScale, KNOTS_PER_METRE_PER_SECOND } from './hud/velocityScale'
@@ -285,6 +286,7 @@ async function start(): Promise<void> {
     // Bank: the roll of the body axes from north-east-down, taken as yaw, pitch, then roll.
     attitude.setFromQuaternion(state.bodyToNED, 'ZYX')
     drawRollIndicator(context, canvas.width, canvas.height, pixelsPerDegree, (attitude.x * 180) / Math.PI)
+    drawAttitudeBars(context, canvas.width, canvas.height, pixelsPerDegree, state.bodyToNED, Math.atan2(nose.y, nose.x))
     hud.aircraft.changed()
   }
 
