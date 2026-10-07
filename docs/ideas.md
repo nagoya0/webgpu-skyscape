@@ -166,6 +166,11 @@ Done:
 - Water ([ADR 0029](adr/0029-water-from-gsi-data.md)), the terrain out to the horizon
   ([ADR 0030](adr/0030-terrain-to-the-horizon.md)), and the photographs' correction
   ([ADR 0031](adr/0031-correct-the-sources-grade-at-the-end.md)).
+- Land reflecting diffusely ([ADR 0032](adr/0032-land-reflects-diffusely.md)), the terrain's skirts
+  and the black lines along tile edges fixed, and more clouds to fly among with `?cloudamount=`
+  ([ADR 0033](adr/0033-more-clouds-to-fly-among.md)) (2026-10-07).
+- Effects in the first-person view ([ADR 0020](adr/0020-effects-by-view.md)): the shake in clouds
+  now follows the clouds' density (2026-10-07), and the water drops below.
 - Clouds, step C5 (2026-10-07): the clouds' density at the camera, computed on the CPU every
   frame from the same textures and layer settings as the GPU march (`src/clouds/cloudDensity.ts`),
   so it follows `?cloudamount=`, `?coverage=` and `?wind=`. About 1 to 15 µs per frame. Shown
@@ -190,13 +195,11 @@ features on 2026-10-06, and on 2026-10-07 put the rest of the terrain and of the
 as room for improvement, listed in the README; changes for performance are still considered):
 
 1. **Forests**: on hold (2026-10-07).
-2. **Effects** in general, rain drops among them ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
-   [ADR 0020](adr/0020-effects-by-view.md)).
-3. **JSBSim path** with manoeuvres, replacing the placeholder.
-4. **Night.** Stars, moon and adaptive exposure fit between any stages.
+2. **JSBSim path** with manoeuvres, replacing the placeholder.
+3. **Night.** Stars, moon and adaptive exposure fit between any stages.
 
-Not yet placed: tile prefetching along the path, and a check of temporal anti-aliasing at
-250 m/s.
+Not yet placed: the HUD (two kinds, above), tile prefetching along the path, and a check of
+temporal anti-aliasing at 250 m/s.
 
 Later: the cockpit view, quality presets, colour grading, the UI, the README and video,
 publishing.
