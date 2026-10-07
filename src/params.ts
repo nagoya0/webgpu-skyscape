@@ -1,15 +1,12 @@
-// Settings from the URL query, the only way to change them until the UI is designed (ADR 0019).
+// Settings from the URL query (ADR 0019).
 // Unknown or malformed values fall back to the defaults. Names and values are ASCII only.
 //
-//   area=NAME         hakone (default; Sagami Bay, Hakone and Mount Fuji, ADR 0028) or tokyo
-//                     (central Tokyo with PLATEAU buildings, the earlier area)
 //   date=YYYY-MM-DD   date in JST (default: today in JST)
 //   time=HH:MM        time of day in JST (default 16:30)
 //   t=seconds         start time on the flight path (default 0)
 //   paused            hold the flight at that time
-//   path=NAME         fly a path computed with JSBSim, public/paths/NAME.json (tools/flightpath),
-//                     or path=racetrack for the placeholder racetrack (default by area: Hakone
-//                     the course of ADR 0035, Tokyo the racetrack)
+//   path=NAME         fly a path computed with JSBSim, public/paths/NAME.json (tools/flightpath)
+//                     (default: course, the course of ADR 0035)
 //   exposure=number   exposure before tone mapping (default 3)
 //   fov=degrees       vertical field of view (default 70)
 //   lag=seconds       head lag in pitch, for the cockpit view; 0 is none (default 0)
@@ -19,16 +16,6 @@
 //   sink=metres       eye moves down per G above 1, up per G below 1, for the cockpit view
 //                     (default 0)
 //   sinktime=seconds  time for the body to settle into a new load (default 0.15)
-//   speed=m/s         speed on the placeholder path (default 250)
-//   altitude=metres   height of the placeholder path above the ellipsoid (default by area:
-//                     Hakone 3000, Tokyo 450)
-//   bank=degrees      bank angle in the placeholder path's turns (default by area: Hakone 45,
-//                     Tokyo 70)
-//   rollrate=deg/s    roll rate of the placeholder path (default 90)
-//   buildings=0       leave out the PLATEAU buildings
-//   textures=1        use PLATEAU's textured buildings (heavy on GPU memory)
-//   tileerror=pixels  screen-space error target for the building tiles (default 20)
-//   draw=MODE         how the building tiles are drawn: batch (default), bundle or plain
 //   terrain=0         leave out the GSI terrain and aerial photographs
 //   terraintexel=px   refine terrain tiles while a photograph texel covers more than this many
 //                     pixels; smaller is sharper and loads more tiles (default 1.5)
@@ -46,7 +33,7 @@
 //   photosat=x        saturation of the aerial photographs, 1 unchanged (default 1.4)
 //                     (defaults chosen by the maintainer from a comparison, 2026-10-06)
 //   clouds=0          leave out the clouds
-//   groundshadow=0    leave out the cloud shadows on the terrain and buildings
+//   groundshadow=0    leave out the cloud shadows on the terrain
 //   cloudamount=NAME  how much cloud: few, normal (default) or many (as takram's default layers)
 //   coverage=0..1     cloud coverage of all layers (default 0.3)
 //   wind=E,N          wind in m/s towards the east and the north, moving the clouds, e.g.
@@ -68,11 +55,10 @@
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 
 export interface Params {
-  area: 'tokyo' | 'hakone'
   date: Date
   flightStart: number
   paused: boolean
-  /** A JSBSim path in public/paths/, or null for the placeholder racetrack. */
+  /** A JSBSim path in public/paths/, or null for the area's (src/areas.ts). */
   path: string | null
   exposure: number
   fov: number
@@ -82,13 +68,6 @@ export interface Params {
   shakeInCloud: number
   sink: number
   sinkTime: number
-  speed: number
-  /** null: the area's default (src/areas.ts). */
-  altitude: number | null
-  bank: number | null
-  rollRate: number
-  buildings: boolean
-  textures: boolean
   terrain: boolean
   terrainTexelPixels: number
   terrainDebug: 'levels' | 'unlit' | 'water' | 'plain' | 'normals' | null
@@ -99,8 +78,6 @@ export interface Params {
   photoSaturation: number
   measure: boolean
   debugText: boolean
-  tileError: number
-  drawMode: 'batch' | 'bundle' | 'plain'
   raymarch: boolean
   flare: boolean
   drops: boolean
@@ -124,11 +101,6 @@ export function readParams(search: string, now = new Date()): Params {
     if (raw === null || raw.trim() === '') return fallback
     const value = Number(raw)
     return Number.isFinite(value) && value >= min && value <= max ? value : fallback
-  }
-  // A number, or null when absent or malformed so that a default from elsewhere applies.
-  const optionalNumber = (name: string, min: number, max: number): number | null => {
-    const value = number(name, Number.NaN, min, max)
-    return Number.isNaN(value) ? null : value
   }
 
   // The day in JST: from date=, or today.
@@ -157,7 +129,6 @@ export function readParams(search: string, now = new Date()): Params {
   }
 
   return {
-    area: query.get('area') === 'tokyo' ? 'tokyo' : 'hakone',
     date,
     flightStart: number('t', 0, -1e6, 1e6),
     paused: query.has('paused'),
@@ -170,12 +141,6 @@ export function readParams(search: string, now = new Date()): Params {
     shakeInCloud: number('shakecloud', 0.3, 0, 10),
     sink: number('sink', 0, 0, 1),
     sinkTime: number('sinktime', 0.15, 0.001, 10),
-    speed: number('speed', 250, 1, 1000),
-    altitude: optionalNumber('altitude', 0, 20_000),
-    bank: optionalNumber('bank', 1, 85),
-    rollRate: number('rollrate', 90, 1, 720),
-    buildings: query.get('buildings') !== '0',
-    textures: query.get('textures') === '1',
     terrain: query.get('terrain') !== '0',
     terrainTexelPixels: number('terraintexel', 1.5, 0.25, 8),
     landSpecular: number('landspecular', 0, 0, 1),
@@ -185,8 +150,6 @@ export function readParams(search: string, now = new Date()): Params {
     photoSaturation: number('photosat', 1.4, 0, 4),
     measure: query.has('measure'),
     debugText: query.has('debug'),
-    tileError: number('tileerror', 20, 0.5, 200),
-    drawMode: (['batch', 'bundle', 'plain'] as const).find(m => m === query.get('draw')) ?? 'batch',
     raymarch: query.get('raymarch') !== '0',
     flare: query.get('flare') !== '0',
     drops: query.get('drops') !== '0',

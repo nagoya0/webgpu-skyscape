@@ -12,7 +12,6 @@ the current set-up are in [ADR 0014](adr/0014-pin-three-and-takram-versions.md),
 | `@types/three` | 0.186.0 | |
 | `@takram/three-atmosphere` | 0.19.1 | Patched |
 | `@takram/three-geospatial` | 0.9.1 | Patched. Must match the version `@takram/three-atmosphere` depends on |
-| `3d-tiles-renderer` | 0.5.3 | Loads the PLATEAU buildings. Check its `three` peer range when upgrading `three` |
 
 All are pinned without `^`. Upgrade `three` and the takram packages together.
 
@@ -24,8 +23,6 @@ All are pinned without `^`. Upgrade `three` and the takram packages together.
 | Patch for three r185+ `struct()` | `patches/@takram__three-geospatial@0.9.1.patch` | `FnLayout` accepts only the r184 struct shape | Same as above |
 | Patch for the r186 render pipeline hooks | `patches/@takram__three-geospatial@0.9.1.patch` (`TemporalAntialiasNode.setup`) | three r186 replaced `renderPipeline.context.onBeforeRenderPipeline` with the `onBeforePipelineCallbacks` array in the builder context. Unpatched, `temporalAntialias` throws "Cannot set properties of undefined (setting 'onBeforeRenderPipeline')" and the camera jitter is never applied. No upstream issue or pull request exists for this yet (checked 2026-10-04) | A takram release registers the callback through `onBeforePipelineCallbacks` or `OnBeforeRenderPipeline()` from `three/tsl` |
 | Type casts marked `TYPE-BRIDGE` | `grep -rn TYPE-BRIDGE src experiments` | takram's type declarations are built against `@types/three` 0.184 | takram's declarations match the `@types/three` in use; `pnpm tsc` passes without the casts |
-| Fixed `BatchedMesh` instance count (8,192) | `src/scene/tileBatcher.ts` | three 0.186 sizes the previous-frame instance matrices (for motion vectors) when the mesh is first drawn; growing the instance count later throws "RangeError: offset is out of bounds" ([ADR 0027](adr/0027-batched-building-tiles.md)) | `setInstanceCount` after the first draw no longer throws with the velocity MRT on |
-| `BatchedMesh` added to the scene after its first geometry | `src/scene/plateauBuildings.ts` | A pipeline built while the batch is empty lacks the vertex attributes and keeps drawing nothing | An empty `BatchedMesh` drawn first and filled later shows its geometry |
 
 Only the ESM builds (`build/webgpu.js`) are patched. The CommonJS builds are minified to one line
 and Vite does not load them.
@@ -93,9 +90,8 @@ In another shell (results print as `[state]`; screenshots go where you point the
 |---|---|---|
 | Atmosphere loads and renders | `WAIT=15000 node scripts/check-page.mjs "http://localhost:4312/experiments/atmosphere-smoke/" atm.png` | `debug.frames` above 0, no `[exception]`, and the screenshot shows a sky with the sun low in the west |
 | Unit tests | `pnpm test` | All pass |
-| Main page starts on WebGPU | `WAIT=60000 node scripts/check-page.mjs "http://localhost:4312/?time=15:00&t=0&paused" main.png` | `guidance` is `null`, `canvas` is `true`, no `[console.error]`, `debug.terrain.water` above 0, and the screenshot shows Mount Fuji ahead, mountains, the sea on the left and clouds below, with a level horizon |
-| Tokyo and the buildings | `WAIT=45000 node scripts/check-page.mjs "http://localhost:4312/?area=tokyo&time=15:00&t=5&paused" tokyo.png` | `debug.tiles.batch.visible` above 0, and the screenshot shows the city's buildings |
-| Turn | `WAIT=45000 node scripts/check-page.mjs "http://localhost:4312/?area=tokyo&time=15:00&t=45&paused" turn.png` | `debug.loadFactor` about 2.92 (the Tokyo course banks 70°); the horizon tilted steeply with the ground on the right |
+| Main page starts on WebGPU | `WAIT=60000 node scripts/check-page.mjs "http://localhost:4312/?time=15:00&t=0&paused" main.png` | `guidance` is `null`, `canvas` is `true`, no `[console.error]`, `debug.terrain.water` above 0, and the screenshot shows the sea close below, the coast and Hakone's mountains ahead and clouds above, with a level horizon (the course's start, 500 m over Sagami Bay) |
+| Turn | `WAIT=60000 node scripts/check-page.mjs "http://localhost:4312/?time=15:00&t=162&paused" turn.png` | `debug.loadFactor` about 7 (the hard turn beside Mount Fuji, 80° of bank); the horizon nearly vertical, the mountain on the right |
 | Guidance screen | `INJECT="GPU.prototype.requestAdapter = async () => null" node scripts/check-page.mjs http://localhost:4312/ guidance.png` | `guidance` holds the no-adapter message |
 | Depth precision | `WAIT=6000 node scripts/check-page.mjs "http://localhost:4312/experiments/depth/?mode=reversed" depth.png` | Every square is green; no red inside the squares |
 | Draw order under reversed Z | `WAIT=15000 node scripts/check-page.mjs "http://localhost:4312/experiments/depth/?mode=reversed&test=overdraw" od.png`, then the same with `mode=standard` | `msPerFrame` of reversed is about the same as standard (3.6 and 4.0 ms on the GPU used for ADR 0015). Several times slower means objects are drawn back to front again |

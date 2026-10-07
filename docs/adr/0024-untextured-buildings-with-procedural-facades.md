@@ -1,6 +1,6 @@
 # 24. Untextured PLATEAU buildings with procedural facades
 
-- Status: Accepted
+- Status: Superseded by [ADR 0036](0036-remove-the-tokyo-area.md) (the Tokyo area was removed)
 - Date: 2026-10-06
 
 ## Context

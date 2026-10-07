@@ -23,12 +23,11 @@ describe('readParams', () => {
   })
 
   it('reads numbers and flags', () => {
-    const params = readParams('?t=45&paused&exposure=5&lag=0.3&bank=60', now)
+    const params = readParams('?t=45&paused&exposure=5&lag=0.3', now)
     expect(params.flightStart).toBe(45)
     expect(params.paused).toBe(true)
     expect(params.exposure).toBe(5)
     expect(params.lag).toBe(0.3)
-    expect(params.bank).toBe(60)
   })
 
   it('reads cloud feature switches', () => {
@@ -56,10 +55,9 @@ describe('readParams', () => {
   })
 
   it('falls back on malformed or out-of-range values', () => {
-    const params = readParams('?time=25:00&exposure=abc&bank=90&fov=', now)
+    const params = readParams('?time=25:00&exposure=abc&fov=', now)
     expect(params.date.toISOString()).toBe('2026-10-05T07:30:00.000Z')
     expect(params.exposure).toBe(3)
-    expect(params.bank).toBeNull()
     expect(params.fov).toBe(70)
   })
 })

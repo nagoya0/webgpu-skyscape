@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-10-06
+- Amended: 2026-10-08 (the Tokyo area removed, [ADR 0036](0036-remove-the-tokyo-area.md))
 - Supersedes [ADR 0023](0023-area-central-tokyo.md); changes the area size and altitude of
   [ADR 0018](0018-f16-at-cruise-speed.md)
 

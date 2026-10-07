@@ -15,7 +15,7 @@ in TSL. Since then:
 - TSL's main advantage, producing both WGSL and GLSL, is not needed: the demo is WebGPU only
   ([ADR 0003](0003-webgpu-only.md)).
 
-A trial ([experiments/cloud-trial](../../experiments/cloud-trial/)) wrote a ray-marched cloud
+A trial (`experiments/cloud-trial`, removed with the Tokyo area in [ADR 0036](0036-remove-the-tokyo-area.md); in the history up to commit 257f189) wrote a ray-marched cloud
 layer in WGSL and connected it with Three.js `wgslFn`. Results on 2026-10-05:
 
 - The WGSL function slots into the post-processing chain after the aerial perspective. Sun and

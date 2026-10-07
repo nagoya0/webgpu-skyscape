@@ -2,7 +2,7 @@ import { Euler, PerspectiveCamera, Quaternion, Scene, Timer, Vector3, WebGPURend
 
 import { Geodetic } from '@takram/three-geospatial'
 
-import { AREAS } from './areas'
+import { AREA } from './areas'
 import { createAtmosphere } from './atmosphere/atmosphere'
 import {
   CLOUD_FEATURES,
@@ -27,14 +27,10 @@ import { loadPlaces } from './hud/flyingOver'
 import { drawVelocityScale, KNOTS_PER_METRE_PER_SECOND } from './hud/velocityScale'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { loadPath } from './flight/loadPath'
-import { createPlaceholderPath } from './flight/placeholderPath'
 import { createLocalFrame, ecefToWorld, nedToWorldRotation } from './geo/localFrame'
 import { requestDevice } from './gpu/support'
 import { readParams } from './params'
 import { createPipeline } from './render/pipeline'
-import { createFacadeMaterial } from './scene/facadeMaterial'
-import { createBuildings, plateauBuildingUrls } from './scene/plateauBuildings'
-import { createPlaceholderGround } from './scene/placeholderGround'
 import { createSeaSphere } from './terrain/seaSphere'
 import { photoGrade } from './terrain/photoGrade'
 import { createTerrain } from './terrain/terrain'
@@ -86,7 +82,7 @@ async function start(): Promise<void> {
   renderer.setSize(container.clientWidth, container.clientHeight)
   container.appendChild(renderer.domElement)
 
-  const area = AREAS[params.area]
+  const area = AREA
   const { origin } = area
   const frame = createLocalFrame(origin.longitude, origin.latitude, origin.height)
   const camera = new PerspectiveCamera(
@@ -101,24 +97,8 @@ async function start(): Promise<void> {
   atmosphere.setFrame(frame)
   atmosphere.setDate(params.date)
   scene.add(atmosphere.light)
-  scene.add(
-    area.beyondTerrain === 'sea'
-      ? createSeaSphere(atmosphere.context, ecefToWorld(frame, new Vector3(0, 0, 0)))
-      : createPlaceholderGround()
-  )
-
-  const buildings = params.buildings && area.buildings
-    ? createBuildings(
-        frame,
-        camera,
-        plateauBuildingUrls(params.textures),
-        params.textures ? null : createFacadeMaterial(),
-        params.tileError,
-        undefined,
-        params.drawMode
-      )
-    : null
-  if (buildings) scene.add(buildings.group)
+  // Beyond the terrain, a sea-level sphere drawn as water (ADR 0030).
+  scene.add(createSeaSphere(atmosphere.context, ecefToWorld(frame, new Vector3(0, 0, 0))))
 
   photoGrade.value.set(params.photoDehaze, params.photoContrast, params.photoSaturation, 0)
   landSpecular.value = params.landSpecular
@@ -176,22 +156,10 @@ async function start(): Promise<void> {
   })
   pipeline.exposure.value = params.exposure
 
-  // The area's JSBSim path, or another with ?path=NAME; the placeholder racetrack where the area
-  // has no path or with ?path=racetrack.
-  const pathName = params.path ?? area.path
-  const { path, seamGap } =
-    pathName && pathName !== 'racetrack'
-      ? { path: await loadPath(pathName), seamGap: 0 }
-      : createPlaceholderPath(frame, {
-          ...area.course,
-          speed: params.speed,
-          height: params.altitude ?? area.course.height,
-          bankDegrees: params.bank ?? area.course.bankDegrees,
-          rollRateDegrees: params.rollRate
-        })
+  // The area's JSBSim path (ADR 0035), or another with ?path=NAME.
+  const path = await loadPath(params.path ?? area.path)
   debug.date = params.date.toISOString()
   debug.pathSeconds = Number(pathDuration(path).toFixed(1))
-  debug.seamGapMetres = Number(seamGap.toFixed(3))
   const cockpit = createCockpitCamera(camera, frame, {
     lagSeconds: params.lag,
     shakeDegrees: params.shake,
@@ -226,20 +194,14 @@ async function start(): Promise<void> {
     const dt = Math.min(timer.getDelta(), 0.1)
     if (!loaded) {
       const elapsed = timer.getElapsed()
-      const stats = buildings?.stats()
       const ground = terrain?.stats()
-      const settled =
-        (!stats || (stats.loaded > 0 && stats.loading === 0)) &&
-        (!ground || (ground.ready > 0 && ground.loading === 0))
+      const settled = !ground || (ground.ready > 0 && ground.loading === 0)
       settledSince = settled ? (settledSince ?? elapsed) : null
       if ((settledSince !== null && elapsed - settledSince > SETTLE_TIME) || elapsed > LOADING_TIMEOUT) {
         loaded = true
         loading.hide()
       } else {
-        const parts = []
-        if (stats && stats.loading > 0) parts.push(`buildings ${stats.loading}`)
-        if (ground && ground.loading > 0) parts.push(`terrain ${ground.loading}`)
-        if (parts.length > 0) loading.setText(`Loading… ${parts.join(', ')} tiles to go`)
+        if (ground && ground.loading > 0) loading.setText(`Loading… terrain ${ground.loading} tiles to go`)
       }
     }
     debug.loaded = loaded
@@ -282,7 +244,6 @@ async function start(): Promise<void> {
     }
   })
 
-  let lastBoundsTime = -Infinity
   let cloudDensity = 0
   let densityMicroseconds = 0
   const inCloud = createInCloud()
@@ -384,17 +345,6 @@ async function start(): Promise<void> {
     }
     cockpit.update(state, first ? 0 : flightDelta, elapsed)
     first = false
-    if (buildings) {
-      buildings.update(container.clientWidth, container.clientHeight)
-      debug.tiles = buildings.stats()
-      // For checks while paused. bounds() visits every vertex, so once a second at most, and
-      // never while measuring.
-      if (params.paused && !params.measure && elapsed - lastBoundsTime > 1) {
-        lastBoundsTime = elapsed
-        debug.buildingBounds = buildings.bounds()
-        debug.traversal = buildings.traversal()
-      }
-    }
     if (terrain) {
       terrain.update(camera, container.clientHeight)
       debug.terrain = terrain.stats()

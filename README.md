@@ -18,10 +18,8 @@ In place:
 - The sea, lakes and rivers drawn as water with waves baked from an FFT ocean, the sky's
   reflection and the sun's glint ([ADR 0029](docs/adr/0029-water-from-gsi-data.md)).
 - The area: Sagami Bay, Hakone and Mount Fuji, flown at 3,000 m
-  ([ADR 0028](docs/adr/0028-area-sagami-bay-hakone-fuji.md)). The earlier area, central Tokyo
-  with PLATEAU LOD2 buildings for eight wards and procedural facades
-  ([ADR 0024](docs/adr/0024-untextured-buildings-with-procedural-facades.md)), stays selectable
-  with `?area=tokyo`.
+  ([ADR 0028](docs/adr/0028-area-sagami-bay-hakone-fuji.md)). An earlier area, central Tokyo with
+  PLATEAU's buildings, was removed ([ADR 0036](docs/adr/0036-remove-the-tokyo-area.md)).
 - Volumetric clouds ported from `@takram/three-clouds` to WGSL, with takram's temporal
   upscaling, aerial perspective, haze, cascaded cloud shadows on the clouds and the ground, and
   light shafts ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md)). Which of takram's
@@ -52,8 +50,8 @@ Beyond using the libraries listed under credits, this project does the following
   renderer. Its shaders are ported to WGSL and connected to the WebGPU renderer through TSL,
   including takram's temporal upscaling, cascaded cloud shadows and light shafts
   ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md),
-  [ADR 0022](docs/adr/0022-heavy-shaders-in-wgsl.md)). The cloud shadows reach the terrain and
-  buildings through the WebGPU renderer's shadow system, and non-finite values are dropped
+  [ADR 0022](docs/adr/0022-heavy-shaders-in-wgsl.md)). The cloud shadows reach the terrain
+  through the WebGPU renderer's shadow system, and non-finite values are dropped
   before they can spread through the temporal history.
 - **takram's packages on a newer Three.js**, patched to run on 0.186
   ([ADR 0016](docs/adr/0016-patch-takram-for-newer-three.md)).
@@ -83,9 +81,6 @@ Beyond using the libraries listed under credits, this project does the following
 - **A HUD** drawn with Canvas 2D into the image, its aircraft layer turned with the camera's shake
   so it stays on the scene, after the DCS F-16C guide's symbology; and the municipality below,
   looked up in national land data with romaji names ([ADR 0034](docs/adr/0034-hud.md)).
-- **Buildings in the Tokyo area**: PLATEAU's untextured models with procedural facades, drawn as
-  one batched mesh ([ADR 0024](docs/adr/0024-untextured-buildings-with-procedural-facades.md),
-  [ADR 0027](docs/adr/0027-batched-building-tiles.md)).
 
 ## Room for improvement (on hold)
 
@@ -143,17 +138,15 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 
 | Parameter | Meaning |
 |---|---|
-| `area=hakone`, `area=tokyo` | Demo area: Sagami Bay, Hakone and Mount Fuji (default), or central Tokyo with buildings |
 | `date=YYYY-MM-DD`, `time=HH:MM` | Date and time of day in JST |
 | `t=seconds`, `paused` | Start time on the flight path; hold the flight there |
 | `exposure`, `fov` | Exposure before tone mapping; vertical field of view |
-| `path=NAME` | Fly another path computed with JSBSim (`public/paths/NAME.json`), or `path=racetrack` for the earlier placeholder; by default the course of [ADR 0035](docs/adr/0035-the-course.md) (the Tokyo area flies the placeholder) |
-| `altitude`, `speed`, `bank`, `rollrate` | Placeholder racetrack |
-| `buildings=0`, `terrain=0`, `clouds=0`, `flare=0`, `drops=0` | Leave out a part of the scene (`drops`: the water drops on the screen in clouds) |
+| `path=NAME` | Fly another path computed with JSBSim (`public/paths/NAME.json`); by default the course of [ADR 0035](docs/adr/0035-the-course.md) |
+| `terrain=0`, `clouds=0`, `flare=0`, `drops=0` | Leave out a part of the scene (`drops`: the water drops on the screen in clouds) |
 | `dropsdebug` | Debugging: show the drops' height map in red |
 | `hud=0` | Leave out the aircraft's HUD |
 | `huddebug` | Debugging: draw a test pattern on both HUD layers |
-| `groundshadow=0` | Leave out the cloud shadows on the terrain and buildings |
+| `groundshadow=0` | Leave out the cloud shadows on the terrain |
 | `terraintexel=px` | Terrain detail: refine while a photograph texel covers more than this many pixels (default 1.5) |
 | `photodehaze`, `photocontrast`, `photosat` | Correction of the aerial photographs (defaults 0.15, 1.2, 1.4) |
 | `landspecular=0..1` | Specular reflection of the land: 0 diffuse only (default), 1 as a standard material |
@@ -180,8 +173,6 @@ The licence of this project's own code is not decided yet.
   (`dem5a_png`, `dem_png`) and the seamless photographs (`seamlessphoto`) are processed into
   terrain meshes and textures, and the water areas of the vector tiles (`optimal_bvmap-v1`) into
   water masks, by this project.
-- Buildings: [3D City Model (Project PLATEAU)](https://www.mlit.go.jp/plateau/), Ministry of
-  Land, Infrastructure, Transport and Tourism (3D都市モデル（Project PLATEAU）国土交通省).
 - Municipal boundaries for the HUD's "FLYING OVER" line:
   [National Land Numerical Information, Administrative Areas](https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2024.html)
   (国土数値情報（行政区域データ）国土交通省, N03 2024, CC BY 4.0), cut to the course's
@@ -196,7 +187,6 @@ The licence of this project's own code is not decided yet.
 | [@takram/three-atmosphere, @takram/three-geospatial](https://github.com/takram-design-engineering/three-geospatial) | Sky, aerial perspective, temporal anti-aliasing, lens flare | MIT |
 | [@takram/three-clouds](https://github.com/takram-design-engineering/three-geospatial) | The cloud shaders in `src/clouds/wgsl/` are ported from it, and its noise and weather textures are in `public/clouds/` | MIT, Copyright (c) 2024 Shota Matsuda ([licence](public/clouds/LICENSE-takram.txt)) |
 | [three-csm](https://github.com/StrandedKitty/three-csm/) | The cascaded shadow maps in `src/clouds/cascadedShadowMaps.ts`, through takram's version | MIT, Copyright (c) 2019 vtHawk |
-| [3DTilesRendererJS](https://github.com/NASA-AMMOS/3DTilesRendererJS) | Loading PLATEAU's 3D Tiles | Apache-2.0 |
-| [Draco](https://github.com/google/draco) | Decoding PLATEAU's compressed meshes (`public/draco/`) | Apache-2.0 |
+| [JSBSim](https://github.com/JSBSim-Team/jsbsim) and its F-16 model | Computing the flight path offline (`tools/flightpath/`); only the computed path is in this repository | LGPL-2.1 (the model's file says GPL) |
 | [Share Tech Mono](https://fonts.google.com/specimen/Share+Tech+Mono) | The HUD's typeface (`public/fonts/`) | SIL Open Font License 1.1, Copyright (c) 2012 Carrois Type Design, Ralph du Carrois ([licence](public/fonts/OFL-ShareTechMono.txt)) |
 | [fast-png](https://github.com/image-js/fast-png) | Decoding the clouds' weather map, so the CPU reads the same values as the GPU | MIT |

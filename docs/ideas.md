@@ -104,6 +104,10 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   [ADR 0019](adr/0019-no-ui-until-features-are-in.md), like the guidance screen, and to be
   redesigned with the UI. A temporary one (`src/ui/loading.ts`) holds the flight at its start
   until the tile queue has stayed empty for 1.5 s, or for 30 s at most.
+- **Another area: mountains such as Okutama** (the maintainer, 2026-10-08). A mountain area
+  needs no buildings and reuses the Hakone work (terrain, photographs, a lake, clouds, a JSBSim
+  course); forests would matter even more there. An idea, not planned. The area structure in
+  `src/areas.ts` is kept for it ([ADR 0036](adr/0036-remove-the-tokyo-area.md)).
 - **Static site host.** GitHub Pages or Cloudflare Pages
   ([ADR 0012](adr/0012-site-and-tile-data-hosted-apart.md)).
 - **A fork of three-geospatial.** Decided during the cloud stage, by how much of the library's
@@ -115,8 +119,9 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
 
 ## Night
 
-The demo should also work at night. Planned split, written for the Tokyo area and to be
-reconsidered for the coast and mountains:
+The demo should also work at night. Planned split, written for the Tokyo area (since removed,
+[ADR 0036](adr/0036-remove-the-tokyo-area.md)) and to be reconsidered for the coast and
+mountains:
 
 - **Early (small):** stars and the moon, which the atmosphere package already draws, and an
   exposure that adapts to the brightness of the scene. A night sky is around a millionth of the
@@ -132,16 +137,10 @@ reconsidered for the coast and mountains:
 
 Placeholders that later stages replace. Remove each with the stage that replaces it.
 
-- `src/scene/placeholderGround.ts`: a flat 200 km disc with a 1 km grid, beyond the terrain in
-  the Tokyo area only. The Hakone area has a sea-level sphere instead
-  ([ADR 0030](adr/0030-terrain-to-the-horizon.md)).
-- `src/flight/placeholderPath.ts`: a racetrack at 250 m/s, level flight only, set per area in
-  `src/areas.ts`. Replaced in the Hakone area by the JSBSim course (ADR 0035); still flown in
-  the Tokyo area, which has no course, and with `?path=racetrack`. Known fault: the lap does not
-  close by about 55 m (`window.__debug.seamGapMetres`), so the camera jumps once a lap at the
-  loop's seam, and the flight path marker is bent within 0.1 s of it.
 - The Hakone origin in `src/areas.ts` (139.02° E, 35.23° N, north of Lake Ashi) was placed for
-  the placeholder racetrack; the course stays within about 30 km of it.
+  the placeholder racetrack, now removed; the course stays within about 30 km of it.
+- `GEOID_HEIGHT` in `src/terrain/tileGeometry.ts` (36.8 m) was measured over central Tokyo and is
+  used for Hakone too; to be checked against GSI's geoid there.
 - `src/ui/loading.ts`: the temporary loading screen, redesigned with the UI.
 
 ## Plan
@@ -158,7 +157,8 @@ Done:
 - Central Tokyo with PLATEAU buildings ([ADR 0023](adr/0023-area-central-tokyo.md),
   [ADR 0024](adr/0024-untextured-buildings-with-procedural-facades.md),
   [ADR 0027](adr/0027-batched-building-tiles.md)), then the move to Sagami Bay, Hakone and Mount
-  Fuji, flown higher ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)).
+  Fuji, flown higher ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)); the Tokyo area
+  removed with its code ([ADR 0036](adr/0036-remove-the-tokyo-area.md), 2026-10-08).
 - Clouds, steps C1 to C4 and light shafts ([ADR 0013](adr/0013-port-the-clouds-to-tsl.md),
   [clouds-parity.md](clouds-parity.md)).
 - Water ([ADR 0029](adr/0029-water-from-gsi-data.md)), the terrain out to the horizon
