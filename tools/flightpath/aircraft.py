@@ -7,6 +7,7 @@ import jsbsim
 FT = 0.3048
 THROTTLE_P = 0.05
 THROTTLE_I = 0.005
+ROLL_PULL_UP = 8.0  # degrees of climb before a full roll
 
 
 def create_fdm(
@@ -58,47 +59,96 @@ class Autopilot:
         self.throttle = fdm["fcs/throttle-cmd-norm"]
         self.bank_integral = 0.0
         self.load_integral = 0.0
+        # Steepest climb or descent towards the height, degrees.
+        self.max_climb = 5.0
+        # Degrees per second of a full roll in progress (positive to the right), or 0.
+        self.roll_rate = 0.0
+        self.rolled = 0.0
+        self.pulling_up = False
+        self.pull_up_time = 0.0
+
+    def start_roll(self, rate: float) -> None:
+        """Rolls once around at `rate` degrees per second, then holds the bank of before.
+
+        As a pilot flies an aileron roll: the nose is first pulled up, as it drops while the
+        aircraft is on its side and inverted.
+        """
+        self.roll_rate = rate
+        self.rolled = 0.0
+        self.pulling_up = True
+        self.pull_up_time = 0.0
 
     def update(self, dt: float) -> None:
         fdm = self.fdm
+        if self.roll_rate:
+            self.rolled += fdm["velocities/p-rad_sec"] * 57.29578 * dt
+            if abs(self.rolled) >= 360 - abs(self.roll_rate) * 0.15:
+                self.roll_rate = 0.0
+                self.bank_integral = 0.0
+        if self.roll_rate and self.pulling_up:
+            self.pull_up_time += dt
+            if fdm["flight-path/gamma-deg"] < ROLL_PULL_UP and self.pull_up_time < 5:
+                # Wings held level: hands-off, the F-16 drifts into a bank.
+                self.hold_bank(0.0, dt)
+                self.yaw()
+                self.pitch_for_load(2.5, dt)
+                self.throttle_for_speed(dt)
+                return
+            self.pulling_up = False
+        if self.roll_rate:
+            # A full roll: a steady roll rate, and the elevator holding 1 G in the body.
+            fdm["fcs/aileron-cmd-norm"] = clamp(self.roll_rate / 180, -1, 1)
+            self.yaw()
+            self.pitch_for_load(1.0, dt)
+            self.throttle_for_speed(dt)
+            return
         # Heading: bank in proportion to the heading error, rolling out as the heading comes up.
         if self.heading is not None:
             heading_error = (self.heading - fdm["attitude/psi-deg"] + 180) % 360 - 180
             self.bank = clamp(8.0 * heading_error, -self.max_bank, self.max_bank)
-        # Bank: roll rate towards the target, at most 90 degrees per second, with an integral so
-        # that the bank settles on the target in a turn.
+        self.hold_bank(self.bank, dt)
         bank = fdm["attitude/phi-deg"]
-        bank_error = (self.bank - bank + 180) % 360 - 180
+        self.yaw()
+        # Height: a climb angle towards the target, at most max_climb; from it the load factor,
+        # including what the bank needs to hold the climb angle.
+        height = fdm["position/h-sl-ft"] * FT
+        climb_target = clamp(0.02 * (self.height - height), -self.max_climb, self.max_climb)
+        climb = fdm["flight-path/gamma-deg"]
+        cos_bank = max(math.cos(math.radians(bank)), 0.15)
+        load = math.cos(math.radians(climb)) / cos_bank + 0.1 * (climb_target - climb)
+        self.pitch_for_load(clamp(load, -2, 7), dt)
+        self.throttle_for_speed(dt)
+
+    def hold_bank(self, target: float, dt: float) -> None:
+        """Roll rate towards the bank, at most 90 degrees per second, with an integral so that
+        the bank settles on the target in a turn."""
+        bank_error = (target - self.fdm["attitude/phi-deg"] + 180) % 360 - 180
         self.bank_integral = clamp(self.bank_integral + bank_error * dt, -30, 30)
         roll_rate = clamp(1.5 * bank_error + 0.5 * self.bank_integral, -90, 90)
-        fdm["fcs/aileron-cmd-norm"] = clamp(roll_rate / 180, -1, 1)
-        # Yaw: the model's yaw damper opposes any yaw rate with a gain of 100 above 46 m/s, so in a
+        self.fdm["fcs/aileron-cmd-norm"] = clamp(roll_rate / 180, -1, 1)
+
+    def yaw(self) -> None:
+        # The model's yaw damper opposes any yaw rate with a gain of 100 above 46 m/s, so in a
         # steady turn it holds the rudder against the turn and leaves a sideslip that the rudder
         # command cannot remove. Its term is cancelled here: taken off the command that feeds the
         # damper's error and added back through the trim, which reaches the rudder directly. The
         # model's own feedback of the lateral load then keeps turns coordinated, within about 0.1
         # degrees of sideslip in a 60 degree bank.
-        damper = fdm["fcs/yaw-rate-norm"]
-        fdm["fcs/rudder-cmd-norm"] = -damper
-        fdm["fcs/yaw-trim-cmd-norm"] = damper
-        # Height: a climb angle towards the target, at most 5 degrees; from it the load factor,
-        # including what the bank needs to hold the climb angle; the elevator follows the load
-        # factor, with an integral for what the fly-by-wire leaves.
-        height = fdm["position/h-sl-ft"] * FT
-        climb_target = clamp(0.02 * (self.height - height), -5, 5)
-        climb = fdm["flight-path/gamma-deg"]
-        cos_bank = max(math.cos(math.radians(bank)), 0.15)
-        load_target = clamp(
-            math.cos(math.radians(climb)) / cos_bank + 0.1 * (climb_target - climb), -2, 7
-        )
-        load_error = load_target - fdm["accelerations/Nz"]
-        self.load_integral = clamp(self.load_integral + load_error * dt, -5, 5)
-        fdm["fcs/elevator-cmd-norm"] = clamp(-0.05 * load_error - 0.3 * self.load_integral, -1, 1)
-        # Speed: throttle in proportion to the error, plus its integral.
-        speed_error = self.speed - fdm["velocities/vt-fps"] * FT
-        self.throttle = clamp(self.throttle + THROTTLE_I * speed_error * dt, 0, 1)
-        fdm["fcs/throttle-cmd-norm"] = clamp(self.throttle + THROTTLE_P * speed_error, 0, 1)
+        damper = self.fdm["fcs/yaw-rate-norm"]
+        self.fdm["fcs/rudder-cmd-norm"] = -damper
+        self.fdm["fcs/yaw-trim-cmd-norm"] = damper
 
+    def pitch_for_load(self, load: float, dt: float) -> None:
+        """The elevator follows a load factor, with an integral for what the fly-by-wire leaves."""
+        error = load - self.fdm["accelerations/Nz"]
+        self.load_integral = clamp(self.load_integral + error * dt, -5, 5)
+        self.fdm["fcs/elevator-cmd-norm"] = clamp(-0.05 * error - 0.3 * self.load_integral, -1, 1)
+
+    def throttle_for_speed(self, dt: float) -> None:
+        """Throttle in proportion to the speed error, plus its integral; 1 is full afterburner."""
+        error = self.speed - self.fdm["velocities/vt-fps"] * FT
+        self.throttle = clamp(self.throttle + THROTTLE_I * error * dt, 0, 1)
+        self.fdm["fcs/throttle-cmd-norm"] = clamp(self.throttle + THROTTLE_P * error, 0, 1)
 
 def body_to_ned(fdm: jsbsim.FGFDMExec) -> tuple[float, float, float, float]:
     """The attitude as a body-to-NED quaternion (x, y, z, w): heading, then pitch, then roll."""

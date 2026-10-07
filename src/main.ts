@@ -240,6 +240,25 @@ async function start(): Promise<void> {
       }
     }
     debug.loaded = loaded
+    // ?debug: where the path goes through clouds, once loaded, for designing the course. Each
+    // stretch in cloud, sampled every 0.1 s, as [from, to, most density per metre].
+    if (loaded && clouds && params.debugText && debug.pathClouds === undefined) {
+      const sample = createAircraftState()
+      const world = new Vector3()
+      const found: [number, number, number][] = []
+      let open: [number, number, number] | null = null
+      for (let i = 0; i * 0.1 < pathDuration(path); i++) {
+        const t = Number((i * 0.1).toFixed(1))
+        samplePath(path, t, sample)
+        const density = clouds.densityAt(ecefToWorld(frame, sample.ecef, world))
+        if (density > 0) {
+          if (!open) found.push((open = [t, t, 0]))
+          open[1] = t
+          open[2] = Math.max(open[2], Number(density.toFixed(4)))
+        } else open = null
+      }
+      debug.pathClouds = found
+    }
     if (loaded && params.measure && !measuring) {
       measuring = true
       renderer.setAnimationLoop(null)

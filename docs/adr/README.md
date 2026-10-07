@@ -36,3 +36,4 @@
 | 0032 | [Land reflects light diffusely (Lambertian)](0032-land-reflects-diffusely.md) | Accepted |
 | 0033 | [More clouds to fly among, with a choice of amount](0033-more-clouds-to-fly-among.md) | Accepted |
 | 0034 | [A HUD in two layers, after the F-16C's](0034-hud.md) | Accepted |
+| 0035 | [The course: a loop of five to six minutes from Sagami Bay to Mount Fuji and back](0035-the-course.md) | Accepted |

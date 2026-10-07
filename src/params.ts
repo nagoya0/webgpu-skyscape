@@ -61,7 +61,8 @@
 //                     symbols)
 //   huddebug          draw a test pattern on both HUD layers
 //   measure           after loading, time 180 frames and report them in window.__debug
-//   debug             show debug text: flight time, height, load factor, frame time
+//   debug             show debug text: flight time, height, load factor, frame time; also lists
+//                     where the path goes through clouds (window.__debug.pathClouds)
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 

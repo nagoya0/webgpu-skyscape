@@ -30,10 +30,8 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   into vibration and head is to be done with the cockpit view.
 - **The HUD** ([ADR 0034](adr/0034-hud.md)). Open: whether the screen layer gets a mini map; and
   checking the instruments with the JSBSim path's manoeuvres, through inverted flight.
-- **The course** ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)). For now the simple
-  out-and-back from Sagami Bay towards Mount Fuji at 3,000 m, above the low clouds. Later, as the
-  maintainer would like: dropping below the cloud base and climbing back, and some fighter
-  manoeuvres.
+- **The course**: decided in [ADR 0035](adr/0035-the-course.md); the JSBSim path stage's notes
+  below.
 - **Manoeuvres in the final route.** The maintainer wants more than level turns: full rolls and
   more complex flying. The placeholder's roll rate (90°/s) looks fine. Things this will affect:
   - Head lag: 0.12 s suits slow turns, but an F-16 can roll at over 200°/s, which would leave the
@@ -105,8 +103,6 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   [ADR 0019](adr/0019-no-ui-until-features-are-in.md), like the guidance screen, and to be
   redesigned with the UI. A temporary one (`src/ui/loading.ts`) holds the flight at its start
   until the tile queue has stayed empty for 1.5 s, or for 30 s at most.
-- **Length of the demo.** Two to three minutes assumed so far; whether it loops. The placeholder
-  course takes about 400 s per lap.
 - **Static site host.** GitHub Pages or Cloudflare Pages
   ([ADR 0012](adr/0012-site-and-tile-data-hosted-apart.md)).
 - **A fork of three-geospatial.** Decided during the cloud stage, by how much of the library's
@@ -206,8 +202,20 @@ as room for improvement, listed in the README; changes for performance are still
    (3) a simple controller in Python for holds and turns, with the load factor; (4) choose the
    course with the maintainer, with the demo's length and whether it loops; (5) manoeuvres, at a
    higher sample rate, checking the HUD inverted and the head lag; (6) tile prefetching along the
-   path. Steps 1 to 3 done (2026-10-07): `tools/flightpath/`, `?path=turns` (turns at 60°, 80°
-   and 30° of bank and a climb of 300 m).
+   path. Steps 1 to 3 done (2026-10-07): `tools/flightpath/`. Step 4: the course decided
+   ([ADR 0035](adr/0035-the-course.md)); a first version flies it, `?path=course`, to be checked
+   on screen with the maintainer. It is not yet the default.
+   - The first version (`tools/flightpath/fly.py`): 374 s a lap. Start over the bay off Odawara at
+     500 m and 250 m/s; climb at up to 15° to 1,400 m, level through a cumulus for about 5 s
+     (`?debug` lists the path's stretches in cloud), then on up towards Lake Ashi to 2,900 m; a roll at 180°/s after a
+     pull-up to 8° of climb; on at 320 m/s to the south-east of Mount Fuji; a turn to the right at
+     80° of bank (about 6.5 G, down to about 240 m/s); back at 320 m/s north of Hakone; down at up
+     to 8° to 500 m, slowing to 250 m/s; a turn to the right at 70° over the bay that ends on the
+     start's line about 8 km before the start. The lap closes within about 9 m and 4 m of height;
+     the rest is spread over the last 10 s.
+   - The F-16 model's speed brake hardly slows it (about 2.5 m/s² at idle with or without it) and
+     gives an angle of attack of -5° in level flight, so it is not used; the aircraft slows at
+     idle and in hard turns. Full afterburner takes it from 250 to 400 m/s in 30 s at 3,000 m.
    - Hands-off, the trimmed F-16 rolls off: a bank of 0.1° grows about 1.3 times every 2 s, and
      after 100 s it is rolling over. A small autopilot in `tools/flightpath/aircraft.py` holds
      heading (through the bank), bank, height (through the load factor) and speed, through the
