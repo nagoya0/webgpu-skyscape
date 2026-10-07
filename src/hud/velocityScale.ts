@@ -34,6 +34,18 @@ const LETTER_GAP = 0.3
 const TEXT = 1.5
 
 /**
+ * The top of the tape: the left end of its ticks, and the height of its last tick, in pixels;
+ * for elements placed by the scale, such as the current G.
+ */
+export function velocityTapeTop(width: number, height: number, pixelsPerDegree: number): { x: number; y: number } {
+  const d = pixelsPerDegree
+  return {
+    x: width / 2 + (BOX_RIGHT + TAPE_GAP - MAJOR_EXTRA) * d,
+    y: height / 2 - (BOX_UP + SPAN_KNOTS * DEGREES_PER_KNOT) * d
+  }
+}
+
+/**
  * Draws the velocity scale on the aircraft layer.
  * @param pixelsPerDegree at the boresight, from the camera's field of view
  */

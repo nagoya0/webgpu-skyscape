@@ -25,6 +25,7 @@ import { drawRollIndicator } from './hud/rollIndicator'
 import { drawScreenLines, FLIGHT_MODEL_LINE, sceneTimeText } from './hud/sceneTime'
 import { loadPlaces } from './hud/flyingOver'
 import { drawVelocityScale, KNOTS_PER_METRE_PER_SECOND } from './hud/velocityScale'
+import { drawCurrentG } from './hud/currentG'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { loadPath } from './flight/loadPath'
 import { createLocalFrame, ecefToWorld, nedToWorldRotation } from './geo/localFrame'
@@ -286,7 +287,6 @@ async function start(): Promise<void> {
         `t      ${flightTime.toFixed(1)} s${loaded ? '' : ' (loading)'}`,
         // Height above the origin's tangent plane; close to the altitude over the demo area.
         `y      ${camera.position.y.toFixed(0)} m`,
-        `load   ${state.loadFactor.toFixed(2)} G`,
         `cloud  ${cloudDensity.toFixed(4)} /m, in cloud ${state.cloudDensity.toFixed(2)} (${densityMicroseconds.toFixed(0)} us)`,
         `frame  ${frameMs.toFixed(1)} ms`
       ])
@@ -365,6 +365,7 @@ async function start(): Promise<void> {
     // Ground speed: the horizontal part of the velocity, as the paths have no wind.
     const groundSpeed = Math.hypot(velocity.x, velocity.z)
     drawVelocityScale(context, canvas.width, canvas.height, pixelsPerDegree, groundSpeed * KNOTS_PER_METRE_PER_SECOND)
+    drawCurrentG(context, canvas.width, canvas.height, pixelsPerDegree, state.loadFactor)
     // Height above mean sea level: GSI heights are above the geoid (ADR 0026).
     const metres = aircraftGeodetic.setFromECEF(state.ecef).height - GEOID_HEIGHT
     drawAltitudeScale(context, canvas.width, canvas.height, pixelsPerDegree, metres * FEET_PER_METRE)
