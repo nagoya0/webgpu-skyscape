@@ -116,7 +116,8 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 | `t=seconds`, `paused` | Start time on the flight path; hold the flight there |
 | `exposure`, `fov` | Exposure before tone mapping; vertical field of view |
 | `altitude`, `speed`, `bank`, `rollrate` | Placeholder flight path |
-| `buildings=0`, `terrain=0`, `clouds=0`, `flare=0` | Leave out a part of the scene |
+| `buildings=0`, `terrain=0`, `clouds=0`, `flare=0`, `drops=0` | Leave out a part of the scene (`drops`: the water drops on the screen in clouds) |
+| `dropsdebug` | Debugging: show the drops' height map in red |
 | `groundshadow=0` | Leave out the cloud shadows on the terrain and buildings |
 | `terraintexel=px` | Terrain detail: refine while a photograph texel covers more than this many pixels (default 1.5) |
 | `photodehaze`, `photocontrast`, `photosat` | Correction of the aerial photographs (defaults 0.15, 1.2, 1.4) |

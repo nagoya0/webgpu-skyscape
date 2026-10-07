@@ -11,6 +11,7 @@ import {
   type CloudFeature
 } from './clouds/clouds'
 import { createCockpitCamera } from './camera/cockpitCamera'
+import { createDrops } from './effects/drops'
 import { createInCloud } from './effects/inCloud'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath } from './flight/placeholderPath'
@@ -146,9 +147,13 @@ async function start(): Promise<void> {
     // `shadowNode` is missing from the type declarations of LightShadow in 0.186.
     ;(atmosphere.light.shadow as unknown as { shadowNode: unknown }).shadowNode = clouds.sceneShadow
   }
+  // Water drops on the screen in clouds (ADR 0011); they need the clouds' density.
+  const drops = clouds && params.drops ? createDrops() : null
   const pipeline = createPipeline(renderer, scene, camera, clouds ? [clouds.stage] : [], {
     lensFlare: params.flare,
-    shadowLength: clouds?.shadowLength
+    shadowLength: clouds?.shadowLength,
+    drops: drops ?? undefined,
+    dropsDebug: params.dropsDebug
   })
   pipeline.exposure.value = params.exposure
 
@@ -280,6 +285,10 @@ async function start(): Promise<void> {
     if (clouds) {
       camera.updateMatrixWorld()
       clouds.updateShadows(renderer)
+    }
+    if (drops) {
+      drops.update(renderer, first ? 0 : flightDelta, state.cloudDensity, params.speed, camera.quaternion)
+      debug.drops = drops.count
     }
     pipeline.render()
   }

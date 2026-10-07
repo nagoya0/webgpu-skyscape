@@ -173,6 +173,12 @@ Done:
   clear, above 0 where it was inside a cloud. The weather map is now decoded with fast-png so the
   CPU and the GPU read the same values (the image did not change). A density channel in the
   precomputed path, for the offline path tool, is left for the JSBSim stage.
+- Water drops on the screen in the first-person view (2026-10-07, `src/effects/drops.ts`): drops
+  land in clouds, flow outwards faster with speed, merge, and evaporate after leaving the cloud
+  (small ones in about 4 s, large ones in about 13 s); drawn after the anti-aliasing as a
+  refracting height map. Simulated on the CPU, not in a compute shader as ADR 0011 says (a few
+  hundred drops); to be confirmed with the maintainer. Cost in a cloud at 1920 × 1080 (medians
+  of three): about 0.2 ms of GPU and 0.3 ms of JavaScript, the latter mostly the drops' merging.
 
 Next, in this order (the maintainer put the ground's quality before the remaining cloud
 features on 2026-10-06, and on 2026-10-07 put the rest of the terrain and of the clouds on hold

@@ -53,6 +53,8 @@
 //                     e.g. cloudfx=-POWDER
 //   raymarch=0        look up the aerial perspective in tables instead of ray marching it
 //   flare=0           leave out the lens flare
+//   drops=0           leave out the water drops on the screen in clouds
+//   dropsdebug        show the drops' height map in red
 //   measure           after loading, time 180 frames and report them in window.__debug
 //   debug             show debug text: flight time, height, load factor, frame time
 
@@ -92,6 +94,8 @@ export interface Params {
   drawMode: 'batch' | 'bundle' | 'plain'
   raymarch: boolean
   flare: boolean
+  drops: boolean
+  dropsDebug: boolean
   clouds: boolean
   groundShadow: boolean
   cloudAmount: 'few' | 'normal' | 'many'
@@ -173,6 +177,8 @@ export function readParams(search: string, now = new Date()): Params {
     drawMode: (['batch', 'bundle', 'plain'] as const).find(m => m === query.get('draw')) ?? 'batch',
     raymarch: query.get('raymarch') !== '0',
     flare: query.get('flare') !== '0',
+    drops: query.get('drops') !== '0',
+    dropsDebug: query.has('dropsdebug'),
     clouds: query.get('clouds') !== '0',
     groundShadow: query.get('groundshadow') !== '0',
     cloudAmount: (['few', 'normal', 'many'] as const).find(a => a === query.get('cloudamount')) ?? 'normal',
