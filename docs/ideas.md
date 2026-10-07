@@ -157,12 +157,12 @@ Next, in this order (the maintainer put the ground's quality before the remainin
 features on 2026-10-06, and on 2026-10-07 put the rest of the terrain and of the clouds on hold
 as room for improvement, listed in the README; changes for performance are still considered):
 
-1. **Forests** (above; not decided whether they are needed).
+1. **Forests**: on hold (2026-10-07).
 2. **Step C5 of the clouds** (cloud density on the CPU for the path's cloud channel and the
-   shake in clouds) is on hold; the idea so far is that the cloud shape data lives in files that
+   shake in clouds), next (2026-10-07); the idea so far is that the cloud shape data lives in files that
    both the GPU and the offline path tool read
    ([ADR 0008](adr/0008-precomputed-flight-path.md)).
-3. **Rain** ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
+3. **Effects** in general, rain drops among them ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
    [ADR 0020](adr/0020-effects-by-view.md)).
 4. **JSBSim path** with manoeuvres, replacing the placeholder.
 5. **Night.** Stars, moon and adaptive exposure fit between any stages.

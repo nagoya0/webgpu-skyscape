@@ -44,7 +44,8 @@
 //                     (defaults chosen by the maintainer from a comparison, 2026-10-06)
 //   clouds=0          leave out the clouds
 //   groundshadow=0    leave out the cloud shadows on the terrain and buildings
-//   coverage=0..1     cloud coverage (default 0.3)
+//   cloudamount=NAME  how much cloud: few, normal (default) or many (as takram's default layers)
+//   coverage=0..1     cloud coverage of all layers (default 0.3)
 //   wind=E,N          wind in m/s towards the east and the north, moving the clouds, e.g.
 //                     wind=10,-5 (default 0,0, as takram)
 //   cloudfx=LIST      cloud feature switches, comma-separated: +NAME turns one on, -NAME off,
@@ -93,6 +94,7 @@ export interface Params {
   flare: boolean
   clouds: boolean
   groundShadow: boolean
+  cloudAmount: 'few' | 'normal' | 'many'
   coverage: number
   /** Metres per second towards the east and the north. */
   wind: { east: number; north: number }
@@ -173,6 +175,7 @@ export function readParams(search: string, now = new Date()): Params {
     flare: query.get('flare') !== '0',
     clouds: query.get('clouds') !== '0',
     groundShadow: query.get('groundshadow') !== '0',
+    cloudAmount: (['few', 'normal', 'many'] as const).find(a => a === query.get('cloudamount')) ?? 'normal',
     coverage: number('coverage', 0.3, 0, 1),
     wind,
     cloudFeatures: Object.fromEntries(

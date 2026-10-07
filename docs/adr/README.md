@@ -34,3 +34,4 @@
 | 0030 | [The terrain reaches the horizon; a sea-level sphere lies beyond it](0030-terrain-to-the-horizon.md) | Accepted |
 | 0031 | [Correct the sources first; grade the whole image at the end](0031-correct-the-sources-grade-at-the-end.md) | Accepted |
 | 0032 | [Land reflects light diffusely (Lambertian)](0032-land-reflects-diffusely.md) | Accepted |
+| 0033 | [More clouds to fly among, with a choice of amount](0033-more-clouds-to-fly-among.md) | Accepted |

@@ -122,7 +122,8 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 | `photodehaze`, `photocontrast`, `photosat` | Correction of the aerial photographs (defaults 0.15, 1.2, 1.4) |
 | `landspecular=0..1` | Specular reflection of the land: 0 diffuse only (default), 1 as a standard material |
 | `terraindebug=1` to `5` | Debugging: tint terrain tiles by zoom level; show the photographs without lighting; show the water mask in red; draw the terrain plain grey; show the normals as colour |
-| `coverage=0..1`, `cloudfx=` | Cloud coverage; cloud feature switches, such as `cloudfx=-POWDER` |
+| `cloudamount=few`, `normal`, `many` | How much cloud ([ADR 0033](docs/adr/0033-more-clouds-to-fly-among.md)); `normal` is the default |
+| `coverage=0..1`, `cloudfx=` | Cloud coverage of all layers; cloud feature switches, such as `cloudfx=-POWDER` |
 | `wind=E,N` | Wind moving the clouds, in m/s towards the east and the north, such as `wind=10,-5` |
 | `measure` | After loading, time 180 frames and report CPU and GPU times in `window.__debug` |
 | `debug` | Show debug text: flight time, height, load factor, frame time |

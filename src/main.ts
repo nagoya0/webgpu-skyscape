@@ -6,6 +6,7 @@ import {
   CLOUD_FEATURES,
   createClouds,
   DEFAULT_CLOUD_FEATURES,
+  cloudLayers,
   DEFAULT_CLOUDS,
   type CloudFeature
 } from './clouds/clouds'
@@ -130,6 +131,7 @@ async function start(): Promise<void> {
   const clouds = params.clouds
     ? await createClouds(atmosphere.context, camera, frame, {
         ...DEFAULT_CLOUDS,
+        layers: cloudLayers(params.cloudAmount),
         coverage: params.coverage,
         features: cloudFeatures,
         wind: params.wind

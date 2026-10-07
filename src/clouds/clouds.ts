@@ -164,11 +164,41 @@ export interface CloudLayer {
 
 // takram's defaults: two cumulus layers (weather channels r and g) that cast shadows, and a
 // thin high layer (b) that does not.
-export const DEFAULT_LAYERS: CloudLayer[] = [
+export const TAKRAM_LAYERS: CloudLayer[] = [
   { altitude: 750, height: 650, densityScale: 0.2, shapeAmount: 1, detailAmount: 1, weatherExponent: 1, shapeAlteringBias: 0.35, coverageFilterWidth: 0.6, shadow: true },
   { altitude: 1000, height: 1200, densityScale: 0.2, shapeAmount: 1, detailAmount: 1, weatherExponent: 1, shapeAlteringBias: 0.35, coverageFilterWidth: 0.6, shadow: true },
   { altitude: 7500, height: 500, densityScale: 0.003, shapeAmount: 0.4, detailAmount: 0, weatherExponent: 1, shapeAlteringBias: 0.35, coverageFilterWidth: 0.5, shadow: false }
 ]
+
+/** How much cloud there is (?cloudamount=): fewer, the demo's default, or as many as takram's. */
+export type CloudAmount = 'few' | 'normal' | 'many'
+
+/** The weather map is raised to this power in the low and middle layers; higher thins them out. */
+const AMOUNT_EXPONENTS: Record<CloudAmount, number> = { few: 3, normal: 2, many: 1 }
+
+/**
+ * The demo's layers (ADR 0033), changed from takram's for clouds to fly among at 3,000 m: the
+ * second low layer reaches 4,000 m, so cloud tops vary and some rise above the course; a middle
+ * layer at 3,500 to 5,000 m uses the weather map's fourth channel; the amount thins out the low
+ * and middle clouds. The thin high layer stays as takram's.
+ */
+export function cloudLayers(amount: CloudAmount = 'normal'): CloudLayer[] {
+  const weatherExponent = AMOUNT_EXPONENTS[amount]
+  return [
+    { ...TAKRAM_LAYERS[0], weatherExponent },
+    { ...TAKRAM_LAYERS[1], height: 3000, weatherExponent },
+    TAKRAM_LAYERS[2],
+    { altitude: 3500, height: 1500, densityScale: 0.1, shapeAmount: 1, detailAmount: 1, weatherExponent, shapeAlteringBias: 0.35, coverageFilterWidth: 0.6, shadow: true }
+  ]
+}
+
+export const DEFAULT_LAYERS: CloudLayer[] = cloudLayers()
+
+/**
+ * Top of the haze: the top of takram's default low layers (agreed 2026-10-06), kept when the
+ * demo's layers reach higher (ADR 0033).
+ */
+const HAZE_TOP_HEIGHT = 2200
 
 /** Shadow maps: takram's default size; they reach as far as the clouds are marched. */
 const SHADOW_MAP_SIZE = 512
@@ -510,8 +540,8 @@ export async function createClouds(
           shadowTopHeight: shadowHeights.y,
           pixel,
           shadowLengthMarch,
-          // The haze lies below the top of the low layers (the shadow-casting ones).
-          hazeTopHeight: shadowHeights.y
+          // The haze lies below the top of takram's low layers, whatever the layers are.
+          hazeTopHeight: float(HAZE_TOP_HEIGHT)
         })
       ).toVar() as unknown as { element(index: number): Node<'vec4'> }
       const cloud = result.element(0)

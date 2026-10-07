@@ -48,6 +48,13 @@ describe('readParams', () => {
     }
   })
 
+  it('reads the cloud amount', () => {
+    expect(readParams('?cloudamount=few', now).cloudAmount).toBe('few')
+    expect(readParams('?cloudamount=many', now).cloudAmount).toBe('many')
+    expect(readParams('', now).cloudAmount).toBe('normal')
+    expect(readParams('?cloudamount=lots', now).cloudAmount).toBe('normal')
+  })
+
   it('falls back on malformed or out-of-range values', () => {
     const params = readParams('?time=25:00&exposure=abc&bank=90&fov=', now)
     expect(params.date.toISOString()).toBe('2026-10-05T07:30:00.000Z')
