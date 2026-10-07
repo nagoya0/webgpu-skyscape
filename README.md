@@ -166,7 +166,8 @@ Design decisions are recorded in [docs/adr/](docs/adr/). Open questions and the 
 
 ## Licence and credits
 
-The licence of this project's own code is not decided yet.
+This project's own code and files are under the [MIT License](LICENSE). The data and the files of
+others that it uses or includes keep their own licences, listed below.
 
 ### Data
 
