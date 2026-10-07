@@ -54,7 +54,9 @@ The HUD's elements are in `src/hud/`, after the DCS F-16C guide ([ADR 0034](docs
 show the maintainer screenshots of overlapping symbols one at a time.
 Each area's origin, terrain extent and placeholder course are in `src/areas.ts`.
 Flight paths from JSBSim are written by `tools/flightpath/fly.py` (Python, its own venv in
-`tools/flightpath/.venv`) into `public/paths/` and read with `?path=NAME`.
+`tools/flightpath/.venv`) into `public/paths/` and read with `?path=NAME`. The sea's waves are
+baked by `tools/water/bake_ocean.py` (numpy, venv in `tools/water/.venv`) into
+`public/water/ocean.bin`.
 
 Write heavy shader code in WGSL (`.wgsl` files, one function each, connected with `wgslFn`) and
 use TSL only to gather inputs and connect stages. In post-processing, pass the scene camera's

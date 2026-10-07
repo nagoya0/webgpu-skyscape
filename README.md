@@ -15,8 +15,8 @@ In place:
   they carry ([ADR 0031](docs/adr/0031-correct-the-sources-grade-at-the-end.md)), streamed in
   real time out to the horizon ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md),
   [ADR 0030](docs/adr/0030-terrain-to-the-horizon.md)).
-- The sea, lakes and rivers drawn as water with waves, the sky's reflection and the sun's glint
-  ([ADR 0029](docs/adr/0029-water-from-gsi-data.md)).
+- The sea, lakes and rivers drawn as water with waves baked from an FFT ocean, the sky's
+  reflection and the sun's glint ([ADR 0029](docs/adr/0029-water-from-gsi-data.md)).
 - The area: Sagami Bay, Hakone and Mount Fuji, flown at 3,000 m
   ([ADR 0028](docs/adr/0028-area-sagami-bay-hakone-fuji.md)). The earlier area, central Tokyo
   with PLATEAU LOD2 buildings for eight wards and procedural facades
@@ -30,7 +30,10 @@ In place:
   ([ADR 0033](docs/adr/0033-more-clouds-to-fly-among.md)), and the clouds' density at the aircraft
   computed on the CPU each frame from the same data as the GPU's clouds.
 - A placeholder flight path at 250 m/s, out from Sagami Bay towards Mount Fuji and back, and a
-  first-person camera that shakes in turns and in clouds.
+  first-person camera that shakes in turns and in clouds. The demo's own course, a loop of about
+  six minutes flown by JSBSim's F-16 under a small autopilot, below and through the clouds and past
+  Mount Fuji, can be flown with `?path=course` ([ADR 0035](docs/adr/0035-the-course.md)); it is
+  not yet the default.
 - Water drops on the screen in clouds: they land deep in a cloud, are blown outwards in streaks,
   merge, and evaporate after it ([ADR 0011](docs/adr/0011-rain-driven-by-relative-wind.md)).
 - A HUD after the F-16C's: velocity, altitude and heading scales, roll indicator, attitude bars,
@@ -38,7 +41,7 @@ In place:
   scene's time and the municipality below ([ADR 0034](docs/adr/0034-hud.md)).
 - Temporal anti-aliasing, lens flare and AgX tone mapping.
 
-Planned: a flight path from JSBSim with manoeuvres, night scenes, colour grading, and a UI;
+Planned: the JSBSim course as the default, night scenes, colour grading, and a UI;
 forests are still open. The order and the open questions are in [docs/ideas.md](docs/ideas.md).
 
 ## What this project adds
@@ -59,8 +62,9 @@ Beyond using the libraries listed under credits, this project does the following
   beyond it ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md),
   [ADR 0030](docs/adr/0030-terrain-to-the-horizon.md)).
 - **Water from map data**: a water mask per tile from the elevation model's missing data and the
-  water polygons of GSI's vector tiles (read by a small decoder in this project), drawn with waves,
-  the sky's reflection and the sun's glint
+  water polygons of GSI's vector tiles (read by a small decoder in this project), drawn with the
+  sky's reflection, the sun's glint and waves from an FFT ocean baked offline into a looping
+  texture, hex-tiled at three sizes so that it does not repeat
   ([ADR 0029](docs/adr/0029-water-from-gsi-data.md)).
 - **Aerial photographs as ground colour**: the haze in the photographs is removed so that it is
   not applied twice ([ADR 0031](docs/adr/0031-correct-the-sources-grade-at-the-end.md)), and the
@@ -126,6 +130,9 @@ tools/flightpath/.venv/Scripts/python -m pip install -r tools/flightpath/require
 tools/flightpath/.venv/Scripts/python tools/flightpath/fly.py   # writes public/paths/*.json
 ```
 
+The sea's waves are baked the same way, with numpy (`tools/water/bake_ocean.py`, writing
+`public/water/ocean.bin`; its own venv in `tools/water/.venv`).
+
 ### URL parameters
 
 There is no on-screen UI yet ([ADR 0019](docs/adr/0019-no-ui-until-features-are-in.md)).
@@ -138,7 +145,7 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 | `date=YYYY-MM-DD`, `time=HH:MM` | Date and time of day in JST |
 | `t=seconds`, `paused` | Start time on the flight path; hold the flight there |
 | `exposure`, `fov` | Exposure before tone mapping; vertical field of view |
-| `path=NAME` | Fly a path computed with JSBSim (`public/paths/NAME.json`), e.g. `path=turns`; without it, the placeholder |
+| `path=NAME` | Fly a path computed with JSBSim (`public/paths/NAME.json`), e.g. `path=course` (the course of [ADR 0035](docs/adr/0035-the-course.md)); without it, the placeholder |
 | `altitude`, `speed`, `bank`, `rollrate` | Placeholder flight path |
 | `buildings=0`, `terrain=0`, `clouds=0`, `flare=0`, `drops=0` | Leave out a part of the scene (`drops`: the water drops on the screen in clouds) |
 | `dropsdebug` | Debugging: show the drops' height map in red |

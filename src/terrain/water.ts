@@ -2,7 +2,7 @@
 // missing data), the surface is drawn as water instead of the photograph. The sky reflection is
 // the atmosphere's sky luminance in the reflected direction, weighted by Fresnel, added as
 // emission; the sun's glint comes from the sun light's specular on a smooth surface. The waves
-// are WGSL (wgsl/waterNormal.wgsl).
+// are baked FFT ocean slopes (tools/water/bake_ocean.py), sampled in WGSL (wgsl/waterNormal.wgsl).
 import { getIndirectLuminance, type AtmosphereContext } from '@takram/three-atmosphere/webgpu'
 import {
   cameraPosition,
@@ -12,7 +12,9 @@ import {
   normalWorldGeometry,
   positionWorld,
   pow,
+  sampler,
   texture,
+  texture3D,
   transformDirection,
   uniform,
   vec2,
@@ -20,11 +22,51 @@ import {
   vec4,
   wgslFn
 } from 'three/tsl'
-import type { Node, Texture } from 'three/webgpu'
+import {
+  Data3DTexture,
+  LinearFilter,
+  NoColorSpace,
+  RepeatWrapping,
+  RGFormat,
+  UnsignedByteType,
+  type Node,
+  type Texture
+} from 'three/webgpu'
 
+import waterLayerCode from './wgsl/waterLayer.wgsl?raw'
 import waterNormalCode from './wgsl/waterNormal.wgsl?raw'
 
-const waterNormalFn = wgslFn(waterNormalCode)
+// TYPE-BRIDGE: @types/three 0.186 does not accept a wgslFn result as an include, although
+// three's WGSLNodeFunction does.
+type Include = Parameters<typeof wgslFn>[1] extends (infer T)[] | undefined ? T : never
+const waterNormalFn = wgslFn(waterNormalCode, [wgslFn(waterLayerCode) as unknown as Include])
+
+/**
+ * The baked wave slopes: 128 x 128 texels over a patch, 64 frames of a loop, two bytes each
+ * (tools/water/bake_ocean.py). Flat until the file has loaded.
+ */
+const SLOPES_SIZE = 128
+const SLOPES_FRAMES = 64
+const oceanSlopes = new Data3DTexture(
+  new Uint8Array(SLOPES_SIZE * SLOPES_SIZE * SLOPES_FRAMES * 2).fill(128),
+  SLOPES_SIZE,
+  SLOPES_SIZE,
+  SLOPES_FRAMES
+)
+oceanSlopes.format = RGFormat
+oceanSlopes.type = UnsignedByteType
+oceanSlopes.minFilter = LinearFilter
+oceanSlopes.magFilter = LinearFilter
+oceanSlopes.wrapS = oceanSlopes.wrapT = oceanSlopes.wrapR = RepeatWrapping
+oceanSlopes.colorSpace = NoColorSpace
+oceanSlopes.needsUpdate = true
+void fetch(`${import.meta.env.BASE_URL}water/ocean.bin`)
+  .then(async response => new Uint8Array(await response.arrayBuffer()))
+  .then(data => {
+    oceanSlopes.image.data = data
+    oceanSlopes.needsUpdate = true
+  })
+const oceanSlopesNode = texture3D(oceanSlopes)
 
 /** Seconds; drives the waves. Set from the time on the flight path. */
 export const waterTime = uniform(0)
@@ -66,17 +108,23 @@ export function terrainShading(
   }
   const water = texture(mask).r.smoothstep(0.3, 0.7)
 
-  // Waves flatten with distance; the roughness rises instead, spreading the sun's glint.
+  // Waves smaller than a few pixels fade out with distance; the roughness rises instead,
+  // spreading the sun's glint. A pixel covers about the distance times 1.1e-3 (70° over 1,080
+  // pixels), stretched along the view where the surface is seen at a grazing angle.
   const distance = positionWorld.distance(cameraPosition)
-  const detail = float(1).sub(distance.div(4000)).clamp(0, 1)
+  const grazing = positionWorld.sub(cameraPosition).normalize().dot(normalWorldGeometry).abs().max(0.05)
+  const pixelMetres = distance.mul(1.1e-3).div(grazing)
   // Around the geometry's own normal: normalWorld would include this material's normal.
   const normal = waterNormalFn({
     position: positionWorld,
     up: normalWorldGeometry,
     time: waterTime,
-    detail
+    pixelMetres,
+    slopes: oceanSlopesNode,
+    slopesSampler: sampler(oceanSlopesNode)
   }) as Node<'vec3'>
-  const roughness = mix(0.06, 0.3, distance.div(30_000).clamp(0, 1))
+  // Rougher where the waves have faded out (pixels over about a metre) and further still far away.
+  const roughness = mix(0.06, 0.25, pixelMetres.smoothstep(0.5, 4)).max(mix(0.06, 0.3, distance.div(30_000).clamp(0, 1)))
 
   // Sky reflection: Schlick's Fresnel for water (F0 0.02) times the sky in the reflected
   // direction, kept above the horizon.

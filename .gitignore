@@ -4,5 +4,5 @@ dist/
 !.env.example
 *.local
 .DS_Store
-tools/flightpath/.venv/
+tools/*/.venv/
 __pycache__/
