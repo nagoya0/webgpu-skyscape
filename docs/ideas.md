@@ -232,8 +232,10 @@ as room for improvement, listed in the README; changes for performance are still
      80° bank about 6 G (7 G at the start) with about 10°, losing about 110 m while rolling in,
      regained in about 20 s. The flight path marker sits that far below the boresight cross, as
      checked on screen. In straight flight at 250 m/s the angle of attack is only 0.2°.
-   - The F-16 model's file says GPL; only computed paths are bundled, not the model or JSBSim.
-     To check before publishing.
+   - The F-16 model's file says GPL, JSBSim is LGPL-2.1 or later. Checked with the maintainer
+     (2026-10-08): neither is in the repository; the scripts load the model from the JSBSim
+     installed with pip, and the computed path contains no part of the model, so publishing it
+     brings no GPL obligation. The HUD and README name JSBSim and the model as the source only.
 3. **Night.** Stars, moon and adaptive exposure fit between any stages.
 4. **The UI** ([ADR 0037](adr/0037-ui.md)), started 2026-10-08 as the maintainer judged the
    features complete enough to prepare for publishing; the Tokyo area was removed first
