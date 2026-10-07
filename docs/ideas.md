@@ -246,4 +246,7 @@ as room for improvement, listed in the README; changes for performance are still
 Not yet placed: a check of temporal anti-aliasing at 250 to 320 m/s (tile prefetching is step 6
 of the JSBSim path).
 
+After the current work settles (the maintainer, 2026-10-08): adjust the additive blending of the
+water drops on the screen (`src/effects/drops.ts`).
+
 Later: the cockpit view, quality presets, colour grading, the README and video, publishing.
