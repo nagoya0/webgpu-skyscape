@@ -11,6 +11,7 @@ import {
   type CloudFeature
 } from './clouds/clouds'
 import { createCockpitCamera } from './camera/cockpitCamera'
+import { createInCloud } from './effects/inCloud'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath } from './flight/placeholderPath'
 import { createLocalFrame, ecefToWorld } from './geo/localFrame'
@@ -226,7 +227,7 @@ async function start(): Promise<void> {
         // Height above the origin's tangent plane; close to the altitude over the demo area.
         `y      ${camera.position.y.toFixed(0)} m`,
         `load   ${state.loadFactor.toFixed(2)} G`,
-        `cloud  ${cloudDensity.toFixed(4)} /m (${densityMicroseconds.toFixed(0)} us)`,
+        `cloud  ${cloudDensity.toFixed(4)} /m, in cloud ${state.cloudDensity.toFixed(2)} (${densityMicroseconds.toFixed(0)} us)`,
         `frame  ${frameMs.toFixed(1)} ms`
       ])
     }
@@ -235,6 +236,8 @@ async function start(): Promise<void> {
   let lastBoundsTime = -Infinity
   let cloudDensity = 0
   let densityMicroseconds = 0
+  const inCloud = createInCloud()
+  const aircraftWorld = new Vector3()
 
   // One frame: move the aircraft, update the tiles, draw.
   function step(flightDelta: number, elapsed: number): void {
@@ -242,17 +245,20 @@ async function start(): Promise<void> {
     samplePath(path, flightTime, state)
     clouds?.setTime(flightTime)
     waterTime.value = flightTime
-    cockpit.update(state, first ? 0 : flightDelta, elapsed)
-    first = false
-    // Cloud step C5: the clouds' density at the camera, for the effects in clouds. Timed, as it
-    // runs on the CPU every frame.
+    // Cloud step C5: the clouds' density at the aircraft, for the effects in clouds. It replaces
+    // the path's cloud channel, which the placeholder path leaves at 0. Timed, as it runs on the
+    // CPU every frame.
     if (clouds) {
       const start = performance.now()
-      cloudDensity = clouds.densityAt(camera.position)
+      cloudDensity = clouds.densityAt(ecefToWorld(frame, state.ecef, aircraftWorld))
       densityMicroseconds += ((performance.now() - start) * 1000 - densityMicroseconds) * 0.05
+      state.cloudDensity = inCloud.update(cloudDensity, first ? 0 : flightDelta)
       debug.cloudDensity = Number(cloudDensity.toFixed(5))
+      debug.inCloud = Number(state.cloudDensity.toFixed(3))
       debug.cloudDensityMicroseconds = Number(densityMicroseconds.toFixed(1))
     }
+    cockpit.update(state, first ? 0 : flightDelta, elapsed)
+    first = false
     if (buildings) {
       buildings.update(container.clientWidth, container.clientHeight)
       debug.tiles = buildings.stats()

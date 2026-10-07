@@ -14,8 +14,10 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   over. Both are tuned when the cockpit view is built.
   Shake, as the maintainer wants it: none in steady flight, even if that is less realistic; some
   in turns and more when passing through clouds. For now 0.04° per G above 1 and 0.3° at full
-  cloud density. The cloud figure is untested; the density at the camera is now known (cloud step C5
-  below) and is to drive it with the effects.
+  cloud density. In clouds the shake now follows how deep in cloud the aircraft is (`src/effects/inCloud.ts`):
+  0 in clear air, 1 − exp(−extinction / 0.01 per metre), so about 0.63 at 100 m of visibility and
+  0.96 at 0.033 per metre, followed over 0.2 s since the density jumps at a cloud's edge. The size
+  of the shake is still to be judged by eye in motion.
 - **The course** ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)). For now the simple
   out-and-back from Sagami Bay towards Mount Fuji at 3,000 m, above the low clouds. Later, as the
   maintainer would like: dropping below the cloud base and climbing back, and some fighter
