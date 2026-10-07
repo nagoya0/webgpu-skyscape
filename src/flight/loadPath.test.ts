@@ -25,6 +25,5 @@ describe('pathFromFile', () => {
     expect(path.ecef[5]).toBeCloseTo(6356752.314 + 1000, 2)
     expect(Array.from(path.attitude)).toEqual([0, 0, 0, 1, 0, 0, expect.closeTo(0.6), expect.closeTo(0.8)])
     expect(Array.from(path.loadFactor)).toEqual([1, 2])
-    expect(Array.from(path.cloudDensity)).toEqual([0, 0])
   })
 })

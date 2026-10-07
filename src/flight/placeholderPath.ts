@@ -81,7 +81,6 @@ function fly(o: RacetrackOptions, start: Geodetic, startHeading: number): Flight
     ecef: new Float64Array(count * 3),
     attitude: new Float32Array(count * 4),
     loadFactor: new Float32Array(count),
-    cloudDensity: new Float32Array(count),
     loop: true
   }
 

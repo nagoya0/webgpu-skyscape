@@ -349,9 +349,8 @@ async function start(): Promise<void> {
       .divideScalar(VELOCITY_STEP)
     clouds?.setTime(flightTime)
     waterTime.value = flightTime
-    // Cloud step C5: the clouds' density at the aircraft, for the effects in clouds. It replaces
-    // the path's cloud channel, which the placeholder path leaves at 0. Timed, as it runs on the
-    // CPU every frame.
+    // Cloud step C5: the clouds' density at the aircraft, for the effects in clouds. The path has
+    // no cloud channel (ADR 0008). Timed, as it runs on the CPU every frame.
     if (clouds) {
       const start = performance.now()
       cloudDensity = clouds.densityAt(ecefToWorld(frame, state.ecef, aircraftWorld))

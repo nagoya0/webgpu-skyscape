@@ -35,8 +35,6 @@ export function pathFromFile(file: PathFile): FlightPath {
     ecef,
     attitude: Float32Array.from(file.attitude),
     loadFactor: Float32Array.from(file.loadFactor),
-    // Taken from the clouds at playback (cloud step C5), not from the file.
-    cloudDensity: new Float32Array(count),
     loop: file.loop
   }
 }

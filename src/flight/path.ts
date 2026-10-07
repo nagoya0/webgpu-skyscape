@@ -14,8 +14,6 @@ export interface FlightPath {
   attitude: Float32Array
   /** Load factor in G. */
   loadFactor: Float32Array
-  /** Cloud density at the aircraft, 0 to 1. */
-  cloudDensity: Float32Array
   /** True if the last sample leads back into the first, so playback can loop. */
   loop: boolean
 }
@@ -24,6 +22,8 @@ export interface AircraftState {
   ecef: Vector3
   bodyToNED: Quaternion
   loadFactor: number
+  /** How far into cloud the aircraft is, 0 to 1: computed at playback from the clouds (cloud
+   * step C5), not part of the path. */
   cloudDensity: number
 }
 
@@ -72,7 +72,5 @@ export function samplePath(path: FlightPath, time: number, result: AircraftState
   result.bodyToNED.slerpQuaternions(qa, qb, u)
 
   result.loadFactor = path.loadFactor[i1] + (path.loadFactor[i2] - path.loadFactor[i1]) * u
-  result.cloudDensity =
-    path.cloudDensity[i1] + (path.cloudDensity[i2] - path.cloudDensity[i1]) * u
   return result
 }

@@ -180,7 +180,7 @@ Done:
   with `?debug`. Checked against the image at 1,500 m with more clouds: 0 where the view was
   clear, above 0 where it was inside a cloud. The weather map is now decoded with fast-png so the
   CPU and the GPU read the same values (the image did not change). A density channel in the
-  precomputed path, for the offline path tool, is left for the JSBSim stage.
+  precomputed path was dropped (ADR 0008).
 - Water drops on the screen in the first-person view (2026-10-07, `src/effects/drops.ts`), tuned
   with the maintainer by eye. Drops land only deeper in cloud than 0.5, up to 210 a second, small
   (cubic distribution) with about 1.5 % large; the smallest cling, larger ones flow outwards
@@ -214,8 +214,6 @@ as room for improvement, listed in the README; changes for performance are still
      path marker stays on the boresight cross; it should move in turns.
    - The F-16 model's file says GPL; only computed paths are bundled, not the model or JSBSim.
      To check before publishing.
-   - The path's cloud density channel: proposed to leave out, as the density is now computed at
-     playback (cloud step C5). The file has no such channel; to confirm with the maintainer.
 3. **Night.** Stars, moon and adaptive exposure fit between any stages.
 
 Not yet placed: tile prefetching along the path, and a check of temporal anti-aliasing at
