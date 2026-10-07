@@ -138,7 +138,7 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 | `date=YYYY-MM-DD`, `time=HH:MM` | Date and time of day in JST |
 | `t=seconds`, `paused` | Start time on the flight path; hold the flight there |
 | `exposure`, `fov` | Exposure before tone mapping; vertical field of view |
-| `path=NAME` | Fly a path computed with JSBSim (`public/paths/NAME.json`), e.g. `path=straight`; without it, the placeholder |
+| `path=NAME` | Fly a path computed with JSBSim (`public/paths/NAME.json`), e.g. `path=turns`; without it, the placeholder |
 | `altitude`, `speed`, `bank`, `rollrate` | Placeholder flight path |
 | `buildings=0`, `terrain=0`, `clouds=0`, `flare=0`, `drops=0` | Leave out a part of the scene (`drops`: the water drops on the screen in clouds) |
 | `dropsdebug` | Debugging: show the drops' height map in red |

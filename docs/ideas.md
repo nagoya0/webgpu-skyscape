@@ -206,12 +206,19 @@ as room for improvement, listed in the README; changes for performance are still
    (3) a simple controller in Python for holds and turns, with the load factor; (4) choose the
    course with the maintainer, with the demo's length and whether it loops; (5) manoeuvres, at a
    higher sample rate, checking the HUD inverted and the head lag; (6) tile prefetching along the
-   path. Steps 1 and 2 done (2026-10-07): `tools/flightpath/`, `?path=straight`.
+   path. Steps 1 to 3 done (2026-10-07): `tools/flightpath/`, `?path=turns` (turns at 60°, 80°
+   and 30° of bank and a climb of 300 m).
    - Hands-off, the trimmed F-16 rolls off: a bank of 0.1° grows about 1.3 times every 2 s, and
      after 100 s it is rolling over. A small autopilot in `tools/flightpath/aircraft.py` holds
-     bank, height and speed through the model's own fly-by-wire.
-   - At 250 m/s and 3,000 m the angle of attack is only 0.2°, so in straight flight the flight
-     path marker stays on the boresight cross; it should move in turns.
+     heading (through the bank), bank, height (through the load factor) and speed, through the
+     model's own fly-by-wire.
+   - The model's yaw damper opposes any yaw rate, also the steady one of a turn, and left 2.4° of
+     sideslip in a 60° bank that full rudder could not remove; the autopilot cancels its term.
+     Turns are then coordinated within about 0.1°.
+   - Results: a 60° bank pulls 2.0 G with 1.8° angle of attack and holds height within 16 m; an
+     80° bank about 6 G (7 G at the start) with about 10°, losing about 110 m while rolling in,
+     regained in about 20 s. The flight path marker sits that far below the boresight cross, as
+     checked on screen. In straight flight at 250 m/s the angle of attack is only 0.2°.
    - The F-16 model's file says GPL; only computed paths are bundled, not the model or JSBSim.
      To check before publishing.
 3. **Night.** Stars, moon and adaptive exposure fit between any stages.

@@ -5,6 +5,8 @@ import math
 import jsbsim
 
 FT = 0.3048
+THROTTLE_P = 0.05
+THROTTLE_I = 0.005
 
 
 def create_fdm(
@@ -47,26 +49,55 @@ class Autopilot:
     def __init__(self, fdm: jsbsim.FGFDMExec) -> None:
         self.fdm = fdm
         self.bank = 0.0  # degrees
+        # Heading in degrees from true north. When set, the bank is chosen to turn towards it, up
+        # to max_bank.
+        self.heading: float | None = None
+        self.max_bank = 60.0
         self.height = fdm["position/h-sl-ft"] * FT  # metres
         self.speed = fdm["velocities/vt-fps"] * FT  # metres per second
         self.throttle = fdm["fcs/throttle-cmd-norm"]
+        self.bank_integral = 0.0
+        self.load_integral = 0.0
 
     def update(self, dt: float) -> None:
         fdm = self.fdm
-        # Bank: roll rate towards the target, at most 90 degrees per second.
-        bank_error = self.bank - fdm["attitude/phi-deg"]
-        bank_error = (bank_error + 180) % 360 - 180
-        roll_rate = clamp(1.5 * bank_error, -90, 90)
+        # Heading: bank in proportion to the heading error, rolling out as the heading comes up.
+        if self.heading is not None:
+            heading_error = (self.heading - fdm["attitude/psi-deg"] + 180) % 360 - 180
+            self.bank = clamp(8.0 * heading_error, -self.max_bank, self.max_bank)
+        # Bank: roll rate towards the target, at most 90 degrees per second, with an integral so
+        # that the bank settles on the target in a turn.
+        bank = fdm["attitude/phi-deg"]
+        bank_error = (self.bank - bank + 180) % 360 - 180
+        self.bank_integral = clamp(self.bank_integral + bank_error * dt, -30, 30)
+        roll_rate = clamp(1.5 * bank_error + 0.5 * self.bank_integral, -90, 90)
         fdm["fcs/aileron-cmd-norm"] = clamp(roll_rate / 180, -1, 1)
-        # Height: a climb angle towards the target, at most 5 degrees, then pitch towards it.
+        # Yaw: the model's yaw damper opposes any yaw rate with a gain of 100 above 46 m/s, so in a
+        # steady turn it holds the rudder against the turn and leaves a sideslip that the rudder
+        # command cannot remove. Its term is cancelled here: taken off the command that feeds the
+        # damper's error and added back through the trim, which reaches the rudder directly. The
+        # model's own feedback of the lateral load then keeps turns coordinated, within about 0.1
+        # degrees of sideslip in a 60 degree bank.
+        damper = fdm["fcs/yaw-rate-norm"]
+        fdm["fcs/rudder-cmd-norm"] = -damper
+        fdm["fcs/yaw-trim-cmd-norm"] = damper
+        # Height: a climb angle towards the target, at most 5 degrees; from it the load factor,
+        # including what the bank needs to hold the climb angle; the elevator follows the load
+        # factor, with an integral for what the fly-by-wire leaves.
         height = fdm["position/h-sl-ft"] * FT
         climb_target = clamp(0.02 * (self.height - height), -5, 5)
         climb = fdm["flight-path/gamma-deg"]
-        fdm["fcs/elevator-cmd-norm"] = clamp(-0.05 * (climb_target - climb), -1, 1)
-        # Speed: throttle, integrating the error.
-        speed = fdm["velocities/vt-fps"] * FT
-        self.throttle = clamp(self.throttle + 0.02 * (self.speed - speed) * dt, 0, 1)
-        fdm["fcs/throttle-cmd-norm"] = self.throttle
+        cos_bank = max(math.cos(math.radians(bank)), 0.15)
+        load_target = clamp(
+            math.cos(math.radians(climb)) / cos_bank + 0.1 * (climb_target - climb), -2, 7
+        )
+        load_error = load_target - fdm["accelerations/Nz"]
+        self.load_integral = clamp(self.load_integral + load_error * dt, -5, 5)
+        fdm["fcs/elevator-cmd-norm"] = clamp(-0.05 * load_error - 0.3 * self.load_integral, -1, 1)
+        # Speed: throttle in proportion to the error, plus its integral.
+        speed_error = self.speed - fdm["velocities/vt-fps"] * FT
+        self.throttle = clamp(self.throttle + THROTTLE_I * speed_error * dt, 0, 1)
+        fdm["fcs/throttle-cmd-norm"] = clamp(self.throttle + THROTTLE_P * speed_error, 0, 1)
 
 
 def body_to_ned(fdm: jsbsim.FGFDMExec) -> tuple[float, float, float, float]:
