@@ -20,6 +20,11 @@ export interface Area {
    * sphere drawn as water (src/terrain/seaSphere.ts).
    */
   beyondTerrain: 'disc' | 'sea'
+  /**
+   * Magnetic declination in degrees, east positive, for the HUD's magnetic heading: a single value
+   * for the area, roughly from GSI's magnetic charts (Japan's is west, 5 to 9°).
+   */
+  magneticDeclination: number
 }
 
 export const AREAS: Record<AreaName, Area> = {
@@ -28,7 +33,8 @@ export const AREAS: Record<AreaName, Area> = {
     terrain: DEFAULT_TERRAIN,
     buildings: true,
     course: { ...DEFAULT_RACETRACK, height: 450 },
-    beyondTerrain: 'disc'
+    beyondTerrain: 'disc',
+    magneticDeclination: -7.6
   },
   // North of Lake Ashi: Mount Fuji about 28 km west-north-west, Sagami Bay about 15 km south-east.
   // Coarser root tiles reach the horizon, which is about 200 km away from 3 km up; at 1.5° the
@@ -47,6 +53,7 @@ export const AREAS: Record<AreaName, Area> = {
     // From Sagami Bay off Odawara towards Mount Fuji (heading 293°), turn short of it, fly back
     // and repeat; simple on purpose for looking into rendering problems (ADR 0028).
     course: { ...DEFAULT_RACETRACK, height: 3000, headingDegrees: 293, straightSeconds: 120, bankDegrees: 45 },
-    beyondTerrain: 'sea'
+    beyondTerrain: 'sea',
+    magneticDeclination: -7.5
   }
 }

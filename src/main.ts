@@ -18,6 +18,7 @@ import { createInCloud } from './effects/inCloud'
 import { createHud, loadHudFont } from './hud/hud'
 import { drawHudDebug } from './hud/hudDebug'
 import { drawAltitudeScale, FEET_PER_METRE } from './hud/altitudeScale'
+import { drawHeadingScale } from './hud/headingScale'
 import { drawVelocityScale, KNOTS_PER_METRE_PER_SECOND } from './hud/velocityScale'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath } from './flight/placeholderPath'
@@ -259,6 +260,7 @@ async function start(): Promise<void> {
 
   // The HUD: both layers redrawn each frame, as their values change all the time.
   const aircraftGeodetic = new Geodetic()
+  const nose = new Vector3()
   function drawHud(): void {
     hud.update(renderer, cockpit.offsetQuaternion, camera.fov)
     const { canvas, context } = hud.aircraft
@@ -273,6 +275,11 @@ async function start(): Promise<void> {
     // Height above mean sea level: GSI heights are above the geoid (ADR 0026).
     const metres = aircraftGeodetic.setFromECEF(state.ecef).height - GEOID_HEIGHT
     drawAltitudeScale(context, canvas.width, canvas.height, pixelsPerDegree, metres * FEET_PER_METRE)
+    // Magnetic heading: the nose's true heading from its body axis in north-east-down, less the
+    // area's declination (east positive).
+    nose.set(1, 0, 0).applyQuaternion(state.bodyToNED)
+    const trueHeading = (Math.atan2(nose.y, nose.x) * 180) / Math.PI
+    drawHeadingScale(context, canvas.width, canvas.height, pixelsPerDegree, trueHeading - area.magneticDeclination)
     hud.aircraft.changed()
   }
 

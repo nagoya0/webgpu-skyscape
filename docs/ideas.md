@@ -42,7 +42,9 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     marker) stay at true angles. The HUD is laid over the image at 75 % opacity.
   - Elements so far: the velocity scale (ground speed in knots, `src/hud/velocityScale.ts`) and,
     mirrored about the boresight, the altitude scale (feet above mean sea level,
-    `src/hud/altitudeScale.ts`).
+    `src/hud/altitudeScale.ts`), and the heading scale (magnetic heading, the area's declination
+    in `src/areas.ts`; `src/hud/headingScale.ts`), its lubber line's top level with the side
+    tapes' bottoms.
   - Text and lines in HUD green with a glow (the maintainer). The elements are added one at a
     time as the maintainer asks. Typeface: Share Tech Mono (the maintainer, from eight open
     typefaces), bundled in `public/fonts/`.
