@@ -32,6 +32,10 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     and the like. It moves with the airframe's vibration. Everything a real HUD would show goes
     on this layer (the maintainer); the screen layer is only for what is not part of the
     aircraft, such as the time of day.
+  - Reference for the aircraft's HUD: the HUD symbology of the DCS: F-16C Viper Early Access
+    Guide (Eagle Dynamics), the F-16C Block 50 (the maintainer, 2026-10-07; ADR 0018 sets an
+    F-16-class aircraft). Not all of it: elements are added one at a time as the maintainer
+    chooses, drawn by this project from the guide's layout and meaning.
   - Text and lines in HUD green with a glow (the maintainer). The elements are added one at a
     time as the maintainer asks. Typeface: Share Tech Mono (the maintainer, from eight open
     typefaces), bundled in `public/fonts/`.
