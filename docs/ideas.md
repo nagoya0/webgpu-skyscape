@@ -201,7 +201,21 @@ features on 2026-10-06, and on 2026-10-07 put the rest of the terrain and of the
 as room for improvement, listed in the README; changes for performance are still considered):
 
 1. **Forests**: on hold (2026-10-07).
-2. **JSBSim path** with manoeuvres, replacing the placeholder.
+2. **JSBSim path** with manoeuvres, replacing the placeholder. Steps proposed and agreed
+   (2026-10-07): (1) install JSBSim and trim the F-16; (2) play a straight flight in the demo;
+   (3) a simple controller in Python for holds and turns, with the load factor; (4) choose the
+   course with the maintainer, with the demo's length and whether it loops; (5) manoeuvres, at a
+   higher sample rate, checking the HUD inverted and the head lag; (6) tile prefetching along the
+   path. Steps 1 and 2 done (2026-10-07): `tools/flightpath/`, `?path=straight`.
+   - Hands-off, the trimmed F-16 rolls off: a bank of 0.1° grows about 1.3 times every 2 s, and
+     after 100 s it is rolling over. A small autopilot in `tools/flightpath/aircraft.py` holds
+     bank, height and speed through the model's own fly-by-wire.
+   - At 250 m/s and 3,000 m the angle of attack is only 0.2°, so in straight flight the flight
+     path marker stays on the boresight cross; it should move in turns.
+   - The F-16 model's file says GPL; only computed paths are bundled, not the model or JSBSim.
+     To check before publishing.
+   - The path's cloud density channel: proposed to leave out, as the density is now computed at
+     playback (cloud step C5). The file has no such channel; to confirm with the maintainer.
 3. **Night.** Stars, moon and adaptive exposure fit between any stages.
 
 Not yet placed: tile prefetching along the path, and a check of temporal anti-aliasing at

@@ -118,6 +118,14 @@ pnpm build          # type-check and build
 screenshot and prints the page state. Further checks, and how to upgrade Three.js and the takram
 packages, are in [docs/upgrading.md](docs/upgrading.md).
 
+Flight paths are computed offline with JSBSim (Python) by the scripts in `tools/flightpath/`:
+
+```sh
+python -m venv tools/flightpath/.venv
+tools/flightpath/.venv/Scripts/python -m pip install -r tools/flightpath/requirements.txt
+tools/flightpath/.venv/Scripts/python tools/flightpath/fly.py   # writes public/paths/*.json
+```
+
 ### URL parameters
 
 There is no on-screen UI yet ([ADR 0019](docs/adr/0019-no-ui-until-features-are-in.md)).
@@ -130,6 +138,7 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 | `date=YYYY-MM-DD`, `time=HH:MM` | Date and time of day in JST |
 | `t=seconds`, `paused` | Start time on the flight path; hold the flight there |
 | `exposure`, `fov` | Exposure before tone mapping; vertical field of view |
+| `path=NAME` | Fly a path computed with JSBSim (`public/paths/NAME.json`), e.g. `path=straight`; without it, the placeholder |
 | `altitude`, `speed`, `bank`, `rollrate` | Placeholder flight path |
 | `buildings=0`, `terrain=0`, `clouds=0`, `flare=0`, `drops=0` | Leave out a part of the scene (`drops`: the water drops on the screen in clouds) |
 | `dropsdebug` | Debugging: show the drops' height map in red |

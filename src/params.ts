@@ -7,6 +7,8 @@
 //   time=HH:MM        time of day in JST (default 16:30)
 //   t=seconds         start time on the flight path (default 0)
 //   paused            hold the flight at that time
+//   path=NAME         fly a path computed with JSBSim, public/paths/NAME.json (tools/flightpath);
+//                     without it, the placeholder racetrack
 //   exposure=number   exposure before tone mapping (default 3)
 //   fov=degrees       vertical field of view (default 70)
 //   lag=seconds       head lag in pitch, for the cockpit view; 0 is none (default 0)
@@ -68,6 +70,8 @@ export interface Params {
   date: Date
   flightStart: number
   paused: boolean
+  /** A JSBSim path in public/paths/, or null for the placeholder racetrack. */
+  path: string | null
   exposure: number
   fov: number
   lag: number
@@ -155,6 +159,7 @@ export function readParams(search: string, now = new Date()): Params {
     date,
     flightStart: number('t', 0, -1e6, 1e6),
     paused: query.has('paused'),
+    path: /^[a-z0-9-]+$/.test(query.get('path') ?? '') ? query.get('path') : null,
     exposure: number('exposure', 3, 0, 1e6),
     fov: number('fov', 70, 10, 150),
     lag: number('lag', 0, 0, 10),

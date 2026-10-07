@@ -26,6 +26,7 @@ import { drawScreenLines, sceneTimeText } from './hud/sceneTime'
 import { loadPlaces } from './hud/flyingOver'
 import { drawVelocityScale, KNOTS_PER_METRE_PER_SECOND } from './hud/velocityScale'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
+import { loadPath } from './flight/loadPath'
 import { createPlaceholderPath } from './flight/placeholderPath'
 import { createLocalFrame, ecefToWorld, nedToWorldRotation } from './geo/localFrame'
 import { requestDevice } from './gpu/support'
@@ -175,13 +176,16 @@ async function start(): Promise<void> {
   })
   pipeline.exposure.value = params.exposure
 
-  const { path, seamGap } = createPlaceholderPath(frame, {
-    ...area.course,
-    speed: params.speed,
-    height: params.altitude ?? area.course.height,
-    bankDegrees: params.bank ?? area.course.bankDegrees,
-    rollRateDegrees: params.rollRate
-  })
+  // ?path=NAME: a path computed with JSBSim; otherwise the placeholder racetrack.
+  const { path, seamGap } = params.path
+    ? { path: await loadPath(params.path), seamGap: 0 }
+    : createPlaceholderPath(frame, {
+        ...area.course,
+        speed: params.speed,
+        height: params.altitude ?? area.course.height,
+        bankDegrees: params.bank ?? area.course.bankDegrees,
+        rollRateDegrees: params.rollRate
+      })
   debug.date = params.date.toISOString()
   debug.pathSeconds = Number(pathDuration(path).toFixed(1))
   debug.seamGapMetres = Number(seamGap.toFixed(3))
@@ -274,6 +278,9 @@ async function start(): Promise<void> {
   const aheadWorld = new Vector3()
   const hereWorld = new Vector3()
   const velocity = new Vector3()
+  const bodyVelocity = new Vector3()
+  // Seconds ahead on the path for the velocity, for the ground speed and the flight path marker.
+  const VELOCITY_STEP = 0.05
   const bodyToWorld = new Quaternion()
   const attitude = new Euler()
   function drawHud(): void {
@@ -308,8 +315,9 @@ async function start(): Promise<void> {
     } else {
       context.clearRect(0, 0, canvas.width, canvas.height)
     }
-    // Ground speed: the path's speed, as it has no wind.
-    drawVelocityScale(context, canvas.width, canvas.height, pixelsPerDegree, params.speed * KNOTS_PER_METRE_PER_SECOND)
+    // Ground speed: the horizontal part of the velocity, as the paths have no wind.
+    const groundSpeed = Math.hypot(velocity.x, velocity.z)
+    drawVelocityScale(context, canvas.width, canvas.height, pixelsPerDegree, groundSpeed * KNOTS_PER_METRE_PER_SECOND)
     // Height above mean sea level: GSI heights are above the geoid (ADR 0026).
     const metres = aircraftGeodetic.setFromECEF(state.ecef).height - GEOID_HEIGHT
     drawAltitudeScale(context, canvas.width, canvas.height, pixelsPerDegree, metres * FEET_PER_METRE)
@@ -323,11 +331,9 @@ async function start(): Promise<void> {
     drawRollIndicator(context, canvas.width, canvas.height, pixelsPerDegree, (attitude.x * 180) / Math.PI)
     drawAttitudeBars(context, canvas.width, canvas.height, pixelsPerDegree, state.bodyToNED, Math.atan2(nose.y, nose.x))
     drawBoresightCross(context, canvas.width, canvas.height, pixelsPerDegree)
-    // The velocity in body axes, from where the path is a moment ahead; also while paused.
-    samplePath(path, flightTime + 0.05, ahead)
-    velocity.subVectors(ecefToWorld(frame, ahead.ecef, aheadWorld), ecefToWorld(frame, state.ecef, hereWorld))
+    // The velocity in body axes.
     nedToWorldRotation(frame, state.ecef, bodyToWorld).multiply(state.bodyToNED).invert()
-    drawFlightPathMarker(context, canvas.width, canvas.height, pixelsPerDegree, velocity.applyQuaternion(bodyToWorld))
+    drawFlightPathMarker(context, canvas.width, canvas.height, pixelsPerDegree, bodyVelocity.copy(velocity).applyQuaternion(bodyToWorld))
     hud.aircraft.changed()
   }
 
@@ -335,6 +341,12 @@ async function start(): Promise<void> {
   function step(flightDelta: number, elapsed: number): void {
     flightTime += flightDelta
     samplePath(path, flightTime, state)
+    // The velocity in world axes (north, up, east), from where the path is a moment ahead; also
+    // while paused.
+    samplePath(path, flightTime + VELOCITY_STEP, ahead)
+    velocity
+      .subVectors(ecefToWorld(frame, ahead.ecef, aheadWorld), ecefToWorld(frame, state.ecef, hereWorld))
+      .divideScalar(VELOCITY_STEP)
     clouds?.setTime(flightTime)
     waterTime.value = flightTime
     // Cloud step C5: the clouds' density at the aircraft, for the effects in clouds. It replaces
@@ -375,7 +387,7 @@ async function start(): Promise<void> {
     }
     if (drops) {
       const start = performance.now()
-      drops.update(renderer, first ? 0 : flightDelta, state.cloudDensity, params.speed, camera.quaternion)
+      drops.update(renderer, first ? 0 : flightDelta, state.cloudDensity, velocity.length(), camera.quaternion)
       dropsMilliseconds += (performance.now() - start - dropsMilliseconds) * 0.05
       debug.drops = drops.count
       debug.dropsMs = Number(dropsMilliseconds.toFixed(3))

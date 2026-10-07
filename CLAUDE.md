@@ -47,12 +47,14 @@ section up to date. Mark every type cast that bridges takram's types to the inst
 `node scripts/check-page.mjs <url> <out.png>` opens a page in headless Chrome and reports its state
 and `window.__debug`; use it to check changes in a real browser. The main page takes its
 settings from URL query parameters, listed in `src/params.ts`. `pnpm test` runs the unit tests
-(Vitest), which cover the coordinate conversions, the tile maths, the flight path, the camera,
-the parameters, the shader preprocessor, the cascaded shadow maps, the vector tile decoder, the
-clouds' density on the CPU, the in-cloud factor and the HUD's scene time.
+(Vitest), which cover the coordinate conversions, the tile maths, the flight path and its file
+format, the camera, the parameters, the shader preprocessor, the cascaded shadow maps, the vector
+tile decoder, the clouds' density on the CPU, the in-cloud factor and the HUD's scene time.
 The HUD's elements are in `src/hud/`, after the DCS F-16C guide ([ADR 0034](docs/adr/0034-hud.md));
 show the maintainer screenshots of overlapping symbols one at a time.
 Each area's origin, terrain extent and placeholder course are in `src/areas.ts`.
+Flight paths from JSBSim are written by `tools/flightpath/fly.py` (Python, its own venv in
+`tools/flightpath/.venv`) into `public/paths/` and read with `?path=NAME`.
 
 Write heavy shader code in WGSL (`.wgsl` files, one function each, connected with `wgslFn`) and
 use TSL only to gather inputs and connect stages. In post-processing, pass the scene camera's

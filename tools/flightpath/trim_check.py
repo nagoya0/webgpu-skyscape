@@ -4,36 +4,16 @@ Run from the repository root:
     tools/flightpath/.venv/Scripts/python tools/flightpath/trim_check.py
 """
 
-import jsbsim
+from aircraft import FT, create_fdm
 
-FT = 0.3048
-SPEED = 250.0  # m/s (ADR 0018)
-HEIGHT = 3000.0  # m above sea level
-LATITUDE = 35.23  # the Hakone origin (src/areas.ts)
-LONGITUDE = 139.02
-HEADING = 293.0  # degrees, the placeholder course's first leg
 RATE = 120  # Hz, JSBSim's integration rate
 SECONDS = 60
 
 
 def main() -> None:
-    fdm = jsbsim.FGFDMExec(None)
-    fdm.set_debug_level(0)
-    fdm.set_dt(1.0 / RATE)
-    if not fdm.load_model("f16"):
-        raise SystemExit("could not load the f16 model")
-
-    fdm["ic/h-sl-ft"] = HEIGHT / FT
-    fdm["ic/vt-fps"] = SPEED / FT
-    fdm["ic/lat-geod-deg"] = LATITUDE
-    fdm["ic/long-gc-deg"] = LONGITUDE
-    fdm["ic/psi-true-deg"] = HEADING
-    fdm["ic/gamma-deg"] = 0.0
-    fdm["gear/gear-cmd-norm"] = 0.0
-    fdm["propulsion/set-running"] = -1
-    fdm.run_ic()
-    fdm["gear/gear-cmd-norm"] = 0.0
-    fdm.do_trim(1)  # full trim: steady level flight
+    # The Hakone origin (src/areas.ts) at 3,000 m and 250 m/s (ADR 0018), on the placeholder
+    # course's first heading.
+    fdm = create_fdm(35.23, 139.02, 3000.0, 250.0, 293.0, RATE)
 
     def report(label: str) -> None:
         print(
