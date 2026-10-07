@@ -1,5 +1,7 @@
 import { PerspectiveCamera, Scene, Timer, Vector3, WebGPURenderer, type Mesh } from 'three/webgpu'
 
+import { Geodetic } from '@takram/three-geospatial'
+
 import { AREAS } from './areas'
 import { createAtmosphere } from './atmosphere/atmosphere'
 import {
@@ -15,6 +17,7 @@ import { createDrops } from './effects/drops'
 import { createInCloud } from './effects/inCloud'
 import { createHud, loadHudFont } from './hud/hud'
 import { drawHudDebug } from './hud/hudDebug'
+import { drawAltitudeScale, FEET_PER_METRE } from './hud/altitudeScale'
 import { drawVelocityScale, KNOTS_PER_METRE_PER_SECOND } from './hud/velocityScale'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath } from './flight/placeholderPath'
@@ -28,6 +31,7 @@ import { createPlaceholderGround } from './scene/placeholderGround'
 import { createSeaSphere } from './terrain/seaSphere'
 import { photoGrade } from './terrain/photoGrade'
 import { createTerrain } from './terrain/terrain'
+import { GEOID_HEIGHT } from './terrain/tileGeometry'
 import { landSpecular, waterTime } from './terrain/water'
 import { showAttribution } from './ui/attribution'
 import { showDebugText } from './ui/debugText'
@@ -254,6 +258,7 @@ async function start(): Promise<void> {
   let dropsMilliseconds = 0
 
   // The HUD: both layers redrawn each frame, as their values change all the time.
+  const aircraftGeodetic = new Geodetic()
   function drawHud(): void {
     hud.update(renderer, cockpit.offsetQuaternion, camera.fov)
     const { canvas, context } = hud.aircraft
@@ -265,6 +270,9 @@ async function start(): Promise<void> {
     const pixelsPerDegree = (canvas.height / 2 / Math.tan((camera.fov * Math.PI) / 360)) * (Math.PI / 180)
     // Ground speed: the path's speed, as it has no wind.
     drawVelocityScale(context, canvas.width, canvas.height, pixelsPerDegree, params.speed * KNOTS_PER_METRE_PER_SECOND)
+    // Height above mean sea level: GSI heights are above the geoid (ADR 0026).
+    const metres = aircraftGeodetic.setFromECEF(state.ecef).height - GEOID_HEIGHT
+    drawAltitudeScale(context, canvas.width, canvas.height, pixelsPerDegree, metres * FEET_PER_METRE)
     hud.aircraft.changed()
   }
 
