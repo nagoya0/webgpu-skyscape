@@ -48,7 +48,10 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     stopping at the 45° mark, and the attitude bars (`src/hud/attitudeBars.ts`): at true angles,
     only the five nearest the nose's pitch, canted by half their angle into a caret pointing at
     the horizon, and centred on the nose rather than on the flight path marker, as in games (the
-    maintainer).
+    maintainer); the boresight cross (open in the middle) and the flight path marker
+    (`src/hud/flightPathMarker.ts`), where the velocity points. On the placeholder path the marker
+    sits on the cross, except within 0.1 s of the loop's seam, where the course's 55 m closing
+    gap bends the velocity.
   - To check with the JSBSim path's manoeuvres (the maintainer): the instruments must stay right
     when the aircraft rolls through inverted. The bank comes from the attitude as yaw, pitch, roll,
     so it is undefined with the nose straight up or down, where it may jump.

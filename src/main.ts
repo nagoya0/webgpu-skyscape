@@ -1,4 +1,4 @@
-import { Euler, PerspectiveCamera, Scene, Timer, Vector3, WebGPURenderer, type Mesh } from 'three/webgpu'
+import { Euler, PerspectiveCamera, Quaternion, Scene, Timer, Vector3, WebGPURenderer, type Mesh } from 'three/webgpu'
 
 import { Geodetic } from '@takram/three-geospatial'
 
@@ -19,12 +19,13 @@ import { createHud, loadHudFont } from './hud/hud'
 import { drawHudDebug } from './hud/hudDebug'
 import { drawAltitudeScale, FEET_PER_METRE } from './hud/altitudeScale'
 import { drawAttitudeBars } from './hud/attitudeBars'
+import { drawBoresightCross, drawFlightPathMarker } from './hud/flightPathMarker'
 import { drawHeadingScale } from './hud/headingScale'
 import { drawRollIndicator } from './hud/rollIndicator'
 import { drawVelocityScale, KNOTS_PER_METRE_PER_SECOND } from './hud/velocityScale'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath } from './flight/placeholderPath'
-import { createLocalFrame, ecefToWorld } from './geo/localFrame'
+import { createLocalFrame, ecefToWorld, nedToWorldRotation } from './geo/localFrame'
 import { requestDevice } from './gpu/support'
 import { readParams } from './params'
 import { createPipeline } from './render/pipeline'
@@ -263,6 +264,11 @@ async function start(): Promise<void> {
   // The HUD: both layers redrawn each frame, as their values change all the time.
   const aircraftGeodetic = new Geodetic()
   const nose = new Vector3()
+  const ahead = createAircraftState()
+  const aheadWorld = new Vector3()
+  const hereWorld = new Vector3()
+  const velocity = new Vector3()
+  const bodyToWorld = new Quaternion()
   const attitude = new Euler()
   function drawHud(): void {
     hud.update(renderer, cockpit.offsetQuaternion, camera.fov)
@@ -287,6 +293,12 @@ async function start(): Promise<void> {
     attitude.setFromQuaternion(state.bodyToNED, 'ZYX')
     drawRollIndicator(context, canvas.width, canvas.height, pixelsPerDegree, (attitude.x * 180) / Math.PI)
     drawAttitudeBars(context, canvas.width, canvas.height, pixelsPerDegree, state.bodyToNED, Math.atan2(nose.y, nose.x))
+    drawBoresightCross(context, canvas.width, canvas.height, pixelsPerDegree)
+    // The velocity in body axes, from where the path is a moment ahead; also while paused.
+    samplePath(path, flightTime + 0.05, ahead)
+    velocity.subVectors(ecefToWorld(frame, ahead.ecef, aheadWorld), ecefToWorld(frame, state.ecef, hereWorld))
+    nedToWorldRotation(frame, state.ecef, bodyToWorld).multiply(state.bodyToNED).invert()
+    drawFlightPathMarker(context, canvas.width, canvas.height, pixelsPerDegree, velocity.applyQuaternion(bodyToWorld))
     hud.aircraft.changed()
   }
 
