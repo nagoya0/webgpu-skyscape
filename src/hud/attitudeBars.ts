@@ -7,8 +7,8 @@
 //
 // The bars mark the scene, so they sit at true angles: each is the direction at its elevation on
 // the aircraft's heading, projected through the airframe's attitude, and turns with the bank. The
-// guide cages them to the flight path marker in azimuth; until that marker is drawn they follow
-// the nose's heading, the same on the placeholder path. Their lengths and the gap in the middle do
+// guide cages them to the flight path marker in azimuth; here they stay on the nose's heading, as
+// in games (the maintainer, 2026-10-07). Their lengths and the gap in the middle do
 // not mark the scene and are drawn twice the guide's size (three times would reach the velocity
 // and altitude tapes).
 import { Quaternion, Vector3 } from 'three/webgpu'

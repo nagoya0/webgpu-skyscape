@@ -47,7 +47,8 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     tapes' bottoms, the roll indicator below it (`src/hud/rollIndicator.ts`), its caret
     stopping at the 45° mark, and the attitude bars (`src/hud/attitudeBars.ts`): at true angles,
     only the five nearest the nose's pitch, canted by half their angle into a caret pointing at
-    the horizon.
+    the horizon, and centred on the nose rather than on the flight path marker, as in games (the
+    maintainer).
   - To check with the JSBSim path's manoeuvres (the maintainer): the instruments must stay right
     when the aircraft rolls through inverted. The bank comes from the attitude as yaw, pitch, roll,
     so it is undefined with the nose straight up or down, where it may jump.
