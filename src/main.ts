@@ -22,7 +22,7 @@ import { drawAttitudeBars } from './hud/attitudeBars'
 import { drawBoresightCross, drawFlightPathMarker } from './hud/flightPathMarker'
 import { drawHeadingScale } from './hud/headingScale'
 import { drawRollIndicator } from './hud/rollIndicator'
-import { drawScreenLines, sceneTimeText } from './hud/sceneTime'
+import { drawScreenLines, FLIGHT_MODEL_LINE, sceneTimeText } from './hud/sceneTime'
 import { loadPlaces } from './hud/flyingOver'
 import { drawVelocityScale, KNOTS_PER_METRE_PER_SECOND } from './hud/velocityScale'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
@@ -323,7 +323,7 @@ async function start(): Promise<void> {
     if ((resized || !screenDrawn) && !params.hudDebug) {
       const { canvas: screen, context: screenContext } = hud.screen
       screenContext.clearRect(0, 0, screen.width, screen.height)
-      const lines = [sceneTimeText(params.date)]
+      const lines = [sceneTimeText(params.date), FLIGHT_MODEL_LINE]
       if (placeLine) lines.push(placeLine)
       drawScreenLines(screenContext, screen.height, pixelsPerDegree, lines)
       hud.screen.changed()

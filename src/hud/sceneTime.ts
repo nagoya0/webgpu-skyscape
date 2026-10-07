@@ -10,6 +10,12 @@ const TEXT = 1.5
 const LINE_SPACING = 2.1
 const MARGIN = 1.5
 
+/**
+ * The second line: the aircraft the flight path is computed with, JSBSim's F-16 model ("General
+ * Dynamics F-16A" in its file) (the maintainer, 2026-10-07).
+ */
+export const FLIGHT_MODEL_LINE = 'FLIGHT MODEL JSBSIM F-16A'
+
 /** "SCENE 2026-10-07 16:30 JST". */
 export function sceneTimeText(date: Date): string {
   const jst = new Date(date.getTime() + JST_OFFSET_MS).toISOString()

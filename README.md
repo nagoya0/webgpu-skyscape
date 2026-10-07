@@ -38,7 +38,7 @@ In place:
   merge, and evaporate after it ([ADR 0011](docs/adr/0011-rain-driven-by-relative-wind.md)).
 - A HUD after the F-16C's: velocity, altitude and heading scales, roll indicator, attitude bars,
   boresight cross and flight path marker, shaking with the airframe; fixed to the screen, the
-  scene's time and the municipality below ([ADR 0034](docs/adr/0034-hud.md)).
+  scene's time, the flight model and the municipality below ([ADR 0034](docs/adr/0034-hud.md)).
 - Temporal anti-aliasing, lens flare and AgX tone mapping.
 
 Planned: night scenes, colour grading, and a UI;
