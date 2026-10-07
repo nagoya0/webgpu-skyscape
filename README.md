@@ -26,12 +26,20 @@ In place:
   upscaling, aerial perspective, haze, cascaded cloud shadows on the clouds and the ground, and
   light shafts ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md)). Which of takram's
   features are in is listed in [docs/clouds-parity.md](docs/clouds-parity.md).
+- More clouds than takram's defaults, to fly among, with a choice of amount
+  ([ADR 0033](docs/adr/0033-more-clouds-to-fly-among.md)), and the clouds' density at the aircraft
+  computed on the CPU each frame from the same data as the GPU's clouds.
 - A placeholder flight path at 250 m/s, out from Sagami Bay towards Mount Fuji and back, and a
-  first-person camera.
+  first-person camera that shakes in turns and in clouds.
+- Water drops on the screen in clouds: they land deep in a cloud, are blown outwards in streaks,
+  merge, and evaporate after it ([ADR 0011](docs/adr/0011-rain-driven-by-relative-wind.md)).
+- A HUD after the F-16C's: velocity, altitude and heading scales, roll indicator, attitude bars,
+  boresight cross and flight path marker, shaking with the airframe; fixed to the screen, the
+  scene's time and the municipality below ([ADR 0034](docs/adr/0034-hud.md)).
 - Temporal anti-aliasing, lens flare and AgX tone mapping.
 
-Planned: rain, a flight path from JSBSim with manoeuvres, night scenes, colour grading, and a
-UI; forests are still open. The order and the open questions are in [docs/ideas.md](docs/ideas.md).
+Planned: a flight path from JSBSim with manoeuvres, night scenes, colour grading, and a UI;
+forests are still open. The order and the open questions are in [docs/ideas.md](docs/ideas.md).
 
 ## What this project adds
 
@@ -61,9 +69,16 @@ Beyond using the libraries listed under credits, this project does the following
 - **A local frame for the scene**: positions are computed on the Earth and moved into a frame
   around the area, which keeps 32-bit floats precise
   ([ADR 0017](docs/adr/0017-local-world-frame.md)).
-- **Camera effects**: shake that grows with load and inside clouds; head lag and the eye moving
+- **Camera effects**: shake that grows with load and inside clouds, the clouds' density at the
+  aircraft computed on the CPU from the same data as the GPU's clouds; head lag and the eye moving
   under load, kept off for a later cockpit view
   ([ADR 0020](docs/adr/0020-effects-by-view.md)).
+- **Water drops on the screen**: simulated on the CPU and drawn as a refracting height map after
+  the anti-aliasing, after two rain-on-glass effects (Heartfelt and the Codrops rain experiments)
+  ([ADR 0011](docs/adr/0011-rain-driven-by-relative-wind.md)).
+- **A HUD** drawn with Canvas 2D into the image, its aircraft layer turned with the camera's shake
+  so it stays on the scene, after the DCS F-16C guide's symbology; and the municipality below,
+  looked up in national land data with romaji names ([ADR 0034](docs/adr/0034-hud.md)).
 - **Buildings in the Tokyo area**: PLATEAU's untextured models with procedural facades, drawn as
   one batched mesh ([ADR 0024](docs/adr/0024-untextured-buildings-with-procedural-facades.md),
   [ADR 0027](docs/adr/0027-batched-building-tiles.md)).

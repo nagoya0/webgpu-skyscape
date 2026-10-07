@@ -25,49 +25,11 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   the instruments' values), the airframe's with its vibration added (shake in turns and in
   clouds; the cockpit model and the aircraft HUD move with it), and the camera's with the
   pilot's head added (lag, sinking under load). In the first-person view the last two are the
-  same while the body effects are off. To be done when the HUD or the cockpit view is built.
-- **The HUD**, drawn after the post-processing, in two kinds (the maintainer, 2026-10-07):
-  - Fixed to the screen: the time of day, a mini map (whether to show one is open). In place:
-    the scene's time top left, "SCENE 2026-10-07 16:30 JST" in HUD green (the maintainer;
-    `src/hud/sceneTime.ts`); the `?debug` text moved to the top right. Below it, where the
-    aircraft is: "FLYING OVER SUSONO, SHIZUOKA", or "FLYING OVER THE SEA" (the maintainer),
-    looked up twice a second in the National Land Numerical Information municipal boundaries
-    within 60 km of the origin, with a romaji table (`scripts/municipality-romaji.json`).
-  - The aircraft's HUD, as in a fighter's real head-up display: heading, pitch, altitude, speed
-    and the like. It moves with the airframe's vibration. Everything a real HUD would show goes
-    on this layer (the maintainer); the screen layer is only for what is not part of the
-    aircraft, such as the time of day.
-  - Reference for the aircraft's HUD: the HUD symbology of the DCS: F-16C Viper Early Access
-    Guide (Eagle Dynamics), the F-16C Block 50 (the maintainer, 2026-10-07; ADR 0018 sets an
-    F-16-class aircraft). Not all of it: elements are added one at a time as the maintainer
-    chooses, drawn by this project from the guide's layout and meaning.
-  - Size: the real HUD spans 25°, small in the demo's 70° view, so elements that do not mark
-    the scene are drawn three times the guide's angular size, as the velocity scale is (the
-    maintainer, 2026-10-07); elements that mark the scene (horizon, pitch ladder, flight path
-    marker) stay at true angles. The HUD is laid over the image at 75 % opacity.
-  - Elements so far: the velocity scale (ground speed in knots, `src/hud/velocityScale.ts`) and,
-    mirrored about the boresight, the altitude scale (feet above mean sea level,
-    `src/hud/altitudeScale.ts`), and the heading scale (magnetic heading, the area's declination
-    in `src/areas.ts`; `src/hud/headingScale.ts`), its lubber line's top level with the side
-    tapes' bottoms, the roll indicator below it (`src/hud/rollIndicator.ts`), its caret
-    stopping at the 45° mark, and the attitude bars (`src/hud/attitudeBars.ts`): at true angles,
-    only the five nearest the nose's pitch, canted by half their angle into a caret pointing at
-    the horizon, and centred on the nose rather than on the flight path marker, as in games (the
-    maintainer); the boresight cross (open in the middle) and the flight path marker
-    (`src/hud/flightPathMarker.ts`), where the velocity points. On the placeholder path the marker
-    sits on the cross, except within 0.1 s of the loop's seam, where the course's 55 m closing
-    gap bends the velocity. The aircraft's HUD is complete for now (the maintainer, 2026-10-07);
-    `?hud=0` leaves it out, and all its lines share one width, `HUD_LINE` (0.1°).
-  - To check with the JSBSim path's manoeuvres (the maintainer): the instruments must stay right
-    when the aircraft rolls through inverted. The bank comes from the attitude as yaw, pitch, roll,
-    so it is undefined with the nose straight up or down, where it may jump.
-  - Text and lines in HUD green with a glow (the maintainer). The elements are added one at a
-    time as the maintainer asks. Typeface: Share Tech Mono (the maintainer, from eight open
-    typefaces), bundled in `public/fonts/`.
-  - In place (2026-10-07, `src/hud/`): both layers drawn with Canvas 2D and laid over the image
-    after the water drops; the aircraft layer is drawn in the airframe's frame and turned by the
-    camera's shake, so it shakes with the scene and stays on it. `?huddebug` draws a test
-    pattern, with a horizon from the airframe's attitude that stays on the real one.
+  same while the body effects are off. The HUD already takes the airframe's attitude and the
+  camera's offset from it (`aircraftQuaternion`, `offsetQuaternion`); the split of the offset
+  into vibration and head is to be done with the cockpit view.
+- **The HUD** ([ADR 0034](adr/0034-hud.md)). Open: whether the screen layer gets a mini map; and
+  checking the instruments with the JSBSim path's manoeuvres, through inverted flight.
 - **The course** ([ADR 0028](adr/0028-area-sagami-bay-hakone-fuji.md)). For now the simple
   out-and-back from Sagami Bay towards Mount Fuji at 3,000 m, above the low clouds. Later, as the
   maintainer would like: dropping below the cloud base and climbing back, and some fighter
@@ -230,6 +192,9 @@ Done:
   After Heartfelt (Martijn Steinrucken) and the Codrops rain experiments (Lucas Bebber).
   Simulated on the CPU, drawn on the GPU ([ADR 0011](adr/0011-rain-driven-by-relative-wind.md),
   agreed after measuring: about 400 drops deep in cloud, 0.33 ms of CPU, `window.__debug.dropsMs`).
+- The HUD ([ADR 0034](adr/0034-hud.md), 2026-10-07): the aircraft's HUD after the DCS F-16C
+  guide (velocity, altitude and heading scales, roll indicator, attitude bars, boresight cross,
+  flight path marker) and, fixed to the screen, the scene's time and where the aircraft is.
 
 Next, in this order (the maintainer put the ground's quality before the remaining cloud
 features on 2026-10-06, and on 2026-10-07 put the rest of the terrain and of the clouds on hold
@@ -239,8 +204,8 @@ as room for improvement, listed in the README; changes for performance are still
 2. **JSBSim path** with manoeuvres, replacing the placeholder.
 3. **Night.** Stars, moon and adaptive exposure fit between any stages.
 
-Not yet placed: the HUD (two kinds, above), tile prefetching along the path, and a check of
-temporal anti-aliasing at 250 m/s.
+Not yet placed: tile prefetching along the path, and a check of temporal anti-aliasing at
+250 m/s.
 
 Later: the cockpit view, quality presets, colour grading, the UI, the README and video,
 publishing.
