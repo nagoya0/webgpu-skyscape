@@ -173,7 +173,10 @@ Placeholders that later stages replace. Remove each with the stage that replaces
 - `src/flight/placeholderPath.ts`: a racetrack at 250 m/s, level flight only, set per area in
   `src/areas.ts` (Hakone: heading 293°, 120 s straights, 45° bank, 3,000 m). Replaced by the
   JSBSim path. Its output has the same form (ECEF positions, body-to-NED attitudes), so the
-  playback and the camera stay.
+  playback and the camera stay. Known fault, left until the JSBSim path (the maintainer,
+  2026-10-07): the lap does not close by about 55 m (`window.__debug.seamGapMetres`), so the
+  camera jumps once a lap at the loop's seam, and the flight path marker is bent within 0.1 s
+  of it.
 - The origins in `src/areas.ts` (Hakone: 139.02° E, 35.23° N, north of Lake Ashi) are placed
   for the placeholder racetrack and may move when the course is fixed.
 - `src/ui/loading.ts`: the temporary loading screen, redesigned with the UI.
