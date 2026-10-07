@@ -221,6 +221,39 @@ body {
   color: var(--accent);
 }
 
+/* The debug window (src/ui/DebugWindow.tsx), top right over the 3D view. */
+.debug-window {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  min-width: 30ch;
+  padding: 5px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: rgb(18 21 28 / 0.85);
+  font: 10px/1.45 ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.debug-group {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.debug-line {
+  padding-left: 1ch;
+  color: var(--text-muted);
+}
+
+/* The left figure of a two-figure line, wide enough that the right ones line up. */
+.debug-pair {
+  display: inline-block;
+  min-width: 20ch;
+}
+
 /* The settings tab (src/ui/SettingsTab.tsx). */
 .settings-group + .settings-group {
   margin-top: 14px;

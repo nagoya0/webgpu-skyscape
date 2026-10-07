@@ -37,7 +37,7 @@ import { photoGrade } from './terrain/photoGrade'
 import { createTerrain } from './terrain/terrain'
 import { GEOID_HEIGHT } from './terrain/tileGeometry'
 import { landSpecular, waterTime } from './terrain/water'
-import { showDebugText, type DebugText } from './ui/debugText'
+import { DebugWindow, debugStats } from './ui/DebugWindow'
 import { showGuidance } from './ui/guidance'
 import { showLoading } from './ui/loading'
 import { Header } from './ui/Header'
@@ -56,7 +56,7 @@ initSettings(params)
 render(h(Header, null), document.getElementById('header')!)
 const overlay = document.createElement('div')
 document.getElementById('app')!.appendChild(overlay)
-render(h(SettingsWindow, null), overlay)
+render(h('div', null, h(DebugWindow, null), h(SettingsWindow, null)), overlay)
 
 const debug: Record<string, unknown> = {}
 ;(window as unknown as { __debug: unknown }).__debug = debug
@@ -74,10 +74,15 @@ async function start(): Promise<void> {
     device,
     antialias: false,
     reversedDepthBuffer: true,
-    // GPU timestamps for ?measure only; they need the 'timestamp-query' feature.
+    // GPU timestamps for ?measure and while the debug window is shown (switched each frame below);
+    // they need the 'timestamp-query' feature.
     trackTimestamp: params.measure && device.features.has('timestamp-query')
   })
   await renderer.init()
+  const timestampsSupported = device.features.has('timestamp-query')
+  // `trackTimestamp` is missing from the type declarations of the backend in 0.186. The backend
+  // reads it each time it starts a pass, so it can be switched while the demo runs.
+  const backendTimestamps = renderer.backend as unknown as { trackTimestamp: boolean }
   // Passing a device should rule out the WebGL 2 fallback; check anyway.
   if (!(renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend) {
     renderer.dispose()
@@ -123,8 +128,6 @@ async function start(): Promise<void> {
       )
     : null
   if (terrain) scene.add(terrain.group)
-  let debugText: DebugText | null = null
-  let frameMs = 0
 
   const cloudFeatures = new Set<CloudFeature>(DEFAULT_CLOUD_FEATURES)
   for (const [name, on] of Object.entries(params.cloudFeatures)) {
@@ -270,28 +273,61 @@ async function start(): Promise<void> {
     }
     // The flight holds while paused and while the settings window is open; the scene is still
     // drawn, so changes made in the window show at once.
+    // The debug window's figures are measured only while it is shown, the GPU timestamps included.
+    const measuringDebug = live.debug.value
+    backendTimestamps.trackTimestamp = (measuringDebug || params.measure) && timestampsSupported
+    const stepStart = performance.now()
     step(loaded && !live.paused.value && !settingsOpen.value ? dt : 0, timer.getElapsed())
     if (now - lastFlightTimeShown > 250) {
       lastFlightTimeShown = now
       flightTimeSignal.value = flightTime
     }
-    // The debug text, switched in the settings window (or ?debug).
-    if (live.debug.value && !debugText) debugText = showDebugText()
-    if (!live.debug.value && debugText) {
-      debugText.remove()
-      debugText = null
-    }
-    frameMs += (timer.getDelta() * 1000 - frameMs) * 0.1
-    if (debugText) {
-      debugText.update([
-        `t      ${flightTime.toFixed(1)} s${loaded ? '' : ' (loading)'}`,
-        // Height above the origin's tangent plane; close to the altitude over the demo area.
-        `y      ${camera.position.y.toFixed(0)} m`,
-        `cloud  ${cloudDensity.toFixed(4)} /m, in cloud ${state.cloudDensity.toFixed(2)} (${densityMicroseconds.toFixed(0)} us)`,
-        `frame  ${frameMs.toFixed(1)} ms`
-      ])
+    if (measuringDebug) {
+      measureDebug(timer.getDelta() * 1000, performance.now() - stepStart, now)
+    } else if (debugStats.value) {
+      debugStats.value = null
+      cpuMs = frameMs = 0
+      gpuMs = null
     }
   })
+
+  // The debug window: averages kept while it is shown, and a fresh snapshot four times a second.
+  let frameMs = 0
+  let cpuMs = 0
+  let gpuMs: number | null = null
+  let resolvingTimestamps = false
+  let lastDebugShown = -Infinity
+  function measureDebug(frame: number, cpu: number, now: number): void {
+    frameMs = frameMs === 0 ? frame : frameMs + (frame - frameMs) * 0.1
+    cpuMs = cpuMs === 0 ? cpu : cpuMs + (cpu - cpuMs) * 0.1
+    // GPU time: the render and compute passes of a past frame, read back without waiting.
+    if (backendTimestamps.trackTimestamp && !resolvingTimestamps) {
+      resolvingTimestamps = true
+      void Promise.all([renderer.resolveTimestampsAsync('render'), renderer.resolveTimestampsAsync('compute')])
+        .then(([render, compute]) => {
+          const ms = (render ?? 0) + (compute ?? 0)
+          if (ms > 0) gpuMs = gpuMs === null ? ms : gpuMs + (ms - gpuMs) * 0.1
+        })
+        .finally(() => (resolvingTimestamps = false))
+    }
+    if (now - lastDebugShown < 250) return
+    lastDebugShown = now
+    const heap = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
+    debugStats.value = {
+      flightTime,
+      loading: !loaded,
+      frameMs,
+      cpuMs,
+      heapBytes: heap ? heap.usedJSHeapSize : null,
+      gpuMs: timestampsSupported ? gpuMs : null,
+      gpuBytes: renderer.info.memory.total,
+      triangles: renderer.info.render.triangles,
+      drawCalls: renderer.info.render.drawCalls,
+      width: renderer.domElement.width,
+      height: renderer.domElement.height,
+      pixelRatio: renderer.getPixelRatio()
+    }
+  }
 
   let cloudDensity = 0
   let densityMicroseconds = 0
