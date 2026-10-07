@@ -16,6 +16,8 @@ Facts that shaped the proposal: the low cloud layer starts at 750 m, so the airc
 below the clouds only over the sea and the plain around Odawara, as the Hakone mountains reach
 about 1,400 m. From Sagami Bay off Odawara to Mount Fuji is about 46 km, about three minutes at
 250 m/s. At the default scene time (16:30 JST in October) the sun is low in the west-south-west.
+(The default became 14:30 in [ADR 0037](0037-ui.md); the sun is then higher, in the
+south-west.)
 
 ## Decision
 

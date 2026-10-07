@@ -36,13 +36,26 @@ import { photoGrade } from './terrain/photoGrade'
 import { createTerrain } from './terrain/terrain'
 import { GEOID_HEIGHT } from './terrain/tileGeometry'
 import { landSpecular, waterTime } from './terrain/water'
-import { showAttribution } from './ui/attribution'
-import { showDebugText } from './ui/debugText'
+import { showDebugText, type DebugText } from './ui/debugText'
 import { showGuidance } from './ui/guidance'
 import { showLoading } from './ui/loading'
+import { Header } from './ui/Header'
+import { SettingsWindow } from './ui/SettingsWindow'
+import { fps, settingsOpen } from './ui/state'
+import { flightDuration, flightTime as flightTimeSignal, initSettings, live, seekTo } from './ui/settings'
+import { effect } from '@preact/signals'
+import { h, render } from 'preact'
 
 
 const params = readParams(location.search)
+initSettings(params)
+
+// The UI (ADR 0037): the header first, so it shows while the demo starts, and the settings window
+// over the 3D view, which holds the data credits.
+render(h(Header, null), document.getElementById('header')!)
+const overlay = document.createElement('div')
+document.getElementById('app')!.appendChild(overlay)
+render(h(SettingsWindow, null), overlay)
 
 const debug: Record<string, unknown> = {}
 ;(window as unknown as { __debug: unknown }).__debug = debug
@@ -95,7 +108,6 @@ async function start(): Promise<void> {
   const scene = new Scene()
   const atmosphere = createAtmosphere(renderer, camera, params.raymarch)
   atmosphere.setFrame(frame)
-  atmosphere.setDate(params.date)
   scene.add(atmosphere.light)
   // Beyond the terrain, a sea-level sphere drawn as water (ADR 0030).
   scene.add(createSeaSphere(atmosphere.context, ecefToWorld(frame, new Vector3(0, 0, 0))))
@@ -110,8 +122,7 @@ async function start(): Promise<void> {
       )
     : null
   if (terrain) scene.add(terrain.group)
-  showAttribution()
-  const debugText = params.debugText ? showDebugText() : null
+  let debugText: DebugText | null = null
   let frameMs = 0
 
   const cloudFeatures = new Set<CloudFeature>(DEFAULT_CLOUD_FEATURES)
@@ -142,24 +153,34 @@ async function start(): Promise<void> {
     ;(atmosphere.light.shadow as unknown as { shadowNode: unknown }).shadowNode = clouds.sceneShadow
   }
   // Water drops on the screen in clouds (ADR 0011); they need the clouds' density.
-  const drops = clouds && params.drops ? createDrops() : null
+  const drops = clouds ? createDrops() : null
   await loadHudFont()
   const places = await loadPlaces()
   debug.hudFont = [...document.fonts].some(face => face.family.includes('Share Tech Mono') && face.status === 'loaded')
   const hud = createHud()
   const pipeline = createPipeline(renderer, scene, camera, clouds ? [clouds.stage] : [], {
-    lensFlare: params.flare,
     shadowLength: clouds?.shadowLength,
     drops: drops ?? undefined,
     hud,
     dropsDebug: params.dropsDebug
   })
+  // Settings from the settings window that apply while the demo runs (ADR 0037).
+  effect(() => {
+    atmosphere.setDate(live.date.value)
+    debug.date = live.date.value.toISOString()
+  })
   pipeline.exposure.value = params.exposure
+  effect(() => {
+    if (clouds) clouds.coverage.value = live.coverage.value
+  })
+  effect(() => {
+    clouds?.setAmount(live.cloudAmount.value)
+  })
 
   // The area's JSBSim path (ADR 0035), or another with ?path=NAME.
   const path = await loadPath(params.path ?? area.path)
-  debug.date = params.date.toISOString()
   debug.pathSeconds = Number(pathDuration(path).toFixed(1))
+  flightDuration.value = pathDuration(path)
   const cockpit = createCockpitCamera(camera, frame, {
     lagSeconds: params.lag,
     shakeDegrees: params.shake,
@@ -188,8 +209,19 @@ async function start(): Promise<void> {
   const timer = new Timer()
   let flightTime = params.flightStart
   let first = true
+  let lastFlightTimeShown = -Infinity
+  // The header's frame rate: frames counted over about half a second.
+  let fpsFrames = 0
+  let fpsSince = performance.now()
   renderer.setAnimationLoop(time => {
     timer.update(time)
+    fpsFrames++
+    const now = performance.now()
+    if (now - fpsSince >= 500) {
+      fps.value = (fpsFrames * 1000) / (now - fpsSince)
+      fpsFrames = 0
+      fpsSince = now
+    }
     // Clamp long frames, such as after a hidden tab, so the head lag does not jump.
     const dt = Math.min(timer.getDelta(), 0.1)
     if (!loaded) {
@@ -207,7 +239,7 @@ async function start(): Promise<void> {
     debug.loaded = loaded
     // ?debug: where the path goes through clouds, once loaded, for designing the course. Each
     // stretch in cloud, sampled every 0.1 s, as [from, to, most density per metre].
-    if (loaded && clouds && params.debugText && debug.pathClouds === undefined) {
+    if (loaded && clouds && live.debug.value && debug.pathClouds === undefined) {
       const sample = createAircraftState()
       const world = new Vector3()
       const found: [number, number, number][] = []
@@ -230,9 +262,26 @@ async function start(): Promise<void> {
       void measure(timer.getElapsed())
       return
     }
-    step(loaded && !params.paused ? dt : 0, timer.getElapsed())
+    // A move asked for in the settings window.
+    if (seekTo.value !== null) {
+      flightTime = seekTo.value
+      seekTo.value = null
+    }
+    // The flight holds while paused and while the settings window is open; the scene is still
+    // drawn, so changes made in the window show at once.
+    step(loaded && !live.paused.value && !settingsOpen.value ? dt : 0, timer.getElapsed())
+    if (now - lastFlightTimeShown > 250) {
+      lastFlightTimeShown = now
+      flightTimeSignal.value = flightTime
+    }
+    // The debug text, switched in the settings window (or ?debug).
+    if (live.debug.value && !debugText) debugText = showDebugText()
+    if (!live.debug.value && debugText) {
+      debugText.remove()
+      debugText = null
+    }
+    frameMs += (timer.getDelta() * 1000 - frameMs) * 0.1
     if (debugText) {
-      frameMs += (timer.getDelta() * 1000 - frameMs) * 0.1
       debugText.update([
         `t      ${flightTime.toFixed(1)} s${loaded ? '' : ' (loading)'}`,
         // Height above the origin's tangent plane; close to the altitude over the demo area.
@@ -254,6 +303,8 @@ async function start(): Promise<void> {
   // The HUD: both layers redrawn each frame, as their values change all the time.
   const aircraftGeodetic = new Geodetic()
   let screenDrawn = false
+  let screenDate = live.date.value
+  let aircraftDrawn = false
   let placeLine: string | null = null
   let lastPlaceLookup = -Infinity
   const nose = new Vector3()
@@ -281,18 +332,31 @@ async function start(): Promise<void> {
         screenDrawn = false
       }
     }
+    if (live.date.value !== screenDate) {
+      screenDate = live.date.value
+      screenDrawn = false
+    }
     if ((resized || !screenDrawn) && !params.hudDebug) {
       const { canvas: screen, context: screenContext } = hud.screen
       screenContext.clearRect(0, 0, screen.width, screen.height)
-      const lines = [sceneTimeText(params.date), FLIGHT_MODEL_LINE]
+      const lines = [sceneTimeText(screenDate), FLIGHT_MODEL_LINE]
       if (placeLine) lines.push(placeLine)
       drawScreenLines(screenContext, screen.height, pixelsPerDegree, lines)
       hud.screen.changed()
       screenDrawn = true
     }
-    // ?hud=0: the aircraft's HUD left out. Its canvas stays clear, so nothing more is uploaded.
-    if (!params.hud && !params.hudDebug) return
+    // The aircraft's HUD switched off (settings window, ?hud=0): its canvas is cleared once and
+    // then left alone, so nothing more is uploaded.
     const { canvas, context } = hud.aircraft
+    if (!live.hud.value && !params.hudDebug) {
+      if (aircraftDrawn) {
+        context.clearRect(0, 0, canvas.width, canvas.height)
+        hud.aircraft.changed()
+        aircraftDrawn = false
+      }
+      return
+    }
+    aircraftDrawn = true
     if (params.hudDebug) {
       drawHudDebug(hud.screen, hud.aircraft, cockpit.aircraftQuaternion, camera.fov)
     } else {
@@ -415,7 +479,7 @@ async function start(): Promise<void> {
     }
     renderer.setAnimationLoop(t => {
       timer.update(t)
-      step(params.paused ? 0 : Math.min(timer.getDelta(), 0.1), timer.getElapsed())
+      step(live.paused.value ? 0 : Math.min(timer.getDelta(), 0.1), timer.getElapsed())
     })
   }
 }

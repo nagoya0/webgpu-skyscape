@@ -1,6 +1,6 @@
 # 19. No UI until the features are in; settings come from the URL
 
-- Status: Accepted
+- Status: Superseded by [ADR 0037](0037-ui.md)
 - Date: 2026-10-05
 
 ## Context

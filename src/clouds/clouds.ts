@@ -252,6 +252,8 @@ export interface Clouds {
    * only, so the same time always shows the same clouds.
    */
   setTime(seconds: number): void
+  /** Changes the cloud amount of the layers made by cloudLayers() (ADR 0033). */
+  setAmount(amount: CloudAmount): void
   /** Marches the cloud shadow maps; call each frame before the scene is drawn. */
   updateShadows(renderer: WebGPURenderer): void
   /**
@@ -291,7 +293,8 @@ export async function createClouds(
     loadWeather(`${ASSETS}local_weather.png`)
   ])
 
-  const { layers } = options
+  // A copy, as the cloud amount changes the layers' weather exponents while the demo runs.
+  const layers = options.layers.map(layer => ({ ...layer }))
   const functions = buildFunctions(options.features)
   // Unused layers get an empty height range far above everything.
   const minHeights = uniform(pack(layers, l => l.altitude, 1e6))
@@ -674,5 +677,15 @@ export async function createClouds(
   const densityAt = (position: Vector3): number =>
     cloudDensityAt(densityInputs, position, densityOffsets, coverage.value)
 
-  return { stage, coverage, setTime, updateShadows, sceneShadow, shadowLength, densityAt }
+  // The cloud amount (ADR 0033) only raises the weather map to a power per layer, a uniform here
+  // and a layer setting for the CPU density, so it can change while the demo runs.
+  const setAmount = (amount: CloudAmount): void => {
+    const next = cloudLayers(amount)
+    layers.forEach((layer, i) => {
+      if (next[i]) layer.weatherExponent = next[i].weatherExponent
+    })
+    weatherExponents.value.copy(pack(layers, l => l.weatherExponent, 1))
+  }
+
+  return { stage, coverage, setTime, setAmount, updateShadows, sceneShadow, shadowLength, densityAt }
 }

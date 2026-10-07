@@ -69,8 +69,10 @@ or deferred, update [docs/clouds-parity.md](docs/clouds-parity.md), and never le
 feature out without a row there saying so. Keep takram's `#ifdef` switches as preprocessor
 blocks (`src/shaders/preprocess.ts`) instead of cutting them out.
 
-Do not add on-screen controls; the UI is designed once the features are in
-([ADR 0019](docs/adr/0019-no-ui-until-features-are-in.md)). Add a URL parameter instead.
+The UI is built with Preact and Signals in `src/ui/` ([ADR 0037](docs/adr/0037-ui.md)): a header and a
+settings window with a settings tab and a credits tab. Its text is in Japanese; the rest of the
+repository stays in English. Settings shown there live in `src/ui/settings.ts`, start from the URL
+and all change while the demo runs; development settings stay as URL parameters only.
 URL parameter names and values are ASCII only; parse values strictly and fall back to the
 default on anything else. Text output for debugging is allowed (`?debug`, `src/ui/debugText.ts`).
 
@@ -81,7 +83,8 @@ default on anything else. Text output for debugging is allowed (`?debug`, `src/u
 - Never ask the maintainer to paste a key into the chat.
 - Large tile data does not go into the repository
   ([ADR 0012](docs/adr/0012-site-and-tile-data-hosted-apart.md)).
-- Every data source keeps its attribution on screen and in the README.
+- Every data source keeps its attribution in the app (the settings window's credits tab,
+  `src/ui/SettingsWindow.tsx`, ADR 0037) and in the README.
 
 ## Repository hygiene
 

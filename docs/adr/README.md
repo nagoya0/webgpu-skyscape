@@ -20,7 +20,7 @@
 | 0016 | [Patch the takram packages to run on Three.js 0.186](0016-patch-takram-for-newer-three.md) | Accepted |
 | 0017 | [The scene is in a local tangent-plane frame, not in ECEF](0017-local-world-frame.md) | Accepted |
 | 0018 | [The aircraft is an F-16-class fighter at cruise speed](0018-f16-at-cruise-speed.md) | Accepted; area size and altitude changed by 0028 |
-| 0019 | [No UI until the features are in; settings come from the URL](0019-no-ui-until-features-are-in.md) | Accepted; settings partly removed by 0036 |
+| 0019 | [No UI until the features are in; settings come from the URL](0019-no-ui-until-features-are-in.md) | Superseded by 0037 |
 | 0020 | [Effects by view: the aircraft's in the first-person view, the pilot's in the cockpit view](0020-effects-by-view.md) | Accepted |
 | 0021 | [Keep Three.js and takram; choose by what works now, not long-term upkeep](0021-keep-threejs-and-takram.md) | Accepted |
 | 0022 | [Heavy shaders in WGSL, connected with TSL](0022-heavy-shaders-in-wgsl.md) | Accepted |
@@ -38,3 +38,4 @@
 | 0034 | [A HUD in two layers, after the F-16C's](0034-hud.md) | Accepted |
 | 0035 | [The course: a loop of five to six minutes from Sagami Bay to Mount Fuji and back](0035-the-course.md) | Accepted |
 | 0036 | [Remove the Tokyo area and its buildings](0036-remove-the-tokyo-area.md) | Accepted |
+| 0037 | [The UI: a header and a settings window, built with Preact](0037-ui.md) | Accepted |

@@ -132,8 +132,9 @@ The sea's waves are baked the same way, with numpy (`tools/water/bake_ocean.py`,
 
 ### URL parameters
 
-There is no on-screen UI yet ([ADR 0019](docs/adr/0019-no-ui-until-features-are-in.md)).
-Settings come from the URL query, for example `/?time=06:00&coverage=0.5`. The full list, with
+The settings window (the gear in the header, [ADR 0037](docs/adr/0037-ui.md)) changes the main
+settings while the demo runs. All settings, including those for development that the window does
+not show, also come from the URL query, for example `/?time=06:00&coverage=0.5`. The full list, with
 defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 
 | Parameter | Meaning |
@@ -142,7 +143,7 @@ defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
 | `t=seconds`, `paused` | Start time on the flight path; hold the flight there |
 | `exposure`, `fov` | Exposure before tone mapping; vertical field of view |
 | `path=NAME` | Fly another path computed with JSBSim (`public/paths/NAME.json`); by default the course of [ADR 0035](docs/adr/0035-the-course.md) |
-| `terrain=0`, `clouds=0`, `flare=0`, `drops=0` | Leave out a part of the scene (`drops`: the water drops on the screen in clouds) |
+| `terrain=0`, `clouds=0` | Leave out a part of the scene |
 | `dropsdebug` | Debugging: show the drops' height map in red |
 | `hud=0` | Leave out the aircraft's HUD |
 | `huddebug` | Debugging: draw a test pattern on both HUD layers |

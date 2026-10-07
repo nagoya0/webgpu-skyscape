@@ -18,9 +18,11 @@
   },
   "packageManager": "pnpm@12.8.1",
   "dependencies": {
+    "@preact/signals": "^2.11.3",
     "@takram/three-atmosphere": "0.19.1",
     "@takram/three-geospatial": "0.9.1",
     "fast-png": "^8.0.0",
+    "preact": "^11.0.0",
     "three": "0.186.1"
   },
   "devDependencies": {

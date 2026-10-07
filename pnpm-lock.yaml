@@ -170,6 +170,9 @@ importers:
 
   .:
     dependencies:
+      '@preact/signals':
+        specifier: ^2.11.3
+        version: 2.11.3(preact@11.0.0)
       '@takram/three-atmosphere':
         specifier: 0.19.1
         version: 0.19.1(patch_hash=516ad6b13fe9b39a4c28b0bc2c9603af6d2fa7a90a68e74544e5502627cb6511)(@react-three/fiber@9.8.1(@types/react@19.3.0)(react@19.3.0)(three@0.186.1))(postprocessing@6.39.5(three@0.186.1))(react@19.3.0)(three@0.186.1)
@@ -179,6 +182,9 @@ importers:
       fast-png:
         specifier: ^8.0.0
         version: 8.0.0
+      preact:
+        specifier: ^11.0.0
+        version: 11.0.0
       three:
         specifier: 0.186.1
         version: 0.186.1
@@ -220,6 +226,14 @@ packages:
 
   '@petamoriken/float16@3.9.3':
     resolution: {integrity: sha512-8awtpHXCx/bNpFt4mt2xdkgtgVvKqty8VbjHI/WWWQuEw+KLzFot3f4+LkQY9YmOtq7A5GdOnqoIC8Pdygjk2g==}
+
+  '@preact/signals-core@1.14.4':
+    resolution: {integrity: sha512-HNB6HYeYKhQbJ1aKl+YRjrS4+QWHLKX6qKoUsfS/m0vqzsVaEBiZiaKbG/e+NKk2ch5ALQr/ihWaMHxiCuuWHA==}
+
+  '@preact/signals@2.11.3':
+    resolution: {integrity: sha512-mttwFM98G/JiriTgMwU+UWygL6sfVmYEiNcPSKkUnv4PxPpZhmP2ugGC4qi360+ZIHyQ8NY05bfJT3b4RUIGlw==}
+    peerDependencies:
+      preact: '>= 10.25.0 || >=11.0.0-0'
 
   '@react-three/fiber@9.8.1':
     resolution: {integrity: sha512-GbNP4r6F/gpclFKkLGHzXcuwFWAzLyKsmrQGcDuwK3wQnwLH6F1TfGtEYjHy8OQoGsajwT19B9jtVLLjjfH09w==}
@@ -704,6 +718,14 @@ packages:
     peerDependencies:
       three: '>= 0.168.0 < 0.187.0'
 
+  preact@11.0.0:
+    resolution: {integrity: sha512-LRTLKuSe6VYPhvBDjwFaX+nuZnpsw6IN2GSboisAvhGsncylBmrbDCERhgKDn6yP2mAwbGvsB5OVyTe33M8gBg==}
+    peerDependencies:
+      preact-render-to-string: '>=6.7.0'
+    peerDependenciesMeta:
+      preact-render-to-string:
+        optional: true
+
   react-merge-refs@3.0.2:
     resolution: {integrity: sha512-MSZAfwFfdbEvwkKWP5EI5chuLYnNUxNS7vyS0i1Jp+wtd8J4Ga2ddzhaE68aMol2Z4vCnRM/oGOo1a3V75UPlw==}
     peerDependencies:
@@ -910,6 +932,13 @@ snapshots:
   '@oxc-project/types@0.152.0': {}
 
   '@petamoriken/float16@3.9.3': {}
+
+  '@preact/signals-core@1.14.4': {}
+
+  '@preact/signals@2.11.3(preact@11.0.0)':
+    dependencies:
+      '@preact/signals-core': 1.14.4
+      preact: 11.0.0
 
   '@react-three/fiber@9.8.1(@types/react@19.3.0)(react@19.3.0)(three@0.186.1)':
     dependencies:
@@ -1223,6 +1252,8 @@ snapshots:
   postprocessing@6.39.5(three@0.186.1):
     dependencies:
       three: 0.186.1
+
+  preact@11.0.0: {}
 
   react-merge-refs@3.0.2(react@19.3.0):
     optionalDependencies:

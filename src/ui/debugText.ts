@@ -5,13 +5,14 @@
 
 export interface DebugText {
   update(lines: string[]): void
+  remove(): void
 }
 
 export function showDebugText(): DebugText {
   const element = document.createElement('pre')
   Object.assign(element.style, {
     position: 'fixed',
-    top: '8px',
+    top: 'calc(var(--header-height) + 8px)',
     right: '8px',
     width: '34ch',
     margin: '0',
@@ -33,6 +34,9 @@ export function showDebugText(): DebugText {
       if (now - last < 250) return
       last = now
       element.textContent = lines.join('\n')
+    },
+    remove() {
+      element.remove()
     }
   }
 }

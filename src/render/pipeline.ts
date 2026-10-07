@@ -41,7 +41,6 @@ export function createPipeline(
   camera: Camera,
   stages: readonly CompositeStage[] = [],
   options: {
-    lensFlare?: boolean
     /** (shadow length, shadow start) in the atmosphere's units, for light shafts. */
     shadowLength?: Node<'vec2'>
     /** Water drops on the screen (ADR 0011). */
@@ -62,9 +61,9 @@ export function createPipeline(
   // TYPE-BRIDGE: takram's aerialPerspective is typed against @types/three 0.184.
   const aerial = aerialPerspective(color, depth, null, options.shadowLength as Parameters<typeof aerialPerspective>[3])
   const composited = stages.reduce<Node<'vec4'>>((input, stage) => stage(input, depth), asNode(aerial))
-  const flare = options.lensFlare === false ? null : lensFlare(composited)
+  const flare = lensFlare(composited)
   const exposure = uniform(3)
-  const toneMapped = toneMapping(AgXToneMapping, exposure, flare ? asNode(flare) : composited)
+  const toneMapped = toneMapping(AgXToneMapping, exposure, asNode(flare))
   const taa = temporalAntialias(toneMapped, depth, velocity, camera)
   const withDrops = options.drops
     ? dropsComposite(convertToTexture(asNode<'vec4'>(taa)), options.drops, options.dropsDebug)
@@ -82,7 +81,7 @@ export function createPipeline(
     dispose() {
       renderPipeline.dispose()
       taa.dispose()
-      flare?.dispose()
+      flare.dispose()
       aerial.dispose()
       passNode.dispose()
     }

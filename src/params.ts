@@ -1,8 +1,9 @@
-// Settings from the URL query (ADR 0019).
+// Settings from the URL query. The settings window (src/ui/settings.ts, ADR 0037) starts from them
+// and changes them while the demo runs; the others are for development.
 // Unknown or malformed values fall back to the defaults. Names and values are ASCII only.
 //
 //   date=YYYY-MM-DD   date in JST (default: today in JST)
-//   time=HH:MM        time of day in JST (default 16:30)
+//   time=HH:MM        time of day in JST (default 14:30, the maintainer, 2026-10-08)
 //   t=seconds         start time on the flight path (default 0)
 //   paused            hold the flight at that time
 //   path=NAME         fly a path computed with JSBSim, public/paths/NAME.json (tools/flightpath)
@@ -42,8 +43,6 @@
 //                     relative to the defaults (src/clouds/clouds.ts, docs/clouds-parity.md);
 //                     e.g. cloudfx=-POWDER
 //   raymarch=0        look up the aerial perspective in tables instead of ray marching it
-//   flare=0           leave out the lens flare
-//   drops=0           leave out the water drops on the screen in clouds
 //   dropsdebug        show the drops' height map in red
 //   hud=0             leave out the aircraft's HUD (the speed, altitude, heading and attitude
 //                     symbols)
@@ -79,8 +78,6 @@ export interface Params {
   measure: boolean
   debugText: boolean
   raymarch: boolean
-  flare: boolean
-  drops: boolean
   dropsDebug: boolean
   hud: boolean
   hudDebug: boolean
@@ -114,7 +111,7 @@ export function readParams(search: string, now = new Date()): Params {
     month = Number(dateMatch[2]) - 1
     day = Number(dateMatch[3])
   }
-  let minutes = 16 * 60 + 30
+  let minutes = 14 * 60 + 30
   const timeMatch = /^(\d{1,2}):(\d{2})$/.exec(query.get('time') ?? '')
   if (timeMatch && Number(timeMatch[1]) < 24 && Number(timeMatch[2]) < 60) {
     minutes = Number(timeMatch[1]) * 60 + Number(timeMatch[2])
@@ -151,8 +148,6 @@ export function readParams(search: string, now = new Date()): Params {
     measure: query.has('measure'),
     debugText: query.has('debug'),
     raymarch: query.get('raymarch') !== '0',
-    flare: query.get('flare') !== '0',
-    drops: query.get('drops') !== '0',
     dropsDebug: query.has('dropsdebug'),
     hud: query.get('hud') !== '0',
     hudDebug: query.has('huddebug'),

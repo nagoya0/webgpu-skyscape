@@ -5,9 +5,9 @@ import { readParams } from './params'
 const now = new Date('2026-10-05T03:00:00Z') // 12:00 JST
 
 describe('readParams', () => {
-  it('defaults to 16:30 JST today', () => {
+  it('defaults to 14:30 JST today', () => {
     const params = readParams('', now)
-    expect(params.date.toISOString()).toBe('2026-10-05T07:30:00.000Z')
+    expect(params.date.toISOString()).toBe('2026-10-05T05:30:00.000Z')
     expect(params.exposure).toBe(3)
     expect(params.paused).toBe(false)
   })
@@ -56,7 +56,7 @@ describe('readParams', () => {
 
   it('falls back on malformed or out-of-range values', () => {
     const params = readParams('?time=25:00&exposure=abc&fov=', now)
-    expect(params.date.toISOString()).toBe('2026-10-05T07:30:00.000Z')
+    expect(params.date.toISOString()).toBe('2026-10-05T05:30:00.000Z')
     expect(params.exposure).toBe(3)
     expect(params.fov).toBe(70)
   })
