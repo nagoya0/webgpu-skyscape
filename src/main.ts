@@ -13,7 +13,7 @@ import {
 import { createCockpitCamera } from './camera/cockpitCamera'
 import { createDrops } from './effects/drops'
 import { createInCloud } from './effects/inCloud'
-import { createHud } from './hud/hud'
+import { createHud, loadHudFont } from './hud/hud'
 import { drawHudDebug } from './hud/hudDebug'
 import { createAircraftState, pathDuration, samplePath } from './flight/path'
 import { createPlaceholderPath } from './flight/placeholderPath'
@@ -151,6 +151,8 @@ async function start(): Promise<void> {
   }
   // Water drops on the screen in clouds (ADR 0011); they need the clouds' density.
   const drops = clouds && params.drops ? createDrops() : null
+  await loadHudFont()
+  debug.hudFont = [...document.fonts].some(face => face.family.includes('Share Tech Mono') && face.status === 'loaded')
   const hud = createHud()
   const pipeline = createPipeline(renderer, scene, camera, clouds ? [clouds.stage] : [], {
     lensFlare: params.flare,

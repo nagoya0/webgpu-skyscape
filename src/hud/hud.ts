@@ -19,8 +19,18 @@ import {
   type WebGPURenderer
 } from 'three/webgpu'
 
-/** The HUD's typeface, for every layer. To be chosen by the maintainer. */
-export const HUD_FONT_FAMILY = 'monospace'
+/**
+ * The HUD's typeface, for every layer: Share Tech Mono (Carrois Type Design, SIL Open Font
+ * License), chosen by the maintainer from eight open typefaces (2026-10-07). Bundled in
+ * public/fonts/ and loaded by loadHudFont() before the HUD draws.
+ */
+export const HUD_FONT_FAMILY = "'Share Tech Mono', monospace"
+
+/** Loads the HUD's typeface, so the canvas does not draw with a fallback. */
+export async function loadHudFont(): Promise<void> {
+  const face = new FontFace('Share Tech Mono', `url(${import.meta.env.BASE_URL}fonts/ShareTechMono-Regular.ttf)`)
+  document.fonts.add(await face.load())
+}
 
 /** HUD green, as the maintainer wants the text and lines (2026-10-07). */
 export const HUD_GREEN = 'rgb(90, 255, 130)'

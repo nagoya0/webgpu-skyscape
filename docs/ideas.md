@@ -31,7 +31,8 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   - The aircraft's HUD, as in a fighter's real head-up display: heading, pitch, altitude, speed
     and the like. It moves with the airframe's vibration.
   - Text and lines in HUD green with a glow (the maintainer). The elements are added one at a
-    time as the maintainer asks; the typeface is still to be chosen.
+    time as the maintainer asks. Typeface: Share Tech Mono (the maintainer, from eight open
+    typefaces), bundled in `public/fonts/`.
   - In place (2026-10-07, `src/hud/`): both layers drawn with Canvas 2D and laid over the image
     after the water drops; the aircraft layer is drawn in the airframe's frame and turned by the
     camera's shake, so it shakes with the scene and stays on it. `?huddebug` draws a test
