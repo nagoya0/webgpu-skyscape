@@ -9,12 +9,13 @@ import { AmbientLight, Color, type Node, type PerspectiveCamera } from 'three/we
 import type { CompositeStage } from './pipeline'
 
 /**
- * The night sky's luminance overhead and at the horizon, in cd/m²: about a suburban sky. Twice
- * as much read better without the moon but lit the horizon too much under a full moon (the
- * maintainer, 2026-10-08).
+ * The night sky's luminance overhead and at the horizon, in cd/m²: overhead about a bright
+ * suburban sky (about 19 magnitudes per square arcsecond), the horizon two and a half times that,
+ * as under mild light pollution. The horizon was five times at first; the maintainer found half
+ * that more natural without the moon (2026-10-08). Under a high moon the moonlit sky outshines it.
  */
 export const NIGHT_SKY_ZENITH = 0.003
-export const NIGHT_SKY_HORIZON = 0.015
+export const NIGHT_SKY_HORIZON = 0.0075
 /** A little warm, from the light of towns. */
 const NIGHT_SKY_COLOR = new Color(1.0, 0.9, 0.78)
 /** The illuminance the night sky gives the ground, in lux. */

@@ -31,7 +31,7 @@ import { loadPath } from './flight/loadPath'
 import { createLocalFrame, ecefToWorld, nedToWorldRotation } from './geo/localFrame'
 import { requestDevice } from './gpu/support'
 import { readParams } from './params'
-import { preExposureForSunAltitude } from './render/exposure'
+import { preExposure } from './render/exposure'
 import { createNightGlow } from './render/nightGlow'
 import { createPipeline } from './render/pipeline'
 import { createSeaSphere } from './terrain/seaSphere'
@@ -199,11 +199,12 @@ async function start(): Promise<void> {
   effect(() => {
     atmosphere.setDate(live.date.value)
     // Brighter as the sun sets, for the night (src/render/exposure.ts).
-    atmosphere.setPreExposure(preExposureForSunAltitude(atmosphere.sunAltitude))
+    atmosphere.setPreExposure(preExposure(atmosphere.sunAltitude, atmosphere.moonAltitude))
     nightGlow.update()
     setCityLightsOn(cityLightsOnForSunAltitude(atmosphere.sunAltitude))
     debug.date = live.date.value.toISOString()
     debug.sunAltitude = Number(atmosphere.sunAltitude.toFixed(2))
+    debug.moonAltitude = Number(atmosphere.moonAltitude.toFixed(2))
   })
   effect(() => {
     if (clouds) clouds.coverage.value = live.coverage.value

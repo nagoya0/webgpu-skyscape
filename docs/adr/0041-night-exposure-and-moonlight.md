@@ -86,3 +86,18 @@ much under a full moon. The clouds are not lit by it and show as silhouettes.
   around bright lights is to come with the colour grading.
 - Frame times: no change on the GPU; about 0.4 ms more on the CPU at night, building the lights
   as tiles load.
+
+## Update 2026-10-08: the exposure follows the moon
+
+Under a full moon the terrain looked too bright, and without the moon too dark: a full moon
+lights the ground about twelve times more than the night sky alone. At night the exposure now
+also follows the moon, as an eye or a camera adapts, part of the way: the night's illuminance on
+the ground is estimated from the moon's altitude (0.25 lux for a full moon overhead) and the night
+sky's 0.02 lux, and of its difference from a reference of 0.07 lux the exposure makes up half
+where the night is darker and nine tenths where it is brighter (the maintainer chose these from
+side-by-side views). The gap between a full moon and none on screen fell from about twelve
+times to about five and a half. By day and at dusk nothing changes.
+
+The night sky's glow at the horizon was lowered from 0.015 to 0.0075 cd/m² (two and a half
+times the zenith, as under mild light pollution), which the maintainer found more natural without
+the moon. Under a high moon the moonlit sky outshines the glow, so it changes little there.

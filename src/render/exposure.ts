@@ -7,6 +7,12 @@
 // Making up all of the difference would show the night as bright as the day, as a photograph of
 // a moonlit landscape exposed in full looks like daytime. As photographers do, the night is shown
 // a few stops darker than that (the maintainer, 2026-10-08), and dusk part of the way.
+//
+// At night the exposure also follows the moon, part of the way, as an eye or a camera adapts: a
+// full moon lights the ground about twelve times more than a night sky without it, which showed
+// the terrain too bright under a full moon and too dark without one (the maintainer, 2026-10-08).
+
+import { NIGHT_GROUND_ILLUMINANCE } from './nightGlow'
 
 /** Pre-exposure that makes up all of the night's darkness: a moonlit scene at the day's brightness. */
 export const NIGHT_PRE_EXPOSURE = 1e5
@@ -16,6 +22,17 @@ export const NIGHT_DARKER_STOPS = 2.5
 export const DAY_ALTITUDE = 5
 /** The sun's altitude in degrees below which the pre-exposure is the night's. */
 export const NIGHT_ALTITUDE = -12
+/** The illuminance a full moon overhead gives the ground, in lux. */
+export const FULL_MOON_ILLUMINANCE = 0.25
+/** The night's illuminance the exposure is set for, in lux: between a full moon and none. */
+export const NIGHT_REFERENCE_ILLUMINANCE = 0.07
+/**
+ * How much of the difference from that the exposure makes up, 0 to 1: half where the night is
+ * darker (without the moon), nearly all where it is brighter (under a high moon), so that a full
+ * moon does not light the terrain much more than the reference (the maintainer, 2026-10-08).
+ */
+export const MOON_ADAPTATION_DARK = 0.5
+export const MOON_ADAPTATION_BRIGHT = 0.9
 
 /** How far into the night the sun's altitude is: 0 by day, 1 at night, smooth in between. */
 function nightness(degrees: number): number {
@@ -27,4 +44,17 @@ function nightness(degrees: number): number {
 export function preExposureForSunAltitude(degrees: number): number {
   const night = nightness(degrees)
   return NIGHT_PRE_EXPOSURE ** night * 2 ** (-NIGHT_DARKER_STOPS * night)
+}
+
+/** The illuminance on the ground at night, in lux: the moonlight by its altitude and the night sky's. */
+export function nightIlluminance(moonDegrees: number): number {
+  return FULL_MOON_ILLUMINANCE * Math.max(Math.sin((moonDegrees * Math.PI) / 180), 0) + NIGHT_GROUND_ILLUMINANCE
+}
+
+/** The pre-exposure for the sun and the moon at the given altitudes: by the sun, then at night by the moon. */
+export function preExposure(sunDegrees: number, moonDegrees: number): number {
+  const illuminance = nightIlluminance(moonDegrees)
+  const share = illuminance > NIGHT_REFERENCE_ILLUMINANCE ? MOON_ADAPTATION_BRIGHT : MOON_ADAPTATION_DARK
+  const adaptation = (NIGHT_REFERENCE_ILLUMINANCE / illuminance) ** share
+  return preExposureForSunAltitude(sunDegrees) * adaptation ** nightness(sunDegrees)
 }

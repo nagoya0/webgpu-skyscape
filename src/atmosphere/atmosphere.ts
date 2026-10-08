@@ -27,6 +27,8 @@ export interface Atmosphere {
   moonLight: AtmosphereLight
   /** The sun's altitude above the horizon at the frame's origin, in degrees, after setDate. */
   readonly sunAltitude: number
+  /** The moon's altitude, likewise. */
+  readonly moonAltitude: number
   /**
    * Multiplies all of the atmosphere's luminance (sky, sun, moon, stars, their light and the
    * aerial perspective) by a factor, through takram's luminance scale (patched into a uniform).
@@ -75,6 +77,9 @@ export function createAtmosphere(
   const up = new Vector3()
   const sunECEF = new Vector3()
   let sunAltitude = 90
+  let moonAltitude = -90
+  const altitude = (direction: Vector3): number =>
+    (Math.asin(Math.min(Math.max(sunECEF.copy(direction).normalize().dot(up), -1), 1)) * 180) / Math.PI
   // TYPE-BRIDGE: luminanceScaleNode is added by this project's patch of @takram/three-atmosphere.
   const luminanceScale = (atmosphereContext as unknown as { luminanceScaleNode: Node<'float'> & { value: number } })
     .luminanceScaleNode
@@ -87,6 +92,9 @@ export function createAtmosphere(
     luminanceScale,
     get sunAltitude() {
       return sunAltitude
+    },
+    get moonAltitude() {
+      return moonAltitude
     },
 
     setPreExposure(factor) {
@@ -106,8 +114,8 @@ export function createAtmosphere(
       getECIToECEFRotationMatrix(date, matrixECIToECEF.value)
       getSunDirectionECI(date, sunDirectionECEF.value, observerECEF).applyMatrix4(matrixECIToECEF.value)
       getMoonDirectionECI(date, moonDirectionECEF.value, observerECEF).applyMatrix4(matrixECIToECEF.value)
-      sunECEF.copy(sunDirectionECEF.value).normalize()
-      sunAltitude = (Math.asin(Math.min(Math.max(sunECEF.dot(up), -1), 1)) * 180) / Math.PI
+      sunAltitude = altitude(sunDirectionECEF.value)
+      moonAltitude = altitude(moonDirectionECEF.value)
     },
 
     dispose() {
