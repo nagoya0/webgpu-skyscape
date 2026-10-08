@@ -467,6 +467,14 @@ body {
   transition: transform 0.3s ease;
 }
 
+/* A note on the download size, in Japanese as the viewer acts on it (the maintainer). */
+.loading-note {
+  margin: 14px 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
 .loading.done {
   opacity: 0;
   pointer-events: none;

@@ -1,6 +1,7 @@
 // The loading screen (ADR 0037): over the 3D view only, a message saying what is being done and
 // one progress bar for the whole start, in the settings window's look. The messages are in
-// English, as the viewer only watches them (the maintainer). It shows from the page's first
+// English, as the viewer only watches them (the maintainer); the note on the download size below
+// the bar is in Japanese, as the viewer acts on it (the maintainer). It shows from the page's first
 // moment; src/main.ts moves it through the stages and hides it when the start is complete.
 import { signal } from '@preact/signals'
 
@@ -47,6 +48,9 @@ export function LoadingScreen() {
         >
           <div class="loading-fill" style={{ transform: `scaleX(${progress.value})` }} />
         </div>
+        <p class="loading-note">
+          ⚠️このデモでは地形や航空写真データを 50〜150 MB ダウンロードします。モバイル回線で接続している場合は注意してください。
+        </p>
       </div>
     </div>
   )

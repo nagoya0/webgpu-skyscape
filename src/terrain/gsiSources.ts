@@ -34,11 +34,20 @@ async function limited<T>(task: () => Promise<T>): Promise<T> {
   }
 }
 
+/**
+ * Tiles that returned 404, not asked for again. GSI sends no cache headers, so the browser does
+ * not cache a 404; without this, every aerial photograph over the sea was requested again each
+ * time its terrain tile was loaded again, about 2,000 requests a lap.
+ */
+const missing = new Set<string>()
+
 async function fetchImage(url: string, signal?: AbortSignal): Promise<ImageBitmap | null> {
+  if (missing.has(url)) return null
   return limited(async () => {
     if (signal?.aborted) return null
     const response = await fetch(url, { signal })
     // Tiles outside the data's coverage return 404.
+    if (response.status === 404) missing.add(url)
     if (!response.ok) return null
     return createImageBitmap(await response.blob())
   })
