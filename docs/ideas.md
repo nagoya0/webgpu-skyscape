@@ -238,7 +238,11 @@ as room for improvement, listed in the README; changes for performance are still
      (2026-10-08): neither is in the repository; the scripts load the model from the JSBSim
      installed with pip, and the computed path contains no part of the model, so publishing it
      brings no GPL obligation. The HUD and README name JSBSim and the model as the source only.
-3. **Night.** Stars, moon and adaptive exposure fit between any stages.
+3. **Night**, started 2026-10-08 ([ADR 0041](adr/0041-night-exposure-and-moonlight.md)). Done: exposure
+   by the sun's altitude through a pre-exposure, moonlight on the terrain and in the sky, fewer
+   stars. Left, in this order: moonlight on the clouds (they show black at night); a faint light
+   for a night without the moon; city lights. Also seen at dusk (about 17:35 in late October): a
+   dotted pattern along the clouds' edges, not investigated yet.
 4. **The UI** ([ADR 0037](adr/0037-ui.md)), started 2026-10-08 as the maintainer judged the
    features complete enough to prepare for publishing; the Tokyo area was removed first
    ([ADR 0036](adr/0036-remove-the-tokyo-area.md)). Done: the header, the settings window with

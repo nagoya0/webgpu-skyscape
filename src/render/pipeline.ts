@@ -60,6 +60,17 @@ export function createPipeline(
 
   // TYPE-BRIDGE: takram's aerialPerspective is typed against @types/three 0.184.
   const aerial = aerialPerspective(color, depth, null, options.shadowLength as Parameters<typeof aerialPerspective>[3])
+  // Moonlight scattered in the sky and in the aerial perspective, for the night (off by default
+  // in takram). TYPE-BRIDGE: the sky node is typed as a plain node.
+  aerial.moonScattering = true
+  const skyNode = aerial.skyNode as unknown as {
+    moonScattering: boolean
+    starsNode: { intensity: { value: number } }
+  }
+  skyNode.moonScattering = true
+  // Fewer stars than takram's default boost of 1,000 shows: about what a city dweller sees, down
+  // to the third or fourth magnitude (the maintainer, 2026-10-08).
+  skyNode.starsNode.intensity.value = 30
   const composited = stages.reduce<Node<'vec4'>>((input, stage) => stage(input, depth), asNode(aerial))
   const flare = lensFlare(composited)
   const exposure = uniform(3)

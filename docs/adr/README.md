@@ -42,3 +42,4 @@
 | 0038 | [Our own blue noise instead of takram's STBN](0038-own-blue-noise.md) | Accepted |
 | 0039 | [Bundle takram's star data](0039-bundle-the-star-data.md) | Accepted |
 | 0040 | [Publish on GitHub Pages](0040-publish-on-github-pages.md) | Accepted |
+| 0041 | [Night: exposure by the sun's altitude, and moonlight](0041-night-exposure-and-moonlight.md) | Accepted |

@@ -18,7 +18,7 @@ index 1f360c09501703e858f5b53526c1f43cef3316fd..c47616f904ff45bcd00cc4dc054a9aaa
    -1.537208,
    -0.4986286,
 diff --git a/build/webgpu.js b/build/webgpu.js
-index 1ce72679646fb617bb62b52dc7f62bf3aebc208a..a4f863e15a30bb92cd2aa33fc956b5be2c0683d1 100644
+index 1ce72679646fb617bb62b52dc7f62bf3aebc208a..375476d76187b665b7f40a759d9a42c7020c9ce1 100644
 --- a/build/webgpu.js
 +++ b/build/webgpu.js
 @@ -5,6 +5,14 @@ import { l as rt, r as Vs, k as So, a as yo } from "./shared2.js";
@@ -64,3 +64,14 @@ index 1ce72679646fb617bb62b52dc7f62bf3aebc208a..a4f863e15a30bb92cd2aa33fc956b5be
    absorptionExtinction: At,
    groundAlbedo: qt,
    minCosLight: q,
+@@ -142,7 +150,9 @@ class gs {
+         minCosLight: P(g),
+         sunRadianceToLuminance: E(S),
+         skyRadianceToLuminance: E(x),
+-        luminanceScale: P(T),
++        // Patched (webgpu-skyscape): a uniform, so that the demo can pre-expose the scene at night
++        // and keep its luminance within half-float precision.
++        luminanceScale: this.luminanceScaleNode = O(T),
+         transmittanceTextureSize: ue(C),
+         irradianceTextureSize: ue(f),
+         multipleScatteringTextureSize: Mt(M),

@@ -31,6 +31,7 @@ import { loadPath } from './flight/loadPath'
 import { createLocalFrame, ecefToWorld, nedToWorldRotation } from './geo/localFrame'
 import { requestDevice } from './gpu/support'
 import { readParams } from './params'
+import { preExposureForSunAltitude } from './render/exposure'
 import { createPipeline } from './render/pipeline'
 import { createSeaSphere } from './terrain/seaSphere'
 import { createTerrain } from './terrain/terrain'
@@ -130,6 +131,7 @@ async function start(): Promise<void> {
   const atmosphere = createAtmosphere(renderer, camera, params.raymarch)
   atmosphere.setFrame(frame)
   scene.add(atmosphere.light)
+  scene.add(atmosphere.moonLight)
   // Beyond the terrain, a sea-level sphere drawn as water (ADR 0030).
   scene.add(createSeaSphere(atmosphere.context, ecefToWorld(frame, new Vector3(0, 0, 0))))
 
@@ -184,7 +186,10 @@ async function start(): Promise<void> {
   // Settings from the settings window that apply while the demo runs (ADR 0037).
   effect(() => {
     atmosphere.setDate(live.date.value)
+    // Brighter as the sun sets, for the night (src/render/exposure.ts).
+    atmosphere.setPreExposure(preExposureForSunAltitude(atmosphere.sunAltitude))
     debug.date = live.date.value.toISOString()
+    debug.sunAltitude = Number(atmosphere.sunAltitude.toFixed(2))
   })
   effect(() => {
     if (clouds) clouds.coverage.value = live.coverage.value
