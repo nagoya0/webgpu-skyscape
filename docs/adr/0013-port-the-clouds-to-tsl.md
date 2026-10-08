@@ -109,7 +109,14 @@ Done between 2026-10-06 and 2026-10-07; the details per feature are in
   over 16 frames, instead of the half resolution first planned. The clouds' GPU time fell from
   about 2.6 ms to about 0.3 ms. A still frame shows single-sample dots at the cloud edges; the
   maintainer judged it acceptable at 60 fps, so takram's method stays.
-- C3: aerial perspective on the clouds, haze, and sun and sky light by height.
+  Update 2026-10-08: at dusk the same dots stand out as dark dots in a 4-pixel grid, as clouds
+  in silhouette against a bright sky give the largest difference. Each frame they are the pixels
+  just rendered, one per 4 × 4 block, differing from their accumulated neighbours; the same with
+  takram's own blue noise, so it is takram's method, not this project's noise. Tried: a
+  Catmull-Rom history lookup (more speckle elsewhere), blending the new pixel half and half with
+  the history (fine by day, a faint fixed grid at dusk), and no upscaling (no dots, but about
+  1.4 ms more GPU at 1262 × 600, several times that on the target hardware). The maintainer
+  accepted the dots at dusk too, as the same trade-off.- C3: aerial perspective on the clouds, haze, and sun and sky light by height.
 - C4: takram's cascaded shadow maps, for the clouds' long-range self-shadowing and for cloud
   shadows on the scene. The scene receives them through the sun light's custom shadow node, so
   only direct sunlight is dimmed, and building shadows can be combined there later. The
