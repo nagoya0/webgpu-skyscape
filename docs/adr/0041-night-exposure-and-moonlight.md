@@ -37,8 +37,15 @@ night a few stops darker, often bluer.
 - Dusk darkens as the sun sets, and a moonlit night shows the terrain dimly with the stars.
   Frame times did not change (GPU about 2.3 ms at 1262 × 600 either way).
 - Light added later outside takram, such as city lights, has to be multiplied by the same factor.
-- Still to do: the clouds are lit by the sun only and show black at night; a faint light for a
-  night without the moon; city lights.
+- Still to do: a faint light for a night without the moon; city lights.
+
+## Update 2026-10-08: the clouds in moonlight
+
+The clouds showed black at night, lit by the sun only. They are now lit by one body, whichever
+lights them more: the moon once the sun is 8° below the horizon, at the same full-moon
+brightness, with their shadow maps following it, so the terrain gets the clouds' shadow in
+moonlight too. Lighting by both bodies at once would double the clouds' cost. Frame times did not
+change.
 
 ## Implementation details, not discussed
 

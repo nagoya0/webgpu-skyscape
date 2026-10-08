@@ -282,8 +282,8 @@ export interface Clouds {
   /** Marches the cloud shadow maps; call each frame before the scene is drawn. */
   updateShadows(renderer: WebGPURenderer): void
   /**
-   * Transmittance of the clouds towards the sun at the shaded point, for a light's
-   * `shadow.shadowNode`: it dims the sunlight only.
+   * Transmittance of the clouds towards the body lighting them (the sun, or the moon at night) at
+   * the shaded point, for a light's `shadow.shadowNode`: it dims that light only.
    */
   sceneShadow: Node<'float'>
   /**
@@ -297,6 +297,15 @@ export interface Clouds {
    */
   densityAt(position: Vector3): number
 }
+
+/**
+ * The clouds are lit by one body, the sun or the moon, whichever lights them more: the moon once
+ * the sun is this far below the horizon, in degrees (night, ADR 0041). Lighting by both would
+ * double the clouds' cost.
+ */
+const MOON_LIGHT_BELOW = -8
+/** The moon's light against the sun's, as takram's moon light (full moon, whatever the phase). */
+const MOON_LIGHT_SCALE = 2.5e-6
 
 const SHAPE_REPEAT = 0.0003
 const DETAIL_REPEAT = 0.006
@@ -378,12 +387,16 @@ export async function createClouds(
     matrixWorldToECEF: Node
     matrixECEFToWorld: Node
     sunDirectionECEF: Node & { value: Vector3 }
+    moonDirectionECEF: Node & { value: Vector3 }
     altitudeCorrectionECEF: Node
     correctAltitude: boolean
     parametersNode: { worldToUnit: Node; bottomRadius: Node }
   }
-  const sunDirectionECEF = asNode<'vec3'>(ctx.sunDirectionECEF)
-  const sunDirection = asNode<'mat4'>(ctx.matrixECEFToWorld).mul(vec4(sunDirectionECEF, 0)).xyz.normalize()
+  // The body lighting the clouds, the sun or at night the moon (set each frame in updateShadows),
+  // and its light against the sun's. The names below keep takram's "sun".
+  const lightDirectionECEF = uniform(new Vector3())
+  const lightScale = uniform(1)
+  const sunDirection = asNode<'mat4'>(ctx.matrixECEFToWorld).mul(vec4(lightDirectionECEF, 0)).xyz.normalize()
   const weatherNode = texture(weather)
   const shapeNode = texture3D(shapeVolume)
   const detailNode = texture3D(detailVolume)
@@ -508,8 +521,15 @@ export async function createClouds(
     .xy.mul(asNode<'float'>(ctx.parametersNode.worldToUnit))
 
   const sunWorld = new Vector3()
+  const upWorld = new Vector3()
+  const moonBelow = Math.sin((MOON_LIGHT_BELOW * Math.PI) / 180)
   const updateShadows = (renderer: WebGPURenderer): void => {
     sunWorld.copy(ctx.sunDirectionECEF.value).transformDirection(frame.ecefToWorld)
+    upWorld.copy(camera.position).sub(earthCenterWorld).normalize()
+    const byMoon = sunWorld.dot(upWorld) < moonBelow
+    lightDirectionECEF.value.copy(byMoon ? ctx.moonDirectionECEF.value : ctx.sunDirectionECEF.value)
+    lightScale.value = byMoon ? MOON_LIGHT_SCALE : 1
+    sunWorld.copy(lightDirectionECEF.value).transformDirection(frame.ecefToWorld)
     shadows.update(renderer, sunWorld, earthCenterWorld)
   }
 
@@ -522,8 +542,11 @@ export async function createClouds(
       return ecef.mul(worldToUnit)
     }
     type Split = { get(name: 'direct' | 'indirect'): Node<'vec3'> }
-    const illuminanceAt = (pointUnit: Node<'vec3'>): Split =>
-      asNode(getSplitScalarIlluminance(pointUnit, sunDirectionECEF)) as unknown as Split
+    // The lighting body's direct light and the sky light it makes, scaled for the moon.
+    const illuminanceAt = (pointUnit: Node<'vec3'>): Split => {
+      const split = asNode(getSplitScalarIlluminance(pointUnit, lightDirectionECEF)) as unknown as Split
+      return { get: name => split.get(name).mul(lightScale) }
+    }
     // As takram's clouds.vert: sun and sky light at the camera (for the haze), and at the bottom
     // and top of the cloud layers straight above the camera (interpolated by height).
     const cameraUnit = toUnit(cameraPosition)
@@ -615,11 +638,11 @@ export async function createClouds(
       // least 1 m away.
       const front = cameraPosition.add(direction.mul(depthVelocity.x.clamp(1, 1e6)))
       const toFront = asNode(
-        getIndirectLuminanceToPoint(cameraUnit, toUnit(front), shadowLengthUnit, sunDirectionECEF)
+        getIndirectLuminanceToPoint(cameraUnit, toUnit(front), shadowLengthUnit, lightDirectionECEF)
       ) as unknown as { get(name: 'luminance' | 'transmittance'): Node<'vec3'> }
       const aerial = select(
         cloud.a.greaterThan(0),
-        vec4(cloud.rgb.mul(toFront.get('transmittance')).add(toFront.get('luminance').mul(cloud.a)), cloud.a),
+        vec4(cloud.rgb.mul(toFront.get('transmittance')).add(toFront.get('luminance').mul(lightScale).mul(cloud.a)), cloud.a),
         cloud
       )
 

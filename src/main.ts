@@ -167,6 +167,10 @@ async function start(): Promise<void> {
     atmosphere.light.castShadow = true
     // `shadowNode` is missing from the type declarations of LightShadow in 0.186.
     ;(atmosphere.light.shadow as unknown as { shadowNode: unknown }).shadowNode = clouds.sceneShadow
+    // At night the shadow maps follow the moon (ADR 0041), so the moonlight gets the same shadow;
+    // by day the moon's light is too faint for its wrong shadow to show.
+    atmosphere.moonLight.castShadow = true
+    ;(atmosphere.moonLight.shadow as unknown as { shadowNode: unknown }).shadowNode = clouds.sceneShadow
   }
   // Water drops on the screen in clouds (ADR 0011); they need the clouds' density.
   const drops = clouds ? createDrops() : null
