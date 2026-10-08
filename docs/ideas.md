@@ -240,8 +240,8 @@ as room for improvement, listed in the README; changes for performance are still
      brings no GPL obligation. The HUD and README name JSBSim and the model as the source only.
 3. **Night**, started 2026-10-08 ([ADR 0041](adr/0041-night-exposure-and-moonlight.md)). Done: exposure
    by the sun's altitude through a pre-exposure, moonlight on the terrain and in the sky, fewer
-   stars, moonlight on the clouds. Left, in this order: a faint light for a night without the
-   moon; city lights. The dark dots along the clouds' edges at dusk were
+   stars, moonlight on the clouds, the night sky's own faint glow for a night without the moon.
+   Left: city lights. The dark dots along the clouds' edges at dusk were
    investigated and accepted (2026-10-08, [ADR 0013](adr/0013-port-the-clouds-to-tsl.md)).
 4. **The UI** ([ADR 0037](adr/0037-ui.md)), started 2026-10-08 as the maintainer judged the
    features complete enough to prepare for publishing; the Tokyo area was removed first

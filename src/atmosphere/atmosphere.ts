@@ -12,7 +12,7 @@ import {
 } from '@takram/three-atmosphere/webgpu'
 import { Ellipsoid } from '@takram/three-geospatial'
 import { context } from 'three/tsl'
-import { Vector3, type Camera, type WebGPURenderer } from 'three/webgpu'
+import { Vector3, type Camera, type Node, type WebGPURenderer } from 'three/webgpu'
 
 import type { LocalFrame } from '../geo/localFrame'
 
@@ -32,6 +32,11 @@ export interface Atmosphere {
    * aerial perspective) by a factor, through takram's luminance scale (patched into a uniform).
    */
   setPreExposure(factor: number): void
+  /**
+   * takram's luminance scale with the pre-exposure: multiplies a luminance in cd/m² (or an
+   * illuminance in lux) into the units the scene is drawn in, for light added outside takram.
+   */
+  luminanceScale: Node<'float'> & { value: number }
   /** Uses the local frame for the world (ADR 0017). */
   setFrame(frame: LocalFrame): void
   /** Moves the sun, moon and stars to their positions at the given time. */
@@ -71,13 +76,15 @@ export function createAtmosphere(
   const sunECEF = new Vector3()
   let sunAltitude = 90
   // TYPE-BRIDGE: luminanceScaleNode is added by this project's patch of @takram/three-atmosphere.
-  const luminanceScale = (atmosphereContext as unknown as { luminanceScaleNode: { value: number } }).luminanceScaleNode
+  const luminanceScale = (atmosphereContext as unknown as { luminanceScaleNode: Node<'float'> & { value: number } })
+    .luminanceScaleNode
   const baseLuminanceScale = luminanceScale.value
 
   return {
     context: atmosphereContext,
     light,
     moonLight,
+    luminanceScale,
     get sunAltitude() {
       return sunAltitude
     },

@@ -37,7 +37,7 @@ night a few stops darker, often bluer.
 - Dusk darkens as the sun sets, and a moonlit night shows the terrain dimly with the stars.
   Frame times did not change (GPU about 2.3 ms at 1262 × 600 either way).
 - Light added later outside takram, such as city lights, has to be multiplied by the same factor.
-- Still to do: a faint light for a night without the moon; city lights.
+- Still to do: city lights.
 
 ## Update 2026-10-08: the clouds in moonlight
 
@@ -52,3 +52,13 @@ change.
 - `src/render/exposure.ts` holds the curve: a smoothstep between the two altitudes, applied as an
   exponent of the night factor of 100,000.
 - The sun's altitude is taken at the frame's origin, against the ellipsoid's normal.
+
+## Update 2026-10-08: a night without the moon
+
+With the moon below the horizon the night showed only the stars. The night sky now has a faint
+glow of its own, as airglow and the light of towns give it: about a suburban sky, 0.003 cd/m²
+overhead and 0.015 cd/m² at the horizon, a little warm, and 0.02 lux on the ground. It is in
+physical units under the same luminance scale, so it does not show by day and keeps its
+proportion to the moonlight, under which it hardly shows. The maintainer compared it at one, two,
+three and ten times and chose once: twice read better without the moon but lit the horizon too
+much under a full moon. The clouds are not lit by it and show as silhouettes.

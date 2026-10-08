@@ -32,6 +32,7 @@ import { createLocalFrame, ecefToWorld, nedToWorldRotation } from './geo/localFr
 import { requestDevice } from './gpu/support'
 import { readParams } from './params'
 import { preExposureForSunAltitude } from './render/exposure'
+import { createNightGlow } from './render/nightGlow'
 import { createPipeline } from './render/pipeline'
 import { createSeaSphere } from './terrain/seaSphere'
 import { createTerrain } from './terrain/terrain'
@@ -132,6 +133,9 @@ async function start(): Promise<void> {
   atmosphere.setFrame(frame)
   scene.add(atmosphere.light)
   scene.add(atmosphere.moonLight)
+  // The faint light of a night without the moon (ADR 0041).
+  const nightGlow = createNightGlow(camera, atmosphere.luminanceScale)
+  scene.add(nightGlow.light)
   // Beyond the terrain, a sea-level sphere drawn as water (ADR 0030).
   scene.add(createSeaSphere(atmosphere.context, ecefToWorld(frame, new Vector3(0, 0, 0))))
 
@@ -181,7 +185,7 @@ async function start(): Promise<void> {
   setLoadingProgress(LOADING.hud)
   debug.hudFont = [...document.fonts].some(face => face.family.includes('Share Tech Mono') && face.status === 'loaded')
   const hud = createHud()
-  const pipeline = createPipeline(renderer, scene, camera, clouds ? [clouds.stage] : [], {
+  const pipeline = createPipeline(renderer, scene, camera, [nightGlow.stage, ...(clouds ? [clouds.stage] : [])], {
     shadowLength: clouds?.shadowLength,
     drops: drops ?? undefined,
     hud,
@@ -192,6 +196,7 @@ async function start(): Promise<void> {
     atmosphere.setDate(live.date.value)
     // Brighter as the sun sets, for the night (src/render/exposure.ts).
     atmosphere.setPreExposure(preExposureForSunAltitude(atmosphere.sunAltitude))
+    nightGlow.update()
     debug.date = live.date.value.toISOString()
     debug.sunAltitude = Number(atmosphere.sunAltitude.toFixed(2))
   })
