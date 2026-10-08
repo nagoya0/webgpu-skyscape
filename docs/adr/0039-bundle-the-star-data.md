@@ -17,7 +17,9 @@ the catalogue's own page at CDS could not be reached when this was checked.
 - The file is bundled at `public/stars/stars.bin` (the maintainer, 2026-10-08), and takram's
   atmosphere loads it from there through a patch of its address, so the demo loads nothing from
   GitHub.
-- The README credits takram for the file (MIT) and the catalogue it comes from.
+- The README credits takram for the file (MIT) and the catalogue it comes from, and so does the
+  demo's credits tab (the maintainer, 2026-10-08), as CDS asks works that use the data to cite it.
+  The tab also links to the README for the software's licences.
 - The stars are not made again from the catalogue: the file's origin is stated.
 
 ## Consequences

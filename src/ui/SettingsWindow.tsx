@@ -119,6 +119,23 @@ function CreditsTab() {
         </a>
         を加工して作成
       </li>
+      <li>
+        星：
+        <a href="https://cdsarc.cds.unistra.fr/viz-bin/cat/V/50" target="_blank" rel="noopener">
+          Bright Star Catalogue 第5改訂版（Hoffleit &amp; Warren, 1991）
+        </a>
+        をもとにした takram のデータ
+      </li>
+      <li>
+        ソフトウェアのライセンス：
+        <a
+          href="https://github.com/nagoya0/webgpu-skyscape#licence-and-credits"
+          target="_blank"
+          rel="noopener"
+        >
+          README
+        </a>
+      </li>
     </ul>
   )
 }
