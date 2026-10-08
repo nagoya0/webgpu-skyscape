@@ -215,6 +215,13 @@ async function start(): Promise<void> {
   effect(() => {
     clouds?.setAmount(live.cloudAmount.value)
   })
+  // The post effects, switched together in the settings window.
+  effect(() => {
+    const on = live.postEffects.value ? 1 : 0
+    pipeline.effects.flare.value = on
+    pipeline.effects.toneMapping.value = on
+    pipeline.effects.drops.value = on
+  })
 
   // The area's JSBSim path (ADR 0035), or another with ?path=NAME.
   loadingMessage.value = 'Loading flight path...'
@@ -530,7 +537,8 @@ async function start(): Promise<void> {
       camera.updateMatrixWorld()
       clouds.updateShadows(renderer)
     }
-    if (drops) {
+    // The drops are not simulated while switched off; they are left as they were.
+    if (drops && live.postEffects.value) {
       const start = performance.now()
       drops.update(renderer, first ? 0 : flightDelta, state.cloudDensity, velocity.length(), camera.quaternion)
       dropsMilliseconds += (performance.now() - start - dropsMilliseconds) * 0.05

@@ -8,7 +8,7 @@ import {
   lensFlare,
   temporalAntialias
 } from '@takram/three-geospatial/webgpu'
-import { convertToTexture, mrt, output, pass, toneMapping, uniform } from 'three/tsl'
+import { convertToTexture, mix, mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import { dropsComposite, type Drops } from '../effects/drops'
 import { hudComposite, type createHud } from '../hud/hud'
 import {
@@ -31,6 +31,12 @@ export type CompositeStage = (input: Node<'vec4'>, depth: TextureNode) => Node<'
 export interface Pipeline {
   /** Exposure before tone mapping. */
   exposure: { value: number }
+  /**
+   * Post effects, 1 on and 0 off, switched together from the settings window (ADR 0037): takram's
+   * lens flare, the tone mapping (off, the exposed image is shown as it is, clipped), and the water
+   * drops on the screen. Switched by uniforms, so nothing is rebuilt; the effects still run.
+   */
+  effects: { flare: { value: number }; toneMapping: { value: number }; drops: { value: number } }
   render(): void
   dispose(): void
 }
@@ -73,11 +79,13 @@ export function createPipeline(
   skyNode.starsNode.intensity.value = 30
   const composited = stages.reduce<Node<'vec4'>>((input, stage) => stage(input, depth), asNode(aerial))
   const flare = lensFlare(composited)
+  const effects = { flare: uniform(1), toneMapping: uniform(1), drops: uniform(1) }
+  const withFlare = mix(composited, asNode<'vec4'>(flare), effects.flare)
   const exposure = uniform(3)
-  const toneMapped = toneMapping(AgXToneMapping, exposure, asNode(flare))
+  const toneMapped = mix(withFlare.mul(exposure), toneMapping(AgXToneMapping, exposure, withFlare), effects.toneMapping)
   const taa = temporalAntialias(toneMapped, depth, velocity, camera)
   const withDrops = options.drops
-    ? dropsComposite(convertToTexture(asNode<'vec4'>(taa)), options.drops, options.dropsDebug)
+    ? mix(asNode<'vec4'>(taa), dropsComposite(convertToTexture(asNode<'vec4'>(taa)), options.drops, options.dropsDebug), effects.drops)
     : asNode<'vec4'>(taa)
   const final = options.hud ? hudComposite(withDrops, options.hud) : withDrops
 
@@ -86,6 +94,7 @@ export function createPipeline(
 
   return {
     exposure,
+    effects,
     render() {
       renderPipeline.render()
     },

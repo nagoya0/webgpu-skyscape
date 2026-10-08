@@ -47,6 +47,10 @@ export function SettingsTab() {
         <Row label="HUD">
           <Toggle signal={live.hud} label="HUD" />
         </Row>
+        {/* Lens flare, tone mapping and the water drops on the screen, together (the maintainer). */}
+        <Row label="ポストエフェクト">
+          <Toggle signal={live.postEffects} label="ポストエフェクト" />
+        </Row>
       </Group>
 
       <Group title="雲">

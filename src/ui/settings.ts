@@ -17,6 +17,8 @@ export const live = {
   /** Cloud coverage of all layers, 0 to 1. */
   coverage: signal(0.3),
   cloudAmount: signal<CloudAmount>('normal'),
+  /** The post effects together: takram's lens flare, the tone mapping and the water drops. */
+  postEffects: signal(true),
   debug: signal(false)
 }
 
