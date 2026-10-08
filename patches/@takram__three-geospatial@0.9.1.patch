@@ -19,7 +19,7 @@ index 0f40793d76469fefd9621fe9b44db9c945168933..b055e532f23aaf472b746a46b2af0514
    constructor() {
      super(), this.boundingSphere = new u(), this.boundingSphere.set(new m(), 1 / 0), this.setAttribute(
 diff --git a/build/webgpu.js b/build/webgpu.js
-index 30408f0256a1d08e53e2b7fbdbc54e6624fdfeae..b48b981dab7215e184fe1b544417689aa7370a70 100644
+index 30408f0256a1d08e53e2b7fbdbc54e6624fdfeae..a95478136a75b42472b8cc2e9cffe55788a3712e 100644
 --- a/build/webgpu.js
 +++ b/build/webgpu.js
 @@ -334,6 +334,12 @@ function Je(s) {
@@ -35,7 +35,58 @@ index 30408f0256a1d08e53e2b7fbdbc54e6624fdfeae..b48b981dab7215e184fe1b544417689a
    throw new Error(`Unsupported layout type: ${s}`);
  }
  function V({
-@@ -1459,7 +1465,11 @@ class at extends Q {
+@@ -547,7 +553,8 @@ class lo extends qe {
+ const Rn = (...s) => new lo(...s);
+ class ho extends Q {
+   constructor(e) {
+-    super("vec3"), this.intensity = v(1e-5), this.inputNode = e;
++    // Patched (webgpu-skyscape): offsetScale spreads the ghosts, for tuning.
++    super("vec3"), this.intensity = v(1e-5), this.offsetScale = v(1), this.inputNode = e;
+   }
+   static get type() {
+     return "LensGhostNode";
+@@ -565,7 +572,7 @@ class ho extends Q {
+         { name: "offset", type: "float" }
+       ]
+     })(([a, d, l, u]) => {
+-      const p = d.mul(u).add(a.oneMinus()).saturate(), h = t.sample(p).rgb.mul(l), m = ie(0.5, p).length().mul(1 / (Math.SQRT2 / 4)).saturate();
++      const p = d.mul(u).mul(this.offsetScale).add(a.oneMinus()).saturate(), h = t.sample(p).rgb.mul(l), m = ie(0.5, p).length().mul(1 / (Math.SQRT2 / 4)).saturate();
+       return h.mulAssign(m.oneMinus().pow(3)), h;
+     }), i = I(), r = i.sub(0.5);
+     return B(
+@@ -708,7 +715,8 @@ class xo extends Re {
+ const vo = /* @__PURE__ */ new ve();
+ class go extends Q {
+   constructor(e) {
+-    super("vec3"), this.intensity = v(1e-5), this.chromaticAberration = v(5e-3), this.aspectRatio = v(0), this.updateBeforeType = H.FRAME, this.inputNode = e;
++    // Patched (webgpu-skyscape): the halo's radius and ring as uniforms, for tuning.
++    super("vec3"), this.intensity = v(1e-5), this.chromaticAberration = v(5e-3), this.radius = v(0.3), this.ringRadius = v(0.45), this.ringThickness = v(0.25), this.arcSpread = v(0), this.aspectRatio = v(0), this.updateBeforeType = H.FRAME, this.inputNode = e;
+   }
+   static get type() {
+     return "LensHaloNode";
+@@ -746,9 +754,19 @@ class go extends Q {
+         t.sample(h.mul(m.g).add(x)).g,
+         t.sample(h.mul(m.b).add(x)).b
+       ), N = l.sub(f(0.5, 0)).mul(p).add(f(0.5, 0)), C = os(N, f(0.5)).saturate();
+-      return w.mulAssign(r(C, 0.45, 0.25)), w;
++      return w.mulAssign(r(C, this.ringRadius, this.ringThickness)), w;
+     }), a = I();
+-    return c(a, 0.3).mul(o);
++    // Patched (webgpu-skyscape): arcSpread, in radians, smears the halo along its ring by
++    // averaging copies rotated about the screen's centre.
++    const sp = f(i, 1), sq = a.sub(0.5).mul(sp);
++    let halo = null;
++    for (let k = 0; k < 7; k++) {
++      const angle = this.arcSpread.mul((k / 6) * 2 - 1), cs = angle.cos(), sn = angle.sin();
++      const ru = f(sq.x.mul(cs).sub(sq.y.mul(sn)), sq.x.mul(sn).add(sq.y.mul(cs))).div(sp).add(0.5);
++      const sample = c(ru, this.radius);
++      halo = halo == null ? sample : halo.add(sample);
++    }
++    return halo.div(7).mul(o);
+   }
+ }
+ const E = (s) => s.greaterThanEqual(0).all().and(s.lessThanEqual(1).all()).toFloat();
+@@ -1459,7 +1477,11 @@ class at extends Q {
        const n = e.renderer.getDrawingBufferSize(rt);
        this.setViewOffset(n.width, n.height);
      };

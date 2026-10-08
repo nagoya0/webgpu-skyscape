@@ -79,6 +79,23 @@ export function createPipeline(
   skyNode.starsNode.intensity.value = 30
   const composited = stages.reduce<Node<'vec4'>>((input, stage) => stage(input, depth), asNode(aerial))
   const flare = lensFlare(composited)
+  // takram's lens flare, tuned by the maintainer in the browser (2026-10-09, ADR 0042): bloom
+  // stronger but spread less widely (at takram's 0.85 the glints' bloom whitened the whole sky),
+  // more ghosts, the halo's arc smeared a little along its ring, shorter glare. The halo's arc
+  // spread is this project's patch of @takram/three-geospatial.
+  // TYPE-BRIDGE: the components are typed as plain nodes.
+  const flareParts = flare as unknown as {
+    bloomIntensity: { value: number }
+    bloomNode: { blendAmount: { value: number } }
+    ghostNode: { intensity: { value: number } }
+    haloNode: { arcSpread: { value: number } }
+    glareNode: { sizeScale: { value: { x: number } } }
+  }
+  flareParts.bloomIntensity.value = 0.355
+  flareParts.bloomNode.blendAmount.value = 0.583
+  flareParts.ghostNode.intensity.value = 8.91e-5
+  flareParts.haloNode.arcSpread.value = 0.1
+  flareParts.glareNode.sizeScale.value.x = 1
   const effects = { flare: uniform(1), toneMapping: uniform(1), drops: uniform(1) }
   const withFlare = mix(composited, asNode<'vec4'>(flare), effects.flare)
   const exposure = uniform(3)
