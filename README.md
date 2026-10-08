@@ -120,6 +120,10 @@ pnpm test           # unit tests (Vitest)
 pnpm build          # type-check and build
 ```
 
+Every push to `main` is built and published on GitHub Pages by `.github/workflows/pages.yml`.
+The build uses relative paths (`base: './'` in `vite.config.ts`), so `dist/` also works served from
+any other folder or host.
+
 `node scripts/check-page.mjs <url> <out.png>` opens a page in headless Chrome, saves a
 screenshot and prints the page state. Further checks, and how to upgrade Three.js and the takram
 packages, are in [docs/upgrading.md](docs/upgrading.md).
