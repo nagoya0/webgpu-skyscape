@@ -4,7 +4,7 @@ What to do when upgrading `three`, `@types/three` or any `@takram/*` package. Th
 the current set-up are in [ADR 0014](adr/0014-pin-three-and-takram-versions.md),
 [ADR 0015](adr/0015-reversed-z-depth.md) and [ADR 0016](adr/0016-patch-takram-for-newer-three.md).
 
-## Current state (2026-10-06)
+## Current state (2026-10-09)
 
 | Package | Version | Notes |
 |---|---|---|
@@ -22,6 +22,10 @@ All are pinned without `^`. Upgrade `three` and the takram packages together.
 | Patch for three r185+ `struct()` | `patches/@takram__three-atmosphere@0.19.1.patch` | `AtmosphereContextBase` reads `struct().layout.name`, which r185 removed; the package throws on import | A takram release contains takram-design-engineering/three-geospatial#118 |
 | Patch for three r185+ `struct()` | `patches/@takram__three-geospatial@0.9.1.patch` | `FnLayout` accepts only the r184 struct shape | Same as above |
 | Patch for the r186 render pipeline hooks | `patches/@takram__three-geospatial@0.9.1.patch` (`TemporalAntialiasNode.setup`) | three r186 replaced `renderPipeline.context.onBeforeRenderPipeline` with the `onBeforePipelineCallbacks` array in the builder context. Unpatched, `temporalAntialias` throws "Cannot set properties of undefined (setting 'onBeforeRenderPipeline')" and the camera jitter is never applied. No upstream issue or pull request exists for this yet (checked 2026-10-04) | A takram release registers the callback through `onBeforePipelineCallbacks` or `OnBeforeRenderPipeline()` from `three/tsl` |
+| takram's luminance scale as a uniform | `patches/@takram__three-atmosphere@0.19.1.patch` (`AtmosphereContextBase`, `luminanceScaleNode`) | The night's pre-exposure multiplies all of takram's light through it ([ADR 0041](adr/0041-night-exposure-and-moonlight.md)); takram makes it a constant | takram exposes the luminance scale as a uniform (then use it instead of `luminanceScaleNode`) |
+| The stars' data bundled | `patches/@takram__three-atmosphere@0.19.1.patch` (`shared2.js`, the stars' address) | Loaded from `public/stars/` instead of takram's GitHub ([ADR 0039](adr/0039-bundle-the-star-data.md)) | Keep, unless the stars are dropped |
+| The blue noise bundled | `patches/@takram__three-geospatial@0.9.1.patch` (`shared2.js`, the STBN address) | takram's own atmosphere loads the project's blue noise instead of the STBN of unknown origin ([ADR 0038](adr/0038-own-blue-noise.md)) | Keep while takram's STBN has no stated licence |
+| Lens flare settings as uniforms | `patches/@takram__three-geospatial@0.9.1.patch` (`LensGhostNode`, `LensHaloNode`) | The ghosts' spread, the halo's radius and ring, and the halo's arc spread, which smears it along its ring by averaging seven rotated copies ([ADR 0042](adr/0042-lens-flare-tuned.md)) | takram adds these settings, or the demo stops using the arc spread |
 | Type casts marked `TYPE-BRIDGE` | `grep -rn TYPE-BRIDGE src experiments` | takram's type declarations are built against `@types/three` 0.184 | takram's declarations match the `@types/three` in use; `pnpm tsc` passes without the casts |
 
 Only the ESM builds (`build/webgpu.js`) are patched. The CommonJS builds are minified to one line
@@ -58,8 +62,8 @@ pnpm add -D -E @types/three@<version>
 `patchedDependencies` in `pnpm-workspace.yaml` names exact versions, so pnpm will report that the
 patch no longer matches.
 
-- **The new version contains #118:** delete the entry from `pnpm-workspace.yaml` and the file in
-  `patches/`.
+- **The new version contains #118:** the struct changes are no longer needed, but the other local
+  changes in the table above still are: redo the patches with those only.
 - **It does not:** redo the patch on the new version.
   1. `pnpm patch @takram/three-atmosphere@<version> --edit-dir ../patch-atmosphere`
   2. In `build/webgpu.js`, find every `<name>.layout.name` and replace it with a call to a helper
@@ -72,7 +76,10 @@ patch no longer matches.
      anti-aliasing node, push the view-offset callback onto
      `builder.context.onBeforePipelineCallbacks` when that array exists, and fall back to the old
      `renderPipeline.context.onBeforeRenderPipeline` otherwise.
-  5. Delete the old patch files and their entries.
+  5. Redo the other local changes in the table above: the luminance scale as a uniform, the stars'
+     and the blue noise's addresses, and the lens flare uniforms. The old patch files show the
+     exact code.
+  6. Delete the old patch files and their entries.
 
 ## Checks after upgrading
 

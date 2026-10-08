@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-10-04
+- Amended: 2026-10-09 (the patches also carry the demo's own changes; see the update below)
 - Supersedes the version choice in [ADR 0014](0014-pin-three-and-takram-versions.md); the pinning
   rule there still applies
 
@@ -52,3 +53,11 @@ in [docs/upgrading.md](../upgrading.md).
 The type declarations of the takram packages are built against `@types/three` 0.184, so some of
 their types do not match 0.186. The code bridges them with type casts at the points where they
 meet.
+
+## Update 2026-10-09
+
+The same patch files now also carry changes made for the demo, not for the newer Three.js: the
+luminance scale as a uniform ([ADR 0041](0041-night-exposure-and-moonlight.md)), the stars' and the
+blue noise's addresses ([ADR 0039](0039-bundle-the-star-data.md), [ADR 0038](0038-own-blue-noise.md))
+and settings of the lens flare ([ADR 0042](0042-lens-flare-tuned.md)). When #118 is released, only
+its part of the patches goes; the list is in [docs/upgrading.md](../upgrading.md).

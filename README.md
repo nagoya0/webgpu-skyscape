@@ -22,17 +22,21 @@ best avoided.
  numpy: blue noise ─────────────▶ blue-noise ─┤                ▼
                                               │      ┌─ terrain: quadtree of GSI tiles
  GSI tiles (elevation, aerial photographs, ───┼─────▶│  (elevation + photographs + water mask)
- vector water areas), loaded at run time      │      ├─ sky and aerial perspective (takram)
+ vector roads, buildings, water), at run time │      ├─ city lights on roads and buildings
+ towns (2020 census districts) ───────────────┼─────▶│  in the densely inhabited districts
+                                              │      ├─ sky, sun, moon, stars, aerial perspective
                                               └─────▶├─ volumetric clouds (WGSL)
                                                      ▼
-                                     temporal anti-aliasing ─▶ lens flare ─▶ tone mapping
+                       lens flare ─▶ tone mapping ─▶ colour grading ─▶ temporal anti-aliasing
                                                      ▼
                                      water drops on the glass ─▶ HUD (Canvas 2D)
 ```
 
 The terrain is refined where a photograph texel would cover more than about 1.5 pixels, out to
 the horizon, with a sea-level sphere beyond it. Only the GSI's servers are contacted at run time;
-tiles come from the browser's cache after the first lap, so nothing reaches the GSI after it.
+tiles come from the browser's cache after the first lap, so nothing reaches the GSI after it. Any
+date and time can be shown: at night the exposure follows the sun and the moon, and the towns
+light up.
 
 ## Decisions worth explaining
 
