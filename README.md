@@ -4,6 +4,9 @@ A demo that tests how well sky, clouds and the ground can be rendered in a web b
 WebGPU. The camera flies along a precomputed path from Sagami Bay over Hakone towards Mount Fuji,
 built from open data.
 
+Live demo: <https://nagoya0.github.io/webgpu-skyscape/>, for a desktop browser with WebGPU. It downloads
+50 to 150 MB of terrain and aerial photographs, so a mobile connection is best avoided.
+
 Work in progress. A demo video and tested browsers will be added here.
 
 ## Status
@@ -41,8 +44,13 @@ In place:
 - A UI in Japanese, built with Preact ([ADR 0037](docs/adr/0037-ui.md)): a header with the
   frame rate; a settings window with the scene's date and time, pausing and the position on
   the course, the HUD and the clouds, and the data credits; a debug window with rendering
-  figures; a loading screen with one progress bar for the whole start; a screen saying what to do
-  when the demo cannot run.
+  figures; a loading screen with one progress bar for the whole start and a note on the download
+  size; a screen saying what to do when the demo cannot run.
+- Published on GitHub Pages, built by a workflow on every push
+  ([ADR 0040](docs/adr/0040-publish-on-github-pages.md)). At run time the demo loads only its own
+  files and the GSI's tiles: the blue noise is its own and the star data is bundled
+  ([ADR 0038](docs/adr/0038-own-blue-noise.md), [ADR 0039](docs/adr/0039-bundle-the-star-data.md)).
+  Over two laps from an empty cache, nothing reaches the GSI after the first lap.
 
 Planned: night
 scenes and colour grading; forests are still open. The order and the open questions are in [docs/ideas.md](docs/ideas.md).

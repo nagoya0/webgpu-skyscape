@@ -109,15 +109,17 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
     known candidate: the HUD's aircraft layer is uploaded at full size every frame.
   - Displays with a high pixel ratio (4K, DPR 2) multiply the GPU's work and memory; a cap on
     the render resolution, or a quality preset, may be needed.
-  - Whether memory keeps growing over several laps of the course (a leak check before
-    publishing). The JS heap moved between about 180 and 240 MB, which looks like garbage
-    collection.
+  - Memory over several laps (checked 2026-10-08, three laps from an empty cache): GPU memory
+    (est.) grew about 300 MB a lap, as takram's blue noise node loaded a new copy for each terrain
+    tile's material; fixed by loading the noise once ([ADR 0038](adr/0038-own-blue-noise.md)),
+    after which it stays at about 1,260 MB with 1,000 tiles. The JS heap after garbage collection
+    still grows about 30 MB a lap, mostly three's node and binding data made for each tile's
+    material. The maintainer accepts it (2026-10-08); removing it would mean one material shared
+    by all tiles.
 - **Another area: mountains such as Okutama** (the maintainer, 2026-10-08). A mountain area
   needs no buildings and reuses the Hakone work (terrain, photographs, a lake, clouds, a JSBSim
   course); forests would matter even more there. An idea, not planned. The area structure in
   `src/areas.ts` is kept for it ([ADR 0036](adr/0036-remove-the-tokyo-area.md)).
-- **Static site host.** GitHub Pages or Cloudflare Pages
-  ([ADR 0012](adr/0012-site-and-tile-data-hosted-apart.md)).
 - **A fork of three-geospatial.** Decided during the cloud stage, by how much of the library's
   internals the cloud port changes ([ADR 0016](adr/0016-patch-takram-for-newer-three.md)).
   Steps C1 to C4 needed no changes to the library: the cloud code is our own WGSL and uses only
@@ -242,6 +244,16 @@ as room for improvement, listed in the README; changes for performance are still
    ([ADR 0036](adr/0036-remove-the-tokyo-area.md)). Done: the header, the settings window with
    its settings and credits tabs, the debug window, Current G on the HUD, the loading screen, the
    screen for when the demo cannot run, and removing development parameters no longer used.
+5. **Publishing** (2026-10-08), done: the JSBSim model's licence checked (above); the project's
+   own code under the MIT licence; the memory check over several laps and the blue noise leak
+   fixed; takram's blue noise of unknown origin replaced by the project's own
+   ([ADR 0038](adr/0038-own-blue-noise.md)) and the star data bundled
+   ([ADR 0039](adr/0039-bundle-the-star-data.md)), so nothing is loaded from GitHub at run time;
+   the load on the GSI measured and missing aerial photographs no longer requested again; a note
+   on the download size on the loading screen; an audit of the repository and its history for
+   private information (nothing to fix); the repository made public and the demo published on
+   GitHub Pages ([ADR 0040](adr/0040-publish-on-github-pages.md)), with a favicon and the demo's
+   address in the repository's About.
 
 Not yet placed: a check of temporal anti-aliasing at 250 to 320 m/s (tile prefetching is step 6
 of the JSBSim path).
@@ -249,4 +261,4 @@ of the JSBSim path).
 After the current work settles (the maintainer, 2026-10-08): adjust the additive blending of the
 water drops on the screen (`src/effects/drops.ts`).
 
-Later: the cockpit view, quality presets, colour grading, the README and video, publishing.
+Later: the cockpit view, quality presets, colour grading, the README and video.

@@ -2,7 +2,8 @@
 
 - Status: Accepted; tile storage not needed so far, see the update below
 - Date: 2026-10-03
-- Amended: 2026-10-08 (no buildings from PLATEAU any more: the Tokyo area removed, [ADR 0036](0036-remove-the-tokyo-area.md))
+- Amended: 2026-10-08 (no buildings from PLATEAU any more: the Tokyo area removed, [ADR 0036](0036-remove-the-tokyo-area.md));
+  2026-10-08 (the site host chosen: GitHub Pages, [ADR 0040](0040-publish-on-github-pages.md))
 
 ## Context
 
@@ -31,3 +32,6 @@ The site host is still to be chosen ([ideas](../ideas.md)).
 
 Update 2026-10-07: GSI's vector tiles, used for water ([ADR 0029](0029-water-from-gsi-data.md)),
 are loaded directly from GSI too.
+
+Update 2026-10-08: the site is published on GitHub Pages ([ADR 0040](0040-publish-on-github-pages.md)).
+The tile data is still loaded directly from GSI, so no object storage is used.
