@@ -74,7 +74,7 @@ README); changes for performance are still considered.
 | Skipping between layers (`insideLayerIntervals`) | on hold | |
 | Mip-level based detail reduction | on hold | |
 | Maximum iterations and distance | partial | 160 steps up to 80 km; takram's default is 500 steps up to 200 km |
-| Spatiotemporal blue noise (STBN) for the jitter | done | `stbn` from `@takram/three-geospatial/webgpu`, indexed like takram's `getSTBN()`: cloud buffer pixel and frame modulo 64 |
+| Spatiotemporal blue noise (STBN) for the jitter | done | Indexed like takram's `getSTBN()`: cloud buffer pixel and frame modulo 64. Since 2026-10-08 the project's own blue noise, loaded once and shared, instead of takram's file ([ADR 0038](adr/0038-own-blue-noise.md)) |
 
 ## Temporal and resolution
 

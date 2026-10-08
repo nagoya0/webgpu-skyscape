@@ -1,3 +1,23 @@
+diff --git a/build/shared2.cjs b/build/shared2.cjs
+index 1e6e4bbbf79477e6ef38e71a2fc2102047a28f1b..1cfd12fe9cb562c3ef4f2e36b1bbb1ba614896ff 100644
+--- a/build/shared2.cjs
++++ b/build/shared2.cjs
+@@ -1,2 +1,2 @@
+-"use strict";const e=require("three"),c=require("./shared.cjs"),i=128,s=128,n=64,h="9627216cc50057994c98a2118f3c4a23765d43b9",g=`https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/${h}/packages/core/assets/stbn.bin`;class E extends e.BufferGeometry{constructor(){super(),this.boundingSphere=new e.Sphere,this.boundingSphere.set(new e.Vector3,1/0),this.setAttribute("position",new e.Float32BufferAttribute([-1,3,0,-1,-1,0,3,-1,0],3)),this.setAttribute("uv",new e.Float32BufferAttribute([0,-1,0,1,2,1],2))}}class m extends e.Loader{load(T,d,p,u){const t=new e.Data3DTexture,r=new e.FileLoader(this.manager);return r.setPath(this.path),r.setRequestHeader(this.requestHeader),r.setWithCredentials(this.withCredentials),r.setResponseType("arraybuffer"),r.load(T,a=>{c.invariant(a instanceof ArrayBuffer),t.image.data=new Uint8Array(a),t.image.width=i,t.image.height=s,t.image.depth=n,t.type=e.UnsignedByteType,t.format=e.RedFormat,t.minFilter=e.NearestFilter,t.magFilter=e.NearestFilter,t.wrapS=e.RepeatWrapping,t.wrapT=e.RepeatWrapping,t.wrapR=e.RepeatWrapping,t.needsUpdate=!0,d?.(t)},p,u),t}}exports.DEFAULT_STBN_URL=g;exports.QuadGeometry=E;exports.STBNLoader=m;exports.STBN_TEXTURE_DEPTH=n;exports.STBN_TEXTURE_HEIGHT=s;exports.STBN_TEXTURE_WIDTH=i;
++"use strict";const e=require("three"),c=require("./shared.cjs"),i=128,s=128,n=64,h="9627216cc50057994c98a2118f3c4a23765d43b9",g="noise/blue-noise.bin";class E extends e.BufferGeometry{constructor(){super(),this.boundingSphere=new e.Sphere,this.boundingSphere.set(new e.Vector3,1/0),this.setAttribute("position",new e.Float32BufferAttribute([-1,3,0,-1,-1,0,3,-1,0],3)),this.setAttribute("uv",new e.Float32BufferAttribute([0,-1,0,1,2,1],2))}}class m extends e.Loader{load(T,d,p,u){const t=new e.Data3DTexture,r=new e.FileLoader(this.manager);return r.setPath(this.path),r.setRequestHeader(this.requestHeader),r.setWithCredentials(this.withCredentials),r.setResponseType("arraybuffer"),r.load(T,a=>{c.invariant(a instanceof ArrayBuffer),t.image.data=new Uint8Array(a),t.image.width=i,t.image.height=s,t.image.depth=n,t.type=e.UnsignedByteType,t.format=e.RedFormat,t.minFilter=e.NearestFilter,t.magFilter=e.NearestFilter,t.wrapS=e.RepeatWrapping,t.wrapT=e.RepeatWrapping,t.wrapR=e.RepeatWrapping,t.needsUpdate=!0,d?.(t)},p,u),t}}exports.DEFAULT_STBN_URL=g;exports.QuadGeometry=E;exports.STBNLoader=m;exports.STBN_TEXTURE_DEPTH=n;exports.STBN_TEXTURE_HEIGHT=s;exports.STBN_TEXTURE_WIDTH=i;
+ //# sourceMappingURL=shared2.cjs.map
+diff --git a/build/shared2.js b/build/shared2.js
+index 0f40793d76469fefd9621fe9b44db9c945168933..b055e532f23aaf472b746a46b2af051489d0eba1 100644
+--- a/build/shared2.js
++++ b/build/shared2.js
+@@ -1,6 +1,6 @@
+ import { BufferGeometry as h, Sphere as u, Vector3 as m, Float32BufferAttribute as r, Loader as T, Data3DTexture as g, FileLoader as f, UnsignedByteType as l, RedFormat as w, NearestFilter as i, RepeatWrapping as a } from "three";
+ import { i as b } from "./shared.js";
+-const S = 128, y = 128, E = 64, R = "9627216cc50057994c98a2118f3c4a23765d43b9", _ = `https://media.githubusercontent.com/media/takram-design-engineering/three-geospatial/${R}/packages/core/assets/stbn.bin`;
++const S = 128, y = 128, E = 64, R = "9627216cc50057994c98a2118f3c4a23765d43b9", _ = "noise/blue-noise.bin"; // Patched (webgpu-skyscape): its own blue noise, relative to the page, instead of the STBN on GitHub, whose origin and licence are not stated.
+ class F extends h {
+   constructor() {
+     super(), this.boundingSphere = new u(), this.boundingSphere.set(new m(), 1 / 0), this.setAttribute(
 diff --git a/build/webgpu.js b/build/webgpu.js
 index 30408f0256a1d08e53e2b7fbdbc54e6624fdfeae..b48b981dab7215e184fe1b544417689aa7370a70 100644
 --- a/build/webgpu.js

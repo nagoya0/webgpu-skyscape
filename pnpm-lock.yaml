@@ -164,7 +164,7 @@ settings:
 
 patchedDependencies:
   '@takram/three-atmosphere@0.19.1': 516ad6b13fe9b39a4c28b0bc2c9603af6d2fa7a90a68e74544e5502627cb6511
-  '@takram/three-geospatial@0.9.1': 408666bff06757823d25536e1f098089061aba195b624bf8b07e86f24fe0e57a
+  '@takram/three-geospatial@0.9.1': 3f9b085b1c83f88355c2133fe7b994c3a59607f4e7eb552e9e6477fbb228c3f2
 
 importers:
 
@@ -178,7 +178,7 @@ importers:
         version: 0.19.1(patch_hash=516ad6b13fe9b39a4c28b0bc2c9603af6d2fa7a90a68e74544e5502627cb6511)(@react-three/fiber@9.8.1(@types/react@19.3.0)(react@19.3.0)(three@0.186.1))(postprocessing@6.39.5(three@0.186.1))(react@19.3.0)(three@0.186.1)
       '@takram/three-geospatial':
         specifier: 0.9.1
-        version: 0.9.1(patch_hash=408666bff06757823d25536e1f098089061aba195b624bf8b07e86f24fe0e57a)(@react-three/fiber@9.8.1(@types/react@19.3.0)(react@19.3.0)(three@0.186.1))(react@19.3.0)(three@0.186.1)
+        version: 0.9.1(patch_hash=3f9b085b1c83f88355c2133fe7b994c3a59607f4e7eb552e9e6477fbb228c3f2)(@react-three/fiber@9.8.1(@types/react@19.3.0)(react@19.3.0)(three@0.186.1))(react@19.3.0)(three@0.186.1)
       fast-png:
         specifier: ^8.0.0
         version: 8.0.0
@@ -1007,7 +1007,7 @@ snapshots:
 
   '@takram/three-atmosphere@0.19.1(patch_hash=516ad6b13fe9b39a4c28b0bc2c9603af6d2fa7a90a68e74544e5502627cb6511)(@react-three/fiber@9.8.1(@types/react@19.3.0)(react@19.3.0)(three@0.186.1))(postprocessing@6.39.5(three@0.186.1))(react@19.3.0)(three@0.186.1)':
     dependencies:
-      '@takram/three-geospatial': 0.9.1(patch_hash=408666bff06757823d25536e1f098089061aba195b624bf8b07e86f24fe0e57a)(@react-three/fiber@9.8.1(@types/react@19.3.0)(react@19.3.0)(three@0.186.1))(react@19.3.0)(three@0.186.1)
+      '@takram/three-geospatial': 0.9.1(patch_hash=3f9b085b1c83f88355c2133fe7b994c3a59607f4e7eb552e9e6477fbb228c3f2)(@react-three/fiber@9.8.1(@types/react@19.3.0)(react@19.3.0)(three@0.186.1))(react@19.3.0)(three@0.186.1)
       astronomy-engine: 2.1.19
       postprocessing: 6.39.5(three@0.186.1)
       react-merge-refs: 3.0.2(react@19.3.0)
@@ -1018,7 +1018,7 @@ snapshots:
       '@react-three/fiber': 9.8.1(@types/react@19.3.0)(react@19.3.0)(three@0.186.1)
       react: 19.3.0
 
-  '@takram/three-geospatial@0.9.1(patch_hash=408666bff06757823d25536e1f098089061aba195b624bf8b07e86f24fe0e57a)(@react-three/fiber@9.8.1(@types/react@19.3.0)(react@19.3.0)(three@0.186.1))(react@19.3.0)(three@0.186.1)':
+  '@takram/three-geospatial@0.9.1(patch_hash=3f9b085b1c83f88355c2133fe7b994c3a59607f4e7eb552e9e6477fbb228c3f2)(@react-three/fiber@9.8.1(@types/react@19.3.0)(react@19.3.0)(three@0.186.1))(react@19.3.0)(three@0.186.1)':
     dependencies:
       '@petamoriken/float16': 3.9.3
       '@react-three/fiber': 9.8.1(@types/react@19.3.0)(react@19.3.0)(three@0.186.1)

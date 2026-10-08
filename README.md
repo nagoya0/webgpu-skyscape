@@ -133,7 +133,9 @@ tools/flightpath/.venv/Scripts/python tools/flightpath/fly.py   # writes public/
 ```
 
 The sea's waves are baked the same way, with numpy (`tools/water/bake_ocean.py`, writing
-`public/water/ocean.bin`; its own venv in `tools/water/.venv`).
+`public/water/ocean.bin`; its own venv in `tools/water/.venv`), and so is the blue noise that
+jitters the clouds' and the atmosphere's ray marching (`tools/bluenoise/make_blue_noise.py`, writing
+`public/noise/blue-noise.bin`; [ADR 0038](docs/adr/0038-own-blue-noise.md)).
 
 ### URL parameters
 

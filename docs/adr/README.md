@@ -39,3 +39,4 @@
 | 0035 | [The course: a loop of five to six minutes from Sagami Bay to Mount Fuji and back](0035-the-course.md) | Accepted |
 | 0036 | [Remove the Tokyo area and its buildings](0036-remove-the-tokyo-area.md) | Accepted |
 | 0037 | [The UI: a header and a settings window, built with Preact](0037-ui.md) | Accepted |
+| 0038 | [Our own blue noise instead of takram's STBN](0038-own-blue-noise.md) | Accepted |

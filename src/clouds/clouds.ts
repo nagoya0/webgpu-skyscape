@@ -6,7 +6,6 @@ import {
   getSplitScalarIlluminance,
   type AtmosphereContext
 } from '@takram/three-atmosphere/webgpu'
-import { DEFAULT_STBN_URL, STBN_TEXTURE_DEPTH, STBN_TEXTURE_HEIGHT, STBN_TEXTURE_WIDTH } from '@takram/three-geospatial'
 import { decode as decodePng } from 'fast-png'
 import {
   float,
@@ -141,15 +140,19 @@ async function loadVolume(url: string, size: number): Promise<Data3DTexture> {
   return volume
 }
 
+/** The blue noise's size: pixels and frames (tools/bluenoise/make_blue_noise.py). */
+const BLUE_NOISE_SIZE = 128
+const BLUE_NOISE_FRAMES = 64
+
 /**
- * takram's spatiotemporal blue noise (128 x 128 pixels, 64 frames), loaded once and shared.
- * takram's own stbn node loads a new copy each time a material is set up and never releases it;
- * the cloud shadow on the terrain is set up in every tile's material, so that leaked about 1 MB
- * per tile as tiles were replaced.
+ * The blue noise that jitters the ray marching, made by this project (tools/bluenoise/), loaded once
+ * and shared. takram's stbn node loads a new copy each time a material is set up and never
+ * releases it; the cloud shadow on the terrain is set up in every tile's material, so that leaked
+ * about 1 MB per tile as tiles were replaced.
  */
 async function loadBlueNoise(): Promise<Data3DTexture> {
-  const data = new Uint8Array(await (await fetch(DEFAULT_STBN_URL)).arrayBuffer())
-  const noise = new Data3DTexture(data, STBN_TEXTURE_WIDTH, STBN_TEXTURE_HEIGHT, STBN_TEXTURE_DEPTH)
+  const data = new Uint8Array(await (await fetch(`noise/blue-noise.bin`)).arrayBuffer())
+  const noise = new Data3DTexture(data, BLUE_NOISE_SIZE, BLUE_NOISE_SIZE, BLUE_NOISE_FRAMES)
   noise.format = RedFormat
   noise.type = UnsignedByteType
   noise.minFilter = NearestFilter
@@ -384,9 +387,9 @@ export async function createClouds(
   const weatherNode = texture(weather)
   const shapeNode = texture3D(shapeVolume)
   const detailNode = texture3D(detailVolume)
-  // Blue noise per pixel and frame, as takram's stbn node, from the shared texture.
+  // Blue noise per pixel and frame, looked up as takram's stbn node does, from the shared texture.
   const stbn = texture3D(blueNoise)
-    .sample(vec3(screenCoordinate.xy, frameId.mod(STBN_TEXTURE_DEPTH)).div(vec3(STBN_TEXTURE_WIDTH, STBN_TEXTURE_HEIGHT, STBN_TEXTURE_DEPTH)))
+    .sample(vec3(screenCoordinate.xy, frameId.mod(BLUE_NOISE_FRAMES)).div(vec3(BLUE_NOISE_SIZE, BLUE_NOISE_SIZE, BLUE_NOISE_FRAMES)))
     .r
 
   // Cloud shadow maps (beer shadow maps), from the layers that cast shadows.
