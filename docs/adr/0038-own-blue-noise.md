@@ -34,7 +34,8 @@ decision by loading it once in the clouds).
 - The noise is an approximation of spatiotemporal blue noise: compared with takram's file, a
   little more of its power is at low frequencies (1.6 % against 0.4 % below a fifth of the
   highest frequency) and an average over 8 frames is a little less smooth (0.040 against 0.034
-  standard deviation).
+  standard deviation). The maintainer compared the image before and after, also in motion, and saw
+  no difference (2026-10-08).
 
 ## Implementation details, not discussed
 
