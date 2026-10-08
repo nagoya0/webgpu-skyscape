@@ -126,6 +126,11 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   the atmosphere's public functions.
 - **Colour grading and tone mapping**, at the end, once the scene is complete
   ([ADR 0031](adr/0031-correct-the-sources-grade-at-the-end.md)). AgX and exposure 3 for now.
+  The haze's height profile was tried first (2026-10-09), as takram's default (aerosol thinning
+  every 1,200 m) might suit a view from the ground better than one from 3,000 m: a boundary layer
+  uniform to 1,500 m then thinning fast, with the ground's density or the same total, and half
+  the haze. The maintainer saw little difference between them, so takram's default stays; the
+  sky's blue is left to the grading.
 
 ## Night
 
