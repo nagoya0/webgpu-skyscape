@@ -10,7 +10,17 @@ Try the **[demo page](https://nagoya0.github.io/webgpu-skyscape/)** in a desktop
 WebGPU. It downloads 50 to 150 MB of terrain and aerial photographs, so a mobile connection is
 best avoided.
 
-<!-- A screenshot or a video goes here. -->
+[![Mount Fuji from the east at 14:30, seen through the HUD](docs/images/fuji.jpg)](https://nagoya0.github.io/webgpu-skyscape/)
+
+<p>
+  <img src="docs/images/clouds.jpg" width="49%" alt="Clouds over Hakone and Lake Ashi at 14:30, Mount Fuji behind">
+  <img src="docs/images/dusk.jpg" width="49%" alt="Mount Fuji against the low sun at 17:00">
+  <img src="docs/images/sunset.jpg" width="49%" alt="Sunset over Sagami Bay at 17:10">
+  <img src="docs/images/night.jpg" width="49%" alt="The lights of Odawara at 18:05">
+</p>
+
+Clouds over Hakone, Mount Fuji at 17:00, sunset over Sagami Bay, and Odawara at night. Every
+picture is the demo as it runs, at 1920 × 1080.
 
 ## How it works
 
