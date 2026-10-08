@@ -49,4 +49,9 @@ describe('preExposure', () => {
     expect(noMoon / fullMoon).toBeGreaterThan(3)
     expect(noMoon / fullMoon).toBeLessThan(ground)
   })
+
+  it('leaves the twilight to the sun alone', () => {
+    expect(preExposure(-8, -30)).toBe(preExposureForSunAltitude(-8))
+    expect(preExposure(-8, 60)).toBe(preExposureForSunAltitude(-8))
+  })
 })

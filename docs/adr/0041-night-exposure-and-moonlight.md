@@ -101,3 +101,17 @@ times to about five and a half. By day and at dusk nothing changes.
 The night sky's glow at the horizon was lowered from 0.015 to 0.0075 cd/m² (two and a half
 times the zenith, as under mild light pollution), which the maintainer found more natural without
 the moon. Under a high moon the moonlit sky outshines the glow, so it changes little there.
+
+## Update 2026-10-09: dusk, and the city lights under the moon
+
+Comparing the full moon (2026-10-26) and the new moon (2026-10-10) hour by hour from 16:00 to
+22:00 showed three things, changed with the maintainer:
+
+- The exposure followed the moon during the twilight too, while the estimate leaves the
+  twilight out: at 18:00 on the new moon's day (sun at -9.8°) the glowing dusk was exposed as a
+  dark night. It now follows the moon only once the sun is 10° below the horizon, fully from 16°.
+- Dusk was still bright: the exposure reached the night's at a sun of -12°. It now does at -15°,
+  the maintainer's choice from -12°, -15° and -18°; midnight is unchanged.
+- Under a full moon the towns' lights had sunk into the terrain, as the lower exposure dimmed them
+  too. The city lights now leave out the part of the exposure that follows the moon, so they
+  look about as bright with or without it, as a point of light does to the eye.

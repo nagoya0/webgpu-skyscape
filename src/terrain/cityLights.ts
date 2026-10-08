@@ -110,11 +110,20 @@ const densityFactor = (density: number): number => Math.min(Math.max(density / R
 
 /** How much the city lights are on, 0 to 1. */
 const cityLightsOn = uniform(0)
+/** Undoes the exposure's following of the moon for the lights; see setCityLightsOn. */
+const moonCompensation = uniform(1)
 const materials: MeshBasicNodeMaterial[] = []
 
-/** Switches the lights on (0 to 1); off, they are not drawn at all. */
-export function setCityLightsOn(value: number): void {
+/**
+ * Switches the lights on (0 to 1); off, they are not drawn at all.
+ * @param moonAdaptation the part of the exposure that follows the moon (render/exposure.ts). The
+ *   lights do not follow it: a point of light looks about as bright to the eye whether the moon is
+ *   up or not, and under a full moon the towns' lights had sunk into the terrain (the maintainer,
+ *   2026-10-08).
+ */
+export function setCityLightsOn(value: number, moonAdaptation = 1): void {
   cityLightsOn.value = value
+  moonCompensation.value = 1 / moonAdaptation
   for (const material of materials) material.visible = value > 0
 }
 
@@ -160,6 +169,7 @@ export function createCityLightsMaterial(luminanceScale: Node<'float'>): MeshBas
     .div(distance.pow2().mul(solidAngle))
     .mul(luminanceScale)
     .mul(cityLightsOn)
+    .mul(moonCompensation)
     .mul(twinkle)
   const radiance = color.mul(luminance).toVertexStage()
   // Round, soft at the edge.

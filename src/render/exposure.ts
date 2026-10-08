@@ -20,8 +20,12 @@ export const NIGHT_PRE_EXPOSURE = 1e5
 export const NIGHT_DARKER_STOPS = 2.5
 /** The sun's altitude in degrees above which the pre-exposure is the day's (1). */
 export const DAY_ALTITUDE = 5
-/** The sun's altitude in degrees below which the pre-exposure is the night's. */
-export const NIGHT_ALTITUDE = -12
+/**
+ * The sun's altitude in degrees below which the pre-exposure is the night's. -12° first; at -10°
+ * the sky still glowed with twilight under a night's exposure, and the maintainer preferred -15°
+ * (2026-10-09), which keeps dusk darker.
+ */
+export const NIGHT_ALTITUDE = -15
 /** The illuminance a full moon overhead gives the ground, in lux. */
 export const FULL_MOON_ILLUMINANCE = 0.25
 /** The night's illuminance the exposure is set for, in lux: between a full moon and none. */
@@ -33,6 +37,13 @@ export const NIGHT_REFERENCE_ILLUMINANCE = 0.07
  */
 export const MOON_ADAPTATION_DARK = 0.5
 export const MOON_ADAPTATION_BRIGHT = 0.9
+/**
+ * The sun's altitudes in degrees between which the exposure starts and finishes following the
+ * moon: only once the twilight has faded, as the estimate leaves the twilight out (at -10° a night
+ * without the moon was exposed as a dark one while the sky still glowed).
+ */
+export const MOON_FROM_ALTITUDE = -10
+export const MOON_FULL_ALTITUDE = -16
 
 /** How far into the night the sun's altitude is: 0 by day, 1 at night, smooth in between. */
 function nightness(degrees: number): number {
@@ -51,10 +62,16 @@ export function nightIlluminance(moonDegrees: number): number {
   return FULL_MOON_ILLUMINANCE * Math.max(Math.sin((moonDegrees * Math.PI) / 180), 0) + NIGHT_GROUND_ILLUMINANCE
 }
 
-/** The pre-exposure for the sun and the moon at the given altitudes: by the sun, then at night by the moon. */
-export function preExposure(sunDegrees: number, moonDegrees: number): number {
+/** The part of the pre-exposure that follows the moon at night: 1 by day and at dusk. */
+export function moonAdaptation(sunDegrees: number, moonDegrees: number): number {
   const illuminance = nightIlluminance(moonDegrees)
   const share = illuminance > NIGHT_REFERENCE_ILLUMINANCE ? MOON_ADAPTATION_BRIGHT : MOON_ADAPTATION_DARK
   const adaptation = (NIGHT_REFERENCE_ILLUMINANCE / illuminance) ** share
-  return preExposureForSunAltitude(sunDegrees) * adaptation ** nightness(sunDegrees)
+  const x = Math.min(Math.max((MOON_FROM_ALTITUDE - sunDegrees) / (MOON_FROM_ALTITUDE - MOON_FULL_ALTITUDE), 0), 1)
+  return adaptation ** (x * x * (3 - 2 * x))
+}
+
+/** The pre-exposure for the sun and the moon at the given altitudes: by the sun, then at night by the moon. */
+export function preExposure(sunDegrees: number, moonDegrees: number): number {
+  return preExposureForSunAltitude(sunDegrees) * moonAdaptation(sunDegrees, moonDegrees)
 }
