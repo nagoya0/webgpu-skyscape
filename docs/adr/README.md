@@ -40,3 +40,4 @@
 | 0036 | [Remove the Tokyo area and its buildings](0036-remove-the-tokyo-area.md) | Accepted |
 | 0037 | [The UI: a header and a settings window, built with Preact](0037-ui.md) | Accepted |
 | 0038 | [Our own blue noise instead of takram's STBN](0038-own-blue-noise.md) | Accepted |
+| 0039 | [Bundle takram's star data](0039-bundle-the-star-data.md) | Accepted |

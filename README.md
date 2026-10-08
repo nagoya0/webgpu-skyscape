@@ -183,6 +183,10 @@ others that it uses or includes keep their own licences, listed below.
   (国土数値情報（行政区域データ）国土交通省, N03 2024, CC BY 4.0), cut to the course's
   surroundings, thinned and named in romaji by this project (`scripts/build-municipalities.mjs`,
   `public/places/municipalities.json`).
+- Stars: `public/stars/stars.bin` from [@takram/three-atmosphere](https://github.com/takram-design-engineering/three-geospatial)
+  (MIT), the directions, magnitudes and colours of the stars in the Bright Star Catalogue, 5th
+  Revised Edition (Hoffleit, D. and Warren, W. H. Jr., 1991; Yale University Observatory),
+  distributed by CDS, Strasbourg (catalogue V/50) and NASA's HEASARC.
 
 ### Code and assets
 
