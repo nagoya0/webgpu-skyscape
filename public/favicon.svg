@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f6fd0"/>
+      <stop offset="1" stop-color="#a9cdf2"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="url(#sky)"/>
+  <!-- A delta-winged jet seen from above, climbing to the upper right. -->
+  <path transform="translate(16.3 16.3) rotate(45) scale(1.45)" fill="#22324a"
+    d="M0 -10 L1.7 -4.5 L1.7 -1.5 L8 4 L8 5.8 L1.7 4 L1.5 6 L4.2 8.2 L4.2 9.6 L0 8.6 L-4.2 9.6 L-4.2 8.2 L-1.5 6 L-1.7 4 L-8 5.8 L-8 4 L-1.7 -1.5 L-1.7 -4.5 Z"/>
+</svg>
