@@ -104,7 +104,7 @@ checks and upgrades are in [docs/upgrading.md](docs/upgrading.md).
   RTX 4070, it keeps up with a 120 Hz display, the GPU taking about 2 ms a frame at 1262 × 600.
   Tested browsers are to be listed.
 - Night has moonlight, stars, the night sky's glow and city lights; far towns show only as thin
-  lines of points, until a glow around bright lights comes with the colour grading.
+  lines of points, without the glow they have from the air.
 - The JavaScript heap grows by about 30 MB a lap, from Three.js's data for each terrain tile's
   material.
 - On hold: finer terrain shading, takram's remaining cloud features

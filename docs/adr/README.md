@@ -44,3 +44,4 @@
 | 0040 | [Publish on GitHub Pages](0040-publish-on-github-pages.md) | Accepted |
 | 0041 | [Night: exposure by the sun's altitude, and moonlight](0041-night-exposure-and-moonlight.md) | Accepted |
 | 0042 | [The lens flare, tuned](0042-lens-flare-tuned.md) | Accepted |
+| 0043 | [Colour grading](0043-colour-grading.md) | Accepted |

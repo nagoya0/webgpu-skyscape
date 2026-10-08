@@ -220,6 +220,7 @@ async function start(): Promise<void> {
     const on = live.postEffects.value ? 1 : 0
     pipeline.effects.flare.value = on
     pipeline.effects.toneMapping.value = on
+    pipeline.effects.grade.value = on
     pipeline.effects.drops.value = on
   })
 

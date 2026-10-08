@@ -10,6 +10,7 @@ import {
 } from '@takram/three-geospatial/webgpu'
 import { convertToTexture, mix, mrt, output, pass, toneMapping, uniform } from 'three/tsl'
 import { dropsComposite, type Drops } from '../effects/drops'
+import { createColorGrading, DEMO_GRADE, type ColorGrading } from './colorGrading'
 import { hudComposite, type createHud } from '../hud/hud'
 import {
   AgXToneMapping,
@@ -33,10 +34,13 @@ export interface Pipeline {
   exposure: { value: number }
   /**
    * Post effects, 1 on and 0 off, switched together from the settings window (ADR 0037): takram's
-   * lens flare, the tone mapping (off, the exposed image is shown as it is, clipped), and the water
-   * drops on the screen. Switched by uniforms, so nothing is rebuilt; the effects still run.
+   * lens flare, the tone mapping (off, the exposed image is shown as it is, clipped), the colour
+   * grading and the water drops on the screen. Switched by uniforms, so nothing is rebuilt; the
+   * effects still run.
    */
-  effects: { flare: { value: number }; toneMapping: { value: number }; drops: { value: number } }
+  effects: { flare: { value: number }; toneMapping: { value: number }; grade: { value: number }; drops: { value: number } }
+  /** Colour grading after tone mapping (ADR 0031). */
+  grading: ColorGrading
   render(): void
   dispose(): void
 }
@@ -96,11 +100,14 @@ export function createPipeline(
   flareParts.ghostNode.intensity.value = 8.91e-5
   flareParts.haloNode.arcSpread.value = 0.1
   flareParts.glareNode.sizeScale.value.x = 1
-  const effects = { flare: uniform(1), toneMapping: uniform(1), drops: uniform(1) }
+  const effects = { flare: uniform(1), toneMapping: uniform(1), grade: uniform(1), drops: uniform(1) }
   const withFlare = mix(composited, asNode<'vec4'>(flare), effects.flare)
   const exposure = uniform(3)
   const toneMapped = mix(withFlare.mul(exposure), toneMapping(AgXToneMapping, exposure, withFlare), effects.toneMapping)
-  const taa = temporalAntialias(toneMapped, depth, velocity, camera)
+  const grading = createColorGrading()
+  grading.set(DEMO_GRADE)
+  const graded = mix(toneMapped, grading.node(toneMapped), effects.grade)
+  const taa = temporalAntialias(graded, depth, velocity, camera)
   const withDrops = options.drops
     ? mix(asNode<'vec4'>(taa), dropsComposite(convertToTexture(asNode<'vec4'>(taa)), options.drops, options.dropsDebug), effects.drops)
     : asNode<'vec4'>(taa)
@@ -112,6 +119,7 @@ export function createPipeline(
   return {
     exposure,
     effects,
+    grading,
     render() {
       renderPipeline.render()
     },

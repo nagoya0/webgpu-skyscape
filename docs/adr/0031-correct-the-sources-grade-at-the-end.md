@@ -1,6 +1,6 @@
 # 31. Correct the sources first; grade the whole image at the end
 
-- Status: Accepted
+- Status: Accepted; the grading at the end is [ADR 0043](0043-colour-grading.md)
 - Date: 2026-10-07
 
 ## Context

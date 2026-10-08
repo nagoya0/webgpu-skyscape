@@ -124,8 +124,8 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
   internals the cloud port changes ([ADR 0016](adr/0016-patch-takram-for-newer-three.md)).
   Steps C1 to C4 needed no changes to the library: the cloud code is our own WGSL and uses only
   the atmosphere's public functions.
-- **Colour grading and tone mapping**, at the end, once the scene is complete
-  ([ADR 0031](adr/0031-correct-the-sources-grade-at-the-end.md)). AgX and exposure 3 for now.
+- **Colour grading and tone mapping**: done ([ADR 0043](adr/0043-colour-grading.md)); AgX and an
+  exposure of 3 before the pre-exposure.
   The haze's height profile was tried first (2026-10-09), as takram's default (aerosol thinning
   every 1,200 m) might suit a view from the ground better than one from 3,000 m: a boundary layer
   uniform to 1,500 m then thinning fast, with the ground's density or the same total, and half
@@ -137,9 +137,9 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
 Done ([ADR 0041](adr/0041-night-exposure-and-moonlight.md)): exposure by the sun's altitude,
 moonlight, stars, the night sky's glow and city lights. Open:
 
-- **A glow around bright lights**, as a screen-space post effect with the colour grading (the
-  maintainer, 2026-10-08): it would soften the towns at night, where far towns now show as thin
-  lines of points on the horizon, and the sun's glints on water by day.
+- **A glow around far towns.** The lens flare's bloom was strengthened (ADR 0042), which softens
+  the sun's glints by day, but it takes only what is brighter than its threshold, and far towns
+  at night stay below it: they still show as thin lines of points on the horizon.
 
 ## Temporary parts
 
@@ -239,7 +239,7 @@ as room for improvement, listed in the README; changes for performance are still
 3. **Night**, started 2026-10-08 ([ADR 0041](adr/0041-night-exposure-and-moonlight.md)). Done: exposure
    by the sun's altitude through a pre-exposure, moonlight on the terrain and in the sky, fewer
    stars, moonlight on the clouds, the night sky's own faint glow for a night without the moon,
-   and city lights. Left: a glow around bright lights, with the colour grading (see Night above). The dark dots along the clouds' edges at dusk were
+   and city lights. Left: a glow around far towns (see Night above). The dark dots along the clouds' edges at dusk were
    investigated and accepted (2026-10-08, [ADR 0013](adr/0013-port-the-clouds-to-tsl.md)).
 4. **The UI** ([ADR 0037](adr/0037-ui.md)), started 2026-10-08 as the maintainer judged the
    features complete enough to prepare for publishing; the Tokyo area was removed first
@@ -266,4 +266,4 @@ up to 60 %, following how deep in cloud the aircraft is (in about 1.5 s) and cle
 0.7 s after it, before the last drops evaporate (`src/effects/drops.ts`). Out of the cloud the drops
 look as before.
 
-Later: the cockpit view, quality presets, colour grading, the README and video.
+Later: the cockpit view, quality presets, the README's video.
