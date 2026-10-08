@@ -266,4 +266,4 @@ up to 60 %, following how deep in cloud the aircraft is (in about 1.5 s) and cle
 0.7 s after it, before the last drops evaporate (`src/effects/drops.ts`). Out of the cloud the drops
 look as before.
 
-Later: the cockpit view, quality presets, the README's video.
+Later: the cockpit view, quality presets. Done: the README's screenshots and video (2026-10-09).
