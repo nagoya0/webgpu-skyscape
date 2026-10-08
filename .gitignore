@@ -6,3 +6,8 @@ dist/
 .DS_Store
 tools/*/.venv/
 __pycache__/
+# Screenshots written by scripts/check-page.mjs into the repository root
+/*.png
+# Local Claude Code settings
+.claude/settings.local.json
+*.log
