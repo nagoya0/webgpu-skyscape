@@ -16,6 +16,10 @@
 // The drops are simulated on the CPU (a few hundred) and drawn as instanced quads into a
 // half-resolution height map, the higher drop winning where they overlap. The last pass of the
 // post-processing (dropsComposite) refracts the image through that height map.
+//
+// In a cloud the glass also mists over: the whole image is softened and veiled, so the drops show
+// less (the maintainer, 2026-10-08: in a cloud the drops stood out too clearly; out of it they
+// look right). The mist follows how deep in cloud the aircraft is, and clears after it.
 import {
   atan,
   float,
@@ -93,6 +97,13 @@ const LARGE_MIN_RADIUS = 0.025
 const LARGE_MAX_RADIUS = 0.045
 /** A moving drop draws a streak behind it as long as it travels in this many seconds. */
 const TAIL_SECONDS = 0.08
+/** Mist on the glass: seconds to mist over in a cloud and to clear out of it, and its strength. */
+const MIST_RISE_SECONDS = 1.5
+// Clears before the drops evaporate, so the last drops are seen on clear glass (the maintainer).
+const MIST_CLEAR_SECONDS = 0.7
+const MIST_STRENGTH = 0.6
+/** How far the mist spreads the image, in screen heights. */
+const MIST_SPREAD = 0.012
 /** Longest streak, in the drop's radii. */
 const MAX_TAIL = 40
 
@@ -117,6 +128,8 @@ export interface Drops {
   texel: Node<'vec2'>
   /** Size of one height map texel in texture coordinates. */
   texelUv: Node<'vec2'>
+  /** Mist on the glass, 0 (clear) to 1 (fully misted over in a cloud). */
+  mist: Node<'float'>
   /**
    * Moves the drops and draws their height map; call each frame before the post-processing.
    * @param inCloud how deep in cloud the aircraft is, 0 to 1
@@ -192,6 +205,7 @@ export function createDrops(): Drops {
   const size = new Vector2()
   const texel = uniform(new Vector2(1, 1))
   const texelUv = uniform(new Vector2(1, 1))
+  const mist = uniform(0)
   const down = new Vector3()
   const grid = new Map<number, Drop[]>()
   let landingDebt = 0
@@ -200,6 +214,7 @@ export function createDrops(): Drops {
     heightTexture: texture(target.texture),
     texel,
     texelUv,
+    mist,
     get count() {
       return drops.length
     },
@@ -214,6 +229,12 @@ export function createDrops(): Drops {
       camera.updateProjectionMatrix()
       texel.value.set((2 * aspect) / width, 2 / height)
       texelUv.value.set(1 / width, 1 / height)
+
+      // The mist moves towards how deep in cloud the aircraft is: quickly in, slowly out.
+      if (dt > 0) {
+        const seconds = inCloud > mist.value ? MIST_RISE_SECONDS : MIST_CLEAR_SECONDS
+        mist.value += (inCloud - mist.value) * (1 - Math.exp(-dt / seconds))
+      }
 
       if (dt > 0) {
         // Land, only deep enough in the cloud; mostly small, from a cubic distribution, and a few
@@ -330,7 +351,8 @@ export function createDrops(): Drops {
 
 /**
  * The image seen through the drops: offset along the slope of the height map, softened a
- * little, darker towards a drop's rim, with a small glint.
+ * little, darker towards a drop's rim, with a small glint; then, in a cloud, through the mist:
+ * spread and lifted towards its own soft average, which keeps dark scenes dark.
  * @param image the finished image as a texture
  * @param debug show the height map in red over the image instead (?dropsdebug)
  */
@@ -362,6 +384,21 @@ export function dropsComposite(image: TextureNode, drops: Drops, debug = false):
     const glint = smoothstep(0.6, 0.95, facing).mul(smoothstep(0.8, 2.5, length(slope))).mul(0.35)
     const seen = color.mul(float(1).sub(rim.mul(0.3))).add(glint)
     if (debug) return mix(image.sample(screenUV), vec4(1, 0, 0, 1), smoothstep(0, 0.0005, h))
-    return mix(image.sample(screenUV), seen, inside)
+    const throughDrops = mix(image.sample(screenUV), seen, inside)
+    // The mist: a wide, soft average of the image around the pixel, a little lighter, laid over
+    // the drops and everything else.
+    const spread = vec2(drops.texelUv.x.div(drops.texelUv.y), 1).mul(MIST_SPREAD / 2)
+    const around = image
+      .sample(screenUV.add(vec2(spread.x, 0)))
+      .add(image.sample(screenUV.sub(vec2(spread.x, 0))))
+      .add(image.sample(screenUV.add(vec2(0, spread.y))))
+      .add(image.sample(screenUV.sub(vec2(0, spread.y))))
+      .add(image.sample(screenUV.add(spread.mul(0.7))))
+      .add(image.sample(screenUV.sub(spread.mul(0.7))))
+      .add(image.sample(screenUV.add(vec2(spread.x, spread.y.negate()).mul(0.7))))
+      .add(image.sample(screenUV.sub(vec2(spread.x, spread.y.negate()).mul(0.7))))
+      .div(8)
+    const veil = around.mul(1.1).add(0.03)
+    return mix(throughDrops, veil, drops.mist.mul(MIST_STRENGTH))
   })() as Node<'vec4'>
 }

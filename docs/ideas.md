@@ -258,7 +258,10 @@ as room for improvement, listed in the README; changes for performance are still
 Not yet placed: a check of temporal anti-aliasing at 250 to 320 m/s (tile prefetching is step 6
 of the JSBSim path).
 
-After the current work settles (the maintainer, 2026-10-08): adjust the additive blending of the
-water drops on the screen (`src/effects/drops.ts`).
+Done 2026-10-08: in a cloud the drops stood out too clearly (the maintainer). The glass now mists
+over in a cloud, so the drops show less: the image is spread and lifted towards its own soft average,
+up to 60 %, following how deep in cloud the aircraft is (in about 1.5 s) and clearing in about
+0.7 s after it, before the last drops evaporate (`src/effects/drops.ts`). Out of the cloud the drops
+look as before.
 
 Later: the cockpit view, quality presets, colour grading, the README and video.
