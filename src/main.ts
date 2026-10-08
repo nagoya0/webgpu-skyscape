@@ -401,6 +401,21 @@ async function start(): Promise<void> {
   function drawHud(): void {
     const resized = hud.update(renderer, cockpit.offsetQuaternion, camera.fov)
     const pixelsPerDegree = (hud.aircraft.canvas.height / 2 / Math.tan((camera.fov * Math.PI) / 360)) * (Math.PI / 180)
+    // The HUD switched off (settings window, ?hud=0): both layers, the aircraft's and the one fixed
+    // to the screen, are cleared once and then left alone, so nothing more is uploaded.
+    if (!live.hud.value && !params.hudDebug) {
+      if (aircraftDrawn) {
+        hud.aircraft.context.clearRect(0, 0, hud.aircraft.canvas.width, hud.aircraft.canvas.height)
+        hud.aircraft.changed()
+        aircraftDrawn = false
+      }
+      if (screenDrawn) {
+        hud.screen.context.clearRect(0, 0, hud.screen.canvas.width, hud.screen.canvas.height)
+        hud.screen.changed()
+        screenDrawn = false
+      }
+      return
+    }
     // The screen layer: the scene's time and the place below, looked up twice a second and drawn
     // again only when the line changes or the canvas is new.
     const now = performance.now()
@@ -426,17 +441,7 @@ async function start(): Promise<void> {
       hud.screen.changed()
       screenDrawn = true
     }
-    // The aircraft's HUD switched off (settings window, ?hud=0): its canvas is cleared once and
-    // then left alone, so nothing more is uploaded.
     const { canvas, context } = hud.aircraft
-    if (!live.hud.value && !params.hudDebug) {
-      if (aircraftDrawn) {
-        context.clearRect(0, 0, canvas.width, canvas.height)
-        hud.aircraft.changed()
-        aircraftDrawn = false
-      }
-      return
-    }
     aircraftDrawn = true
     if (params.hudDebug) {
       drawHudDebug(hud.screen, hud.aircraft, cockpit.aircraftQuaternion, camera.fov)

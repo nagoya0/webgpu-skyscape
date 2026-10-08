@@ -27,8 +27,8 @@
 //                     e.g. cloudfx=-POWDER
 //   raymarch=0        look up the aerial perspective in tables instead of ray marching it
 //   dropsdebug        show the drops' height map in red
-//   hud=0             leave out the aircraft's HUD (the speed, altitude, heading and attitude
-//                     symbols)
+//   hud=0             leave out the HUD: the aircraft's symbols and the lines fixed to the screen
+//                     (the scene's time, the flight model, the place below)
 //   huddebug          draw a test pattern on both HUD layers
 //   measure           after loading, time 180 frames and report them in window.__debug
 //   debug             open the debug window (flight time and rendering figures); also lists
