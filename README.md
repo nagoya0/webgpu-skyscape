@@ -103,7 +103,8 @@ checks and upgrades are in [docs/upgrading.md](docs/upgrading.md).
   60 fps ([ADR 0025](docs/adr/0025-target-hardware.md)). On the development machine, a GeForce
   RTX 4070, it keeps up with a 120 Hz display, the GPU taking about 2 ms a frame at 1262 × 600.
   Tested browsers are to be listed.
-- No night yet: the exposure is the day's, so the night sky is black.
+- Night has moonlight, stars, the night sky's glow and city lights; far towns show only as thin
+  lines of points, until a glow around bright lights comes with the colour grading.
 - The JavaScript heap grows by about 30 MB a lap, from Three.js's data for each terrain tile's
   material.
 - On hold: finer terrain shading, takram's remaining cloud features
@@ -126,6 +127,11 @@ others that it uses or includes keep their own licences, listed below.
   (国土数値情報（行政区域データ）国土交通省, N03 2024, CC BY 4.0), cut to the course's
   surroundings, thinned and named in romaji by this project (`scripts/build-municipalities.mjs`,
   `public/places/municipalities.json`).
+- Towns lit at night: [National Land Numerical Information, Densely Inhabited Districts](https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-A16-2020.html)
+  (国土数値情報（人口集中地区データ）国土交通省, A16 2020, Government Standard Terms of Use 2.0,
+  compatible with CC BY 4.0), cut to the course's surroundings and thinned by this project
+  (`scripts/build-urban-areas.mjs`, `public/places/urban-areas.json`). Roads and buildings for the
+  lights come from the GSI vector tiles above.
 - Stars: `public/stars/stars.bin` from [@takram/three-atmosphere](https://github.com/takram-design-engineering/three-geospatial)
   (MIT), the directions, magnitudes and colours of the stars in the Bright Star Catalogue, 5th
   Revised Edition (Hoffleit, D. and Warren, W. H. Jr., 1991; Yale University Observatory),

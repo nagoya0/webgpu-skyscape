@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { decodeRings, readPolygonLayer } from './vectorTile'
+import { decodeRings, readLayers, readPolygonLayer } from './vectorTile'
 
 const zz = (n: number): number => (n >= 0 ? n * 2 : -n * 2 - 1)
 const command = (id: number, count: number): number => (count << 3) | id
@@ -46,5 +46,27 @@ describe('vector tiles', () => {
     expect(result?.features).toHaveLength(1)
     expect(result?.features[0].rings[0][2]).toEqual([3, 3])
     expect(readPolygonLayer(tile, 'other')).toBeNull()
+  })
+
+  it('reads lines with their properties', () => {
+    // A line from (0, 0) to (10, 0) to (10, 5), tagged rdctg = "国道" and width = 1260.
+    const line = [command(1, 1), zz(0), zz(0), command(2, 2), zz(10), zz(0), zz(0), zz(5)].flatMap(varint)
+    const feature = [...bytes(2, [0, 0, 1, 1]), ...int(3, 2), ...bytes(4, line)]
+    const text = (s: string): number[] => [...new TextEncoder().encode(s)]
+    const layer = [
+      ...bytes(1, text('RdCL')),
+      ...bytes(2, feature),
+      ...bytes(3, text('vt_rdctg')),
+      ...bytes(3, text('vt_width')),
+      ...bytes(4, bytes(1, text('国道'))),
+      ...bytes(4, int(5, 1260)),
+      ...int(5, 4096)
+    ]
+    const layers = readLayers(new Uint8Array(bytes(3, layer)), ['RdCL'])
+    const roads = layers.get('RdCL')
+    expect(roads?.features).toHaveLength(1)
+    expect(roads?.features[0].type).toBe(2)
+    expect(roads?.features[0].parts).toEqual([[[0, 0], [10, 0], [10, 5]]])
+    expect(roads?.features[0].properties).toEqual({ vt_rdctg: '国道', vt_width: 1260 })
   })
 })

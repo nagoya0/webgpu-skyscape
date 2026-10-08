@@ -27,7 +27,8 @@ export interface HeightSource {
   size: number
 }
 
-function sampleHeight(source: HeightSource, u: number, v: number): number {
+/** The height in metres above the geoid at (u, v) across the tile, 0 to 1 from the north-west corner. */
+export function sampleHeight(source: HeightSource, u: number, v: number): number {
   const { grid } = source
   if (!grid) return 0
   const n = grid.size

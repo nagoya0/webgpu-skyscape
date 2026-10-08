@@ -4,7 +4,7 @@
 // Requests are limited in number at a time to keep the load on GSI's servers modest.
 import type { TileKey } from './webMercator'
 
-import { readPolygonLayer, type PolygonLayer } from './vectorTile'
+import { readLayers, type Layer, type PolygonLayer } from './vectorTile'
 
 const DEM5A = 'https://cyberjapandata.gsi.go.jp/xyz/dem5a_png'
 const VECTOR = 'https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1'
@@ -145,27 +145,39 @@ export function loadHeights(tile: TileKey, signal?: AbortSignal): Promise<Height
   return promise
 }
 
-const waterCache = new Map<string, Promise<PolygonLayer | null>>()
+export interface VectorTileData {
+  /** Water areas (sea, lakes, wide rivers): the WA layer, as polygons. */
+  water: PolygonLayer | null
+  /** Road centre lines (RdCL), with their category and width. */
+  roads: Layer | null
+  /** Building outlines (BldA); only at zoom 14 and above, all of them at 16. */
+  buildings: Layer | null
+}
 
 /**
- * Water areas (sea, lakes, wide rivers) of a vector tile: the WA layer of GSI's vector tiles
- * (optimal_bvmap-v1), as polygons. Null where the tile has none or does not exist.
+ * The layers the demo uses from one of GSI's vector tiles (optimal_bvmap-v1); null where the tile
+ * does not exist. Not cached: a tile is read again when its terrain tile is loaded again, from the
+ * browser's cache, so the roads and buildings of every tile seen do not stay in memory.
  */
-export function loadWaterAreas(tile: TileKey, signal?: AbortSignal): Promise<PolygonLayer | null> {
-  const key = `${tile.z}/${tile.x}/${tile.y}`
-  let promise = waterCache.get(key)
-  if (!promise) {
-    promise = limited(async () => {
-      // An aborted request throws, so that it is not cached as "no water".
-      signal?.throwIfAborted()
-      const response = await fetch(`${VECTOR}/${key}.pbf`, { signal })
-      if (!response.ok) return null
-      return readPolygonLayer(new Uint8Array(await response.arrayBuffer()), 'WA')
-    })
-    promise.catch(() => waterCache.delete(key))
-    waterCache.set(key, promise)
-  }
-  return promise
+export async function loadVectorTile(tile: TileKey, signal?: AbortSignal): Promise<VectorTileData | null> {
+  const url = `${VECTOR}/${tile.z}/${tile.x}/${tile.y}.pbf`
+  if (missing.has(url)) return null
+  return limited(async () => {
+    // An aborted request throws, so that it is not taken as "no water".
+    signal?.throwIfAborted()
+    const response = await fetch(url, { signal })
+    if (response.status === 404) missing.add(url)
+    if (!response.ok) return null
+    const layers = readLayers(new Uint8Array(await response.arrayBuffer()), ['WA', 'RdCL', 'BldA'])
+    const water = layers.get('WA')
+    return {
+      water: water
+        ? { extent: water.extent, features: water.features.filter(f => f.type === 3).map(f => ({ rings: f.parts })) }
+        : null,
+      roads: layers.get('RdCL') ?? null,
+      buildings: layers.get('BldA') ?? null
+    }
+  })
 }
 
 /**

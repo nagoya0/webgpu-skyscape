@@ -35,6 +35,8 @@ import { preExposureForSunAltitude } from './render/exposure'
 import { createNightGlow } from './render/nightGlow'
 import { createPipeline } from './render/pipeline'
 import { createSeaSphere } from './terrain/seaSphere'
+import { cityLightsOnForSunAltitude, setCityLightsOn, setUrbanAreas } from './terrain/cityLights'
+import { loadUrbanAreas } from './terrain/urbanAreas'
 import { createTerrain } from './terrain/terrain'
 import { GEOID_HEIGHT } from './terrain/tileGeometry'
 import { waterTime } from './terrain/water'
@@ -139,6 +141,8 @@ async function start(): Promise<void> {
   // Beyond the terrain, a sea-level sphere drawn as water (ADR 0030).
   scene.add(createSeaSphere(atmosphere.context, ecefToWorld(frame, new Vector3(0, 0, 0))))
 
+  // The towns whose roads light up at night (ADR 0041), before the terrain's tiles are built.
+  if (params.terrain) setUrbanAreas(await loadUrbanAreas())
   const terrain = params.terrain
     ? createTerrain(frame, { ...area.terrain, debug: params.terrainDebug }, atmosphere.context)
     : null
@@ -197,6 +201,7 @@ async function start(): Promise<void> {
     // Brighter as the sun sets, for the night (src/render/exposure.ts).
     atmosphere.setPreExposure(preExposureForSunAltitude(atmosphere.sunAltitude))
     nightGlow.update()
+    setCityLightsOn(cityLightsOnForSunAltitude(atmosphere.sunAltitude))
     debug.date = live.date.value.toISOString()
     debug.sunAltitude = Number(atmosphere.sunAltitude.toFixed(2))
   })

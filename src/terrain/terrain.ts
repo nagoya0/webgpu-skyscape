@@ -25,10 +25,12 @@ import {
   DEM5A_ZOOM,
   loadHeights,
   loadPhoto,
-  loadWaterAreas,
+  loadVectorTile,
   pendingRequests,
-  VECTOR_MAX_ZOOM
+  VECTOR_MAX_ZOOM,
+  type VectorTileData
 } from './gsiSources'
+import { buildCityLights, createCityLightsMaterial } from './cityLights'
 import { gradedPhoto } from './photoGrade'
 import { buildTileGeometry, GEOID_HEIGHT, type HeightSource } from './tileGeometry'
 import { TerrainMaterial } from './terrainMaterial'
@@ -126,6 +128,15 @@ export function createTerrain(
   let frameNumber = 0
   let loading = 0
   let drawn = 0
+  // City lights at night (ADR 0041), one material for all tiles; not in the debug views.
+  // TYPE-BRIDGE: luminanceScaleNode is added by this project's patch of @takram/three-atmosphere.
+  const lightsMaterial =
+    atmosphereContext && !options.debug
+      ? createCityLightsMaterial(
+          (atmosphereContext as unknown as { luminanceScaleNode: Parameters<typeof createCityLightsMaterial>[0] })
+            .luminanceScaleNode
+        )
+      : null
 
   const metresPerDegree = 111_320 * Math.cos((options.latitude * Math.PI) / 180)
   const geodetic = new Geodetic()
@@ -183,17 +194,20 @@ export function createTerrain(
     const abort = new AbortController()
     tile.abort = abort
     // The water mask: the sea from the 10 m DEM, which covers all land (the 5 m DEM has gaps on
-    // land that would read as sea), and lakes from the vector tiles' water areas.
-    const maskSource = async (): Promise<[HeightSource, Parameters<typeof buildWaterMask>[1]]> => {
+    // land that would read as sea), and lakes from the vector tiles' water areas. The same vector
+    // tile gives the city lights.
+    type VectorPart = { data: VectorTileData | null; u0: number; v0: number; size: number }
+    const maskSource = async (): Promise<[HeightSource, Parameters<typeof buildWaterMask>[1], VectorPart]> => {
       const coarse = ancestorOf(tile.key, Math.min(tile.key.z, DEM10_ZOOM))
       const vector = ancestorOf(tile.key, Math.min(tile.key.z, VECTOR_MAX_ZOOM))
-      const [grid, layer] = await Promise.all([
+      const [grid, data] = await Promise.all([
         loadHeights(coarse.tile, abort.signal),
-        loadWaterAreas(vector.tile, abort.signal)
+        loadVectorTile(vector.tile, abort.signal)
       ])
       return [
         { grid, u0: coarse.u0, v0: coarse.v0, size: coarse.size },
-        { layer, u0: vector.u0, v0: vector.v0, size: vector.size }
+        { layer: data?.water ?? null, u0: vector.u0, v0: vector.v0, size: vector.size },
+        { data, u0: vector.u0, v0: vector.v0, size: vector.size }
       ]
     }
     Promise.all([
@@ -227,7 +241,7 @@ export function createTerrain(
         const land = options.debug === 'levels'
           ? mix(gradedPhoto(texture), vec3(...LEVEL_COLORS[tile.key.z % LEVEL_COLORS.length]), 0.6)
           : gradedPhoto(texture)
-        const mask = maskSources && atmosphereContext ? buildWaterMask(...maskSources) : null
+        const mask = maskSources && atmosphereContext ? buildWaterMask(maskSources[0], maskSources[1]) : null
         let waterMask: DataTexture | null = null
         if (options.debug === 'unlit') {
           // ?terraindebug=2: the photograph as emission, without lighting, water or correction.
@@ -268,6 +282,12 @@ export function createTerrain(
         mesh.position.copy(center)
         mesh.receiveShadow = true // cloud shadows
         mesh.visible = false
+        const vectorPart = maskSources?.[2]
+        if (lightsMaterial && vectorPart?.data) {
+          const { data, u0, v0, size } = vectorPart
+          const lights = buildCityLights(tile.key, frame, center, radius, heights, { data, u0, v0, size }, lightsMaterial)
+          if (lights) mesh.add(lights)
+        }
         group.add(mesh)
         tile.mesh = mesh
         tile.center.copy(center)
@@ -293,6 +313,7 @@ export function createTerrain(
     if (tile.mesh) {
       group.remove(tile.mesh)
       tile.mesh.geometry.dispose()
+      for (const child of tile.mesh.children) (child as Mesh).geometry.dispose()
       const material = tile.mesh.material as TerrainMaterial
       material.map?.dispose()
       ;(tile.mesh.userData.waterMask as DataTexture | null)?.dispose()

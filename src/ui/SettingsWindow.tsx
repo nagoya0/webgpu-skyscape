@@ -120,6 +120,13 @@ function CreditsTab() {
         を加工して作成
       </li>
       <li>
+        市街地の明かり：
+        <a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-A16-2020.html" target="_blank" rel="noopener">
+          国土数値情報（人口集中地区データ）国土交通省
+        </a>
+        を加工して作成
+      </li>
+      <li>
         星：
         <a href="https://cdsarc.cds.unistra.fr/viz-bin/cat/V/50" target="_blank" rel="noopener">
           Bright Star Catalogue 第5改訂版（Hoffleit &amp; Warren, 1991）

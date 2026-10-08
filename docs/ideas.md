@@ -129,19 +129,12 @@ Things not decided yet. When an idea is settled it becomes an [ADR](adr/) and is
 
 ## Night
 
-The demo should also work at night. Planned split, written for the Tokyo area (since removed,
-[ADR 0036](adr/0036-remove-the-tokyo-area.md)) and to be reconsidered for the coast and
-mountains:
+Done ([ADR 0041](adr/0041-night-exposure-and-moonlight.md)): exposure by the sun's altitude,
+moonlight, stars, the night sky's glow and city lights. Open:
 
-- **Early (small):** stars and the moon, which the atmosphere package already draws, and an
-  exposure that adapts to the brightness of the scene. A night sky is around a millionth of the
-  brightness of a day sky, so a fixed exposure shows it as black. Whether moonlight lights the
-  ground is still to be checked.
-- **Town lights:** NASA Black Marble night-light imagery (about 500 m resolution) on the ground
-  for far views. In Tokyo: windows generated from PLATEAU building use attributes for near views,
-  and pools of light from street lamps as additively blended quads, instanced, drawn in the HDR
-  scene pass before the aerial perspective without writing depth. Real light sources for street
-  lamps are not planned; from the air the quads should be enough.
+- **A glow around bright lights**, as a screen-space post effect with the colour grading (the
+  maintainer, 2026-10-08): it would soften the towns at night, where far towns now show as thin
+  lines of points on the horizon, and the sun's glints on water by day.
 
 ## Temporary parts
 
@@ -240,8 +233,8 @@ as room for improvement, listed in the README; changes for performance are still
      brings no GPL obligation. The HUD and README name JSBSim and the model as the source only.
 3. **Night**, started 2026-10-08 ([ADR 0041](adr/0041-night-exposure-and-moonlight.md)). Done: exposure
    by the sun's altitude through a pre-exposure, moonlight on the terrain and in the sky, fewer
-   stars, moonlight on the clouds, the night sky's own faint glow for a night without the moon.
-   Left: city lights. The dark dots along the clouds' edges at dusk were
+   stars, moonlight on the clouds, the night sky's own faint glow for a night without the moon,
+   and city lights. Left: a glow around bright lights, with the colour grading (see Night above). The dark dots along the clouds' edges at dusk were
    investigated and accepted (2026-10-08, [ADR 0013](adr/0013-port-the-clouds-to-tsl.md)).
 4. **The UI** ([ADR 0037](adr/0037-ui.md)), started 2026-10-08 as the maintainer judged the
    features complete enough to prepare for publishing; the Tokyo area was removed first
