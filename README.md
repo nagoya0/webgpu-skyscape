@@ -1,123 +1,83 @@
 # webgpu-skyscape
 
-A demo that tests how well sky, clouds and the ground can be rendered in a web browser with
-WebGPU. The camera flies along a precomputed path from Sagami Bay over Hakone towards Mount Fuji,
-built from open data.
+How far can sky, clouds and ground be rendered in a web browser with WebGPU? This demo flies an
+F-16 on a six-minute loop from Sagami Bay over Hakone to Mount Fuji and back, at 250 to 320 m/s,
+through volumetric clouds and over terrain streamed in real time from Japan's national map tiles.
+The flight is computed offline with the JSBSim flight dynamics model; the sky comes from takram's
+atmosphere, and the clouds are takram's, ported to WGSL to run on WebGPU.
 
-Live demo: <https://nagoya0.github.io/webgpu-skyscape/>, for a desktop browser with WebGPU. It downloads
-50 to 150 MB of terrain and aerial photographs, so a mobile connection is best avoided.
+Try the **[demo page](https://nagoya0.github.io/webgpu-skyscape/)** in a desktop browser with
+WebGPU. It downloads 50 to 150 MB of terrain and aerial photographs, so a mobile connection is
+best avoided.
 
-Work in progress. A demo video and tested browsers will be added here.
+<!-- A screenshot or a video goes here. -->
 
-## Status
+## How it works
 
-In place:
+```
+ offline                                   in the browser, every frame
+ ───────                                   ───────────────────────────
+ JSBSim F-16 + small autopilot ─▶ course.json ─▶ position, attitude, load factor
+ numpy: FFT ocean ──────────────▶ ocean.bin  ─┐                │
+ numpy: blue noise ─────────────▶ blue-noise ─┤                ▼
+                                              │      ┌─ terrain: quadtree of GSI tiles
+ GSI tiles (elevation, aerial photographs, ───┼─────▶│  (elevation + photographs + water mask)
+ vector water areas), loaded at run time      │      ├─ sky and aerial perspective (takram)
+                                              └─────▶├─ volumetric clouds (WGSL)
+                                                     ▼
+                                     temporal anti-aliasing ─▶ lens flare ─▶ tone mapping
+                                                     ▼
+                                     water drops on the glass ─▶ HUD (Canvas 2D)
+```
 
-- Sky, sun and aerial perspective from `@takram/three-atmosphere`, for any date and time of day.
-- Terrain from GSI elevation tiles, covered with GSI aerial photographs corrected for the haze
-  they carry ([ADR 0031](docs/adr/0031-correct-the-sources-grade-at-the-end.md)), streamed in
-  real time out to the horizon ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md),
-  [ADR 0030](docs/adr/0030-terrain-to-the-horizon.md)).
-- The sea, lakes and rivers drawn as water with waves baked from an FFT ocean, the sky's
-  reflection and the sun's glint ([ADR 0029](docs/adr/0029-water-from-gsi-data.md)).
-- The area: Sagami Bay, Hakone and Mount Fuji, flown at 3,000 m
-  ([ADR 0028](docs/adr/0028-area-sagami-bay-hakone-fuji.md)). An earlier area, central Tokyo with
-  PLATEAU's buildings, was removed ([ADR 0036](docs/adr/0036-remove-the-tokyo-area.md)).
-- Volumetric clouds ported from `@takram/three-clouds` to WGSL, with takram's temporal
-  upscaling, aerial perspective, haze, cascaded cloud shadows on the clouds and the ground, and
-  light shafts ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md)). Which of takram's
-  features are in is listed in [docs/clouds-parity.md](docs/clouds-parity.md).
-- More clouds than takram's defaults, to fly among, with a choice of amount
-  ([ADR 0033](docs/adr/0033-more-clouds-to-fly-among.md)), and the clouds' density at the aircraft
-  computed on the CPU each frame from the same data as the GPU's clouds.
-- The demo's course: a loop of about six minutes flown by JSBSim's F-16 under a small autopilot,
-  from below the clouds over Sagami Bay, through a cumulus, past Mount Fuji in a hard turn and
-  back, speeding up and slowing down ([ADR 0035](docs/adr/0035-the-course.md),
-  [ADR 0008](docs/adr/0008-precomputed-flight-path.md)); and a first-person camera that shakes in
-  turns and in clouds.
-- Water drops on the screen in clouds: they land deep in a cloud, are blown outwards in streaks,
-  merge, and evaporate after it ([ADR 0011](docs/adr/0011-rain-driven-by-relative-wind.md)).
-- A HUD after the F-16C's: velocity, altitude and heading scales, current G, roll indicator, attitude bars,
-  boresight cross and flight path marker, shaking with the airframe; fixed to the screen, the
-  scene's time, the flight model and the municipality below ([ADR 0034](docs/adr/0034-hud.md)).
-- Temporal anti-aliasing, lens flare and AgX tone mapping.
-- A UI in Japanese, built with Preact ([ADR 0037](docs/adr/0037-ui.md)): a header with the
-  frame rate; a settings window with the scene's date and time, pausing and the position on
-  the course, the HUD and the clouds, and the data credits; a debug window with rendering
-  figures; a loading screen with one progress bar for the whole start and a note on the download
-  size; a screen saying what to do when the demo cannot run.
-- Published on GitHub Pages, built by a workflow on every push
-  ([ADR 0040](docs/adr/0040-publish-on-github-pages.md)). At run time the demo loads only its own
-  files and the GSI's tiles: the blue noise is its own and the star data is bundled
-  ([ADR 0038](docs/adr/0038-own-blue-noise.md), [ADR 0039](docs/adr/0039-bundle-the-star-data.md)).
-  Over two laps from an empty cache, nothing reaches the GSI after the first lap.
+The terrain is refined where a photograph texel would cover more than about 1.5 pixels, out to
+the horizon, with a sea-level sphere beyond it. Only the GSI's servers are contacted at run time;
+tiles come from the browser's cache after the first lap, so nothing reaches the GSI after it.
 
-Planned: night
-scenes and colour grading; forests are still open. The order and the open questions are in [docs/ideas.md](docs/ideas.md).
+## Decisions worth explaining
 
-## What this project adds
+The full record is in [docs/adr/](docs/adr/) (40 decisions). A few that shaped the demo:
 
-Beyond using the libraries listed under credits, this project does the following itself:
+**takram's clouds, ported to run on WebGPU.** The released `@takram/three-clouds` runs on
+Three.js's WebGL renderer only. Its shaders were ported to WGSL and wired to the WebGPU renderer
+through TSL, with its temporal upscaling, cascaded cloud shadows and light shafts
+([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md)). The cloud shadows reach the terrain
+through the renderer's shadow system, and the clouds' density at the aircraft is computed on the
+CPU from the same data, to shake the camera inside a cloud.
 
-- **Clouds on WebGPU.** The released `@takram/three-clouds` (0.7.6) runs on Three.js's WebGL
-  renderer. Its shaders are ported to WGSL and connected to the WebGPU renderer through TSL,
-  including takram's temporal upscaling, cascaded cloud shadows and light shafts
-  ([ADR 0013](docs/adr/0013-port-the-clouds-to-tsl.md),
-  [ADR 0022](docs/adr/0022-heavy-shaders-in-wgsl.md)). The cloud shadows reach the terrain
-  through the WebGPU renderer's shadow system, and non-finite values are dropped
-  before they can spread through the temporal history.
-- **takram's packages on a newer Three.js**, patched to run on 0.186
-  ([ADR 0016](docs/adr/0016-patch-takram-for-newer-three.md)).
-- **Terrain streamed from GSI tiles**: a quadtree refined by how large a photograph texel
-  appears on screen, with no holes while tiles load, out to the horizon, and a sea-level sphere
-  beyond it ([ADR 0026](docs/adr/0026-own-terrain-from-gsi-tiles.md),
-  [ADR 0030](docs/adr/0030-terrain-to-the-horizon.md)).
-- **Water from map data**: a water mask per tile from the elevation model's missing data and the
-  water polygons of GSI's vector tiles (read by a small decoder in this project), drawn with the
-  sky's reflection, the sun's glint and waves from an FFT ocean baked offline into a looping
-  texture, hex-tiled at three sizes so that it does not repeat
-  ([ADR 0029](docs/adr/0029-water-from-gsi-data.md)).
-- **Aerial photographs as ground colour**: the haze in the photographs is removed so that it is
-  not applied twice ([ADR 0031](docs/adr/0031-correct-the-sources-grade-at-the-end.md)), and the
-  land reflects light diffusely, without the sheen a standard material keeps at grazing angles
-  ([ADR 0032](docs/adr/0032-land-reflects-diffusely.md)).
-- **A local frame for the scene**: positions are computed on the Earth and moved into a frame
-  around the area, which keeps 32-bit floats precise
-  ([ADR 0017](docs/adr/0017-local-world-frame.md)).
-- **Camera effects**: shake that grows with load and inside clouds, the clouds' density at the
-  aircraft computed on the CPU from the same data as the GPU's clouds; head lag and the eye moving
-  under load, kept off for a later cockpit view
-  ([ADR 0020](docs/adr/0020-effects-by-view.md)).
-- **Water drops on the screen**: simulated on the CPU and drawn as a refracting height map after
-  the anti-aliasing, after two rain-on-glass effects (Heartfelt and the Codrops rain experiments)
-  ([ADR 0011](docs/adr/0011-rain-driven-by-relative-wind.md)).
-- **A HUD** drawn with Canvas 2D into the image, its aircraft layer turned with the camera's shake
-  so it stays on the scene, after the DCS F-16C guide's symbology; and the municipality below,
-  looked up in national land data with romaji names ([ADR 0034](docs/adr/0034-hud.md)).
+**Lake Ashi fell 725 m.** The 5 m elevation model has no data over lakes, and the missing values
+read as sea level: the lake became a pit with cliffs for shores. The gaps are now filled from the
+10 m model of the parent tile.
 
-## Room for improvement (on hold)
+**A trimmed F-16 does not fly straight on its own.** Hands-off, a bank of 0.1° grew by a third
+every two seconds until the aircraft rolled over. A small autopilot holds heading, bank, height
+(through the load factor) and speed through the model's own fly-by-wire. The model's yaw damper
+then fought the steady yaw of every turn and left 2.4° of sideslip, so the autopilot cancels its
+term; turns are coordinated within about 0.1°, and the lap closes within about 9 m.
 
-The image is good enough for now; these would raise its quality further and are on hold.
-Changes that make the demo faster are still welcome.
+**The sea repeated.** Six summed waves repeated visibly, and 24 drew crossing stripes. The waves
+are now an FFT ocean baked offline into a looping 3D texture and sampled at three sizes with hex
+tiling, so no pattern repeats ([ADR 0029](docs/adr/0029-water-from-gsi-data.md)).
 
-- **Terrain**: shading from the elevation model at its full resolution, so slopes in the shade
-  show their folds; ambient occlusion in the valleys; a finer grid per tile, so ridges are not
-  drawn as straight segments; the terrain's relief in the choice of tile detail.
-- **Clouds**: the rest of takram's default features: turbulence, light bounced from the ground,
-  and sun and sky light computed per sample. The full list is in
-  [docs/clouds-parity.md](docs/clouds-parity.md).
-- **Flight**: fighter manoeuvres beyond the course's roll and hard turn, such as loops, with the
-  path sampled more often for fast rolls and the HUD checked through longer inverted flight.
+**A memory leak of 1 MB per terrain tile.** GPU memory grew by about 300 MB a lap. takram's blue
+noise node loaded a new copy of its texture for every material it was set up in, and every
+terrain tile has its own. Tracing it also showed that the noise file's origin and licence were not
+stated, so the demo now makes its own blue noise and loads it once
+([ADR 0038](docs/adr/0038-own-blue-noise.md)).
 
-## Requirements
+## Repository layout
 
-A browser with WebGPU enabled. There is no WebGL fallback; other browsers get a page explaining
-what is missing ([ADR 0003](docs/adr/0003-webgpu-only.md)).
-
-The target is a mid-range gaming PC, such as a GeForce RTX 2060 or Radeon RX 6600 XT, at
-1920 × 1080 and 60 frames per second. Integrated GPUs are not targeted
-([ADR 0025](docs/adr/0025-target-hardware.md)). The GPU must support the `float32-filterable`
-feature and a `maxColorAttachmentBytesPerSample` limit of at least 48.
+| Path | What it is |
+| --- | --- |
+| `src/terrain/` | GSI tiles to a terrain quadtree, water masks, the photographs' correction |
+| `src/clouds/` | The cloud port: WGSL shaders, the passes, cloud shadows, density on the CPU |
+| `src/render/` | The post-processing chain |
+| `src/hud/` | The HUD, after the F-16C's |
+| `src/flight/`, `src/camera/` | Playing the computed path; the first-person camera |
+| `src/ui/` | Header, settings window, loading and guidance screens (Preact) |
+| `tools/` | Offline: the flight path (JSBSim), the ocean and the blue noise (numpy) |
+| `patches/` | Patches to takram's packages for Three.js 0.186 ([ADR 0016](docs/adr/0016-patch-takram-for-newer-three.md)) |
+| `docs/` | Decisions ([adr/](docs/adr/)), open questions and the plan ([ideas.md](docs/ideas.md)) |
 
 ## Development
 
@@ -128,55 +88,26 @@ pnpm test           # unit tests (Vitest)
 pnpm build          # type-check and build
 ```
 
-Every push to `main` is built and published on GitHub Pages by `.github/workflows/pages.yml`.
-The build uses relative paths (`base: './'` in `vite.config.ts`), so `dist/` also works served from
-any other folder or host.
+Every push to `main` is published on GitHub Pages by `.github/workflows/pages.yml`. Settings can
+also be given in the URL, such as `?time=06:00&coverage=0.5` or `?t=150&paused`; the full list,
+including switches for debugging, is at the top of [src/params.ts](src/params.ts). The offline
+tools in `tools/` each have their own Python venv and a usage note at the top of their script;
+checks and upgrades are in [docs/upgrading.md](docs/upgrading.md).
 
-`node scripts/check-page.mjs <url> <out.png>` opens a page in headless Chrome, saves a
-screenshot and prints the page state. Further checks, and how to upgrade Three.js and the takram
-packages, are in [docs/upgrading.md](docs/upgrading.md).
+## Requirements and known limitations
 
-Flight paths are computed offline with JSBSim (Python) by the scripts in `tools/flightpath/`:
-
-```sh
-python -m venv tools/flightpath/.venv
-tools/flightpath/.venv/Scripts/python -m pip install -r tools/flightpath/requirements.txt
-tools/flightpath/.venv/Scripts/python tools/flightpath/fly.py   # writes public/paths/*.json
-```
-
-The sea's waves are baked the same way, with numpy (`tools/water/bake_ocean.py`, writing
-`public/water/ocean.bin`; its own venv in `tools/water/.venv`), and so is the blue noise that
-jitters the clouds' and the atmosphere's ray marching (`tools/bluenoise/make_blue_noise.py`, writing
-`public/noise/blue-noise.bin`; [ADR 0038](docs/adr/0038-own-blue-noise.md)).
-
-### URL parameters
-
-The settings window (the gear in the header, [ADR 0037](docs/adr/0037-ui.md)) changes the main
-settings while the demo runs. All settings, including those for development that the window does
-not show, also come from the URL query, for example `/?time=06:00&coverage=0.5`. The full list, with
-defaults, is at the top of [src/params.ts](src/params.ts). The main ones:
-
-| Parameter | Meaning |
-|---|---|
-| `date=YYYY-MM-DD`, `time=HH:MM` | Date and time of day in JST |
-| `t=seconds`, `paused` | Start time on the flight path; hold the flight there |
-| `path=NAME` | Fly another path computed with JSBSim (`public/paths/NAME.json`); by default the course of [ADR 0035](docs/adr/0035-the-course.md) |
-| `terrain=0`, `clouds=0` | Leave out a part of the scene |
-| `dropsdebug` | Debugging: show the drops' height map in red |
-| `hud=0` | Leave out the aircraft's HUD |
-| `huddebug` | Debugging: draw a test pattern on both HUD layers |
-| `groundshadow=0` | Leave out the cloud shadows on the terrain |
-| `terraindebug=1` to `5` | Debugging: tint terrain tiles by zoom level; show the photographs without lighting; show the water mask in red; draw the terrain plain grey; show the normals as colour |
-| `cloudamount=few`, `normal`, `many` | How much cloud ([ADR 0033](docs/adr/0033-more-clouds-to-fly-among.md)); `normal` is the default |
-| `coverage=0..1`, `cloudfx=` | Cloud coverage of all layers; cloud feature switches, such as `cloudfx=-POWDER` |
-| `wind=E,N` | Wind moving the clouds, in m/s towards the east and the north, such as `wind=10,-5` |
-| `measure` | After loading, time 180 frames and report CPU and GPU times in `window.__debug` |
-| `debug` | Open the debug window (flight time and rendering figures), as its switch in the settings window does |
-
-## Design
-
-Design decisions are recorded in [docs/adr/](docs/adr/). Open questions and the plan are in
-[docs/ideas.md](docs/ideas.md).
+- WebGPU only, with no WebGL fallback; other browsers get a page saying what is missing
+  ([ADR 0003](docs/adr/0003-webgpu-only.md)). The GPU must support `float32-filterable` and a
+  `maxColorAttachmentBytesPerSample` of at least 48.
+- Aimed at a mid-range gaming PC (GeForce RTX 2060, Radeon RX 6600 XT) at 1920 × 1080 and
+  60 fps ([ADR 0025](docs/adr/0025-target-hardware.md)). On the development machine, a GeForce
+  RTX 4070, it keeps up with a 120 Hz display, the GPU taking about 2 ms a frame at 1262 × 600.
+  Tested browsers are to be listed.
+- No night yet: the exposure is the day's, so the night sky is black.
+- The JavaScript heap grows by about 30 MB a lap, from Three.js's data for each terrain tile's
+  material.
+- On hold: finer terrain shading, takram's remaining cloud features
+  ([docs/clouds-parity.md](docs/clouds-parity.md)), forests and fighter manoeuvres.
 
 ## Licence and credits
 
@@ -211,3 +142,4 @@ others that it uses or includes keep their own licences, listed below.
 | [JSBSim](https://github.com/JSBSim-Team/jsbsim) and its F-16 model | Computing the flight path offline (`tools/flightpath/`, which installs JSBSim with pip). Neither JSBSim nor the model is in this repository, only the computed path, which contains no part of them | JSBSim: LGPL-2.1 or later; the F-16 model (Erik Hofman): GPL |
 | [Share Tech Mono](https://fonts.google.com/specimen/Share+Tech+Mono) | The HUD's typeface (`public/fonts/`) | SIL Open Font License 1.1, Copyright (c) 2012 Carrois Type Design, Ralph du Carrois ([licence](public/fonts/OFL-ShareTechMono.txt)) |
 | [fast-png](https://github.com/image-js/fast-png) | Decoding the clouds' weather map, so the CPU reads the same values as the GPU | MIT |
+| [Preact](https://preactjs.com/) and [@preact/signals](https://github.com/preactjs/signals) | The UI | MIT |
