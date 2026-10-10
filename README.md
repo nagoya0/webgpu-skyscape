@@ -45,14 +45,16 @@ https://github.com/user-attachments/assets/685df7a8-2b32-444a-a4f3-9de7daab86d0
 ```
 
 The terrain is refined where a photograph texel would cover more than about 1.5 pixels, out to
-the horizon, with a sea-level sphere beyond it. Only the GSI's servers are contacted at run time;
-tiles come from the browser's cache after the first lap, so nothing reaches the GSI after it. Any
-date and time can be shown: at night the exposure follows the sun and the moon, and the towns
-light up.
+the horizon, with a sea-level sphere beyond it. Only the GSI's servers are contacted at run time.
+Their tiles carry a Last-Modified date, which lets the browser keep them in its cache: measured in
+Chrome before the city lights were added, the second lap asked the GSI for nothing
+([ADR 0040](docs/adr/0040-publish-on-github-pages.md)). The demo leaves this to the browser and
+does not ensure it. Any date and time can be shown: at night the exposure follows the sun and the
+moon, and the towns light up.
 
 ## Decisions worth explaining
 
-The full record is in [docs/adr/](docs/adr/) (40 decisions). A few that shaped the demo:
+The full record is in [docs/adr/](docs/adr/). A few that shaped the demo:
 
 **takram's clouds, ported to run on WebGPU.** The released `@takram/three-clouds` runs on
 Three.js's WebGL renderer only. Its shaders were ported to WGSL and wired to the WebGPU renderer
