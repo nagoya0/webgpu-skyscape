@@ -6,9 +6,14 @@ through volumetric clouds and over terrain streamed in real time from Japan's na
 The flight is computed offline with the JSBSim flight dynamics model; the sky comes from takram's
 atmosphere, and the clouds are takram's, ported to WGSL to run on WebGPU.
 
-Try the **[demo page](https://nagoya0.github.io/webgpu-skyscape/)** in a desktop browser with
-WebGPU. It downloads 50 to 150 MB of terrain and aerial photographs, so a mobile connection is
-best avoided.
+## Demo
+
+Open the **[demo page](https://nagoya0.github.io/webgpu-skyscape/)** in a desktop browser with
+WebGPU.
+
+> [!WARNING]
+> The demo downloads 50 to 150 MB of terrain and aerial photographs. Take care on a mobile
+> connection.
 
 [![Mount Fuji from the east at 14:30, seen through the HUD](docs/images/fuji.jpg)](docs/images/fuji.jpg)
 
